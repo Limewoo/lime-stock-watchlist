@@ -9,3 +9,4 @@ build/
 bun.lock
 yarn.lock
 package-lock.json
+skills-lock.json
