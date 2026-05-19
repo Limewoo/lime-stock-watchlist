@@ -3,3 +3,10 @@ vendor/
 build/
 *.log
 .DS_Store
+.claude/
+.agents/
+.idea/
+bun.lock
+yarn.lock
+package-lock.json
+skills-lock.json

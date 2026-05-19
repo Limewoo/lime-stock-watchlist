@@ -1,6 +1,32 @@
-// Brand
-$lswl-lime:      #5d9e3f;
-$lswl-lime-dark: #4a8030;
+// ── Brand ──────────────────────────────────────────────
+$lswl-lime:          #5d9e3f;
+$lswl-lime-dark:     #4a8030;
+$lswl-lime-darker:   #3a6626;
+$lswl-lime-light:    #ecf7e4;
+$lswl-lime-mid:      #c5e6a8;
+$lswl-forest:        #0f2009;
+$lswl-forest-mid:    #1a3d0e;
+$lswl-forest-light:  #2a5c1a;
 
-// Admin
-$lswl-panel-gap: 24px;
+// ── Status colours ─────────────────────────────────────
+$lswl-waiting-bg:    #ecf7e4;
+$lswl-waiting-text:  #2a6b15;
+$lswl-waiting-dot:   #5d9e3f;
+
+$lswl-notified-bg:   #e8f0ff;
+$lswl-notified-text: #1a40bb;
+$lswl-notified-dot:  #3b82f6;
+
+$lswl-unsub-bg:      #f3f3f3;
+$lswl-unsub-text:    #666;
+$lswl-unsub-dot:     #bbb;
+
+// ── Spacing & shape ────────────────────────────────────
+$lswl-radius-sm:   6px;
+$lswl-radius:      10px;
+$lswl-radius-lg:   14px;
+$lswl-shadow-card: 0 1px 6px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
+$lswl-shadow-lift: 0 4px 16px rgba(0, 0, 0, 0.1);
+
+// ── Typography ─────────────────────────────────────────
+$lswl-font-brand: inherit; // WP admin system font
