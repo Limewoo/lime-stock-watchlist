@@ -96,23 +96,28 @@ Namespace: `lime-stock-watchlist/v1`
 ### Admin UI
 
 Single React SPA rendered in `<div id="lswl-admin-root">`. Two tabs via `@wordpress/components` `TabPanel`:
-- **Subscribers** — table grouped by product, single + bulk delete
-- **Settings** — `ToggleControl` / `TextControl` fields, saved via REST
+- **Subscribers** — stats bar (total / waiting / notified / unsubscribed), subscribers grouped into per-product cards with status badges, per-group checkbox, single + bulk delete
+- **Settings** — three grouped cards (Notifications / Subscriber Form / Email Configuration) using `ToggleControl` / `TextControl`, saved via REST
 
 React entry: `src/admin/js/index.js` → `build/admin.js` + `build/admin.css`.  
-Data layer: `@wordpress/api-fetch` + `wp_rest` nonce.
+Component tree: `App` → `SubscribersTab` / `SettingsTab`. API wrappers in `src/admin/js/api/index.js`.  
+Data layer: `@wordpress/api-fetch` + `wp_rest` nonce. Uses `url:` (not `path:`) in all `apiFetch` calls to bypass root-URL middleware resolution issues.
 
 ### Frontend form
 
-PHP-rendered via `woocommerce_single_product_summary` (priority after price).  
+PHP-rendered via `woocommerce_single_product_summary` (priority 31, after price).  
 Only shown when product is out-of-stock AND feature enabled (global + per-product check).  
-Name field visibility controlled by `show_name_field` setting.  
-AJAX via `fetch()` → `POST /wp-json/lime-stock-watchlist/v1/subscribe`.
+Template: `templates/frontend-form.php`. Variables: `$show_name` (bool), `$name_required` (bool).  
+Submits via `fetch()` → `POST /wp-json/lime-stock-watchlist/v1/subscribe`.
 
 ### Styles
 
 Entry: `src/admin/scss/index.scss` and `src/frontend/scss/index.scss` (imported inside each JS entry).  
-BEM under `.lswl-`. `--lswl-lime` (`#5d9e3f`) is the brand accent.
+BEM under `.lswl-`. Brand accent: `$lswl-lime: #5d9e3f` (SCSS variable, not a CSS custom property).
+
+**Admin SCSS** — full design system: brand header (dark forest gradient), lime tab underline, product-group cards, status badge pills, stats bar, settings cards.
+
+**Frontend SCSS** — intentionally minimal: inherits all typography and input styles from the active theme. Only asserts lime `3px` top-border accent on the container, lime focus ring on inputs, and lime button colour. No hardcoded fonts, backgrounds, or colours that could clash with store themes.
 
 ### Build
 
