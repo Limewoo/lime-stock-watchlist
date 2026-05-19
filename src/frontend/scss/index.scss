@@ -1,88 +1,115 @@
 @use 'variables' as *;
 
+// ─────────────────────────────────────────────────────────────
+// Notify-me form
+//
+// Design intent: inherit theme typography, colours, and button
+// styles. Only brand the focus ring, submit button, and the
+// lime top-border accent that separates the form from the
+// out-of-stock notice above it.
+// ─────────────────────────────────────────────────────────────
+
 .lswl-notify-form {
-	margin: 24px 0;
-	padding: 20px;
+	margin: 24px 0 0;
+	padding: 20px 20px 20px 18px;
 	border: 1px solid $lswl-border;
-	border-radius: $lswl-radius;
-	background: #fafafa;
+	border-top: 3px solid $lswl-lime; // brand accent — only visible colour touch
+	border-radius: 0 0 $lswl-radius $lswl-radius;
+	background: transparent; // let theme background show through
+}
 
-	&__heading {
-		margin: 0 0 16px;
-		font-weight: 600;
-		font-size: 1em;
-	}
+.lswl-notify-form__heading {
+	margin: 0 0 14px;
+	font-size: 1em;
+	font-weight: 600;
+	// color, font-family — inherited from theme
+}
 
-	&__form {
-		display: flex;
-		flex-direction: column;
-		gap: 12px;
-	}
+.lswl-notify-form__form {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
 
-	&__field {
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-	}
+.lswl-notify-form__field {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
 
-	&__label {
-		font-size: $lswl-font-size;
-		font-weight: 500;
-	}
+.lswl-notify-form__label {
+	font-size: 0.875em;
+	font-weight: 500;
+	// color inherited from theme
+}
 
-	&__optional {
-		font-weight: 400;
-		color: #777;
-		margin-left: 4px;
-	}
+.lswl-notify-form__optional {
+	font-weight: 400;
+	opacity: 0.6;
+	margin-left: 4px;
+	font-size: 0.9em;
+}
 
-	&__input {
-		padding: 8px 10px;
-		border: 1px solid $lswl-border;
-		border-radius: $lswl-radius;
-		font-size: $lswl-font-size;
-		width: 100%;
-		box-sizing: border-box;
+// Inputs: let the theme do all the heavy lifting.
+// We only add a branded focus ring.
+.lswl-notify-form__input {
+	width: 100%;
+	box-sizing: border-box;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
 
-		&:focus {
-			border-color: $lswl-lime;
-			outline: none;
-			box-shadow: 0 0 0 2px rgba($lswl-lime, 0.2);
-		}
-	}
-
-	&__button {
-		align-self: flex-start;
-		background: $lswl-lime !important;
-		color: #fff !important;
+	&:focus {
 		border-color: $lswl-lime !important;
+		outline: none;
+		box-shadow: 0 0 0 2px rgba($lswl-lime, 0.18);
+	}
+}
 
-		&:hover {
-			background: $lswl-lime-dark !important;
-			border-color: $lswl-lime-dark !important;
-		}
+.lswl-notify-form__submit {
+	margin-top: 2px;
+}
 
-		&:disabled {
-			opacity: 0.65;
-			cursor: not-allowed;
-		}
+// Button: piggybacks on theme `.button` base styles.
+// Only asserts colour so the shape/size/font stays native.
+.lswl-notify-form__button {
+	transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+
+	&,
+	&:visited {
+		background-color: $lswl-lime !important;
+		border-color: $lswl-lime-dark !important;
+		color: #fff !important;
 	}
 
-	&__message {
-		padding: 8px 12px;
-		border-radius: $lswl-radius;
-		font-size: $lswl-font-size;
+	&:hover,
+	&:focus {
+		background-color: $lswl-lime-dark !important;
+		border-color: $lswl-lime-darker !important;
+		color: #fff !important;
+	}
 
-		&--success {
-			background: #edfaee;
-			border: 1px solid #aedcb1;
-			color: #276228;
-		}
+	&:disabled {
+		opacity: 0.55 !important;
+		cursor: not-allowed;
+	}
+}
 
-		&--error {
-			background: #fdf0f0;
-			border: 1px solid #e6a8a8;
-			color: #8a1c1c;
-		}
+// Inline feedback message
+.lswl-notify-form__message {
+	padding: 9px 13px;
+	border-radius: $lswl-radius;
+	font-size: 0.875em;
+	line-height: 1.5;
+	border: 1px solid transparent;
+
+	&--success {
+		background: #edf7ec;
+		border-color: #b3ddb0;
+		color: #2a6028;
+	}
+
+	&--error {
+		background: #fdf1f1;
+		border-color: #e6b8b8;
+		color: #8a2020;
 	}
 }
