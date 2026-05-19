@@ -1,0 +1,16 @@
+{
+	"name": "lime-stock-watchlist",
+	"version": "1.0.0",
+	"description": "Stock watchlist and back-in-stock notifications for WooCommerce",
+	"private": true,
+	"license": "GPL-2.0-or-later",
+	"scripts": {
+		"build": "wp-scripts build",
+		"start": "wp-scripts start",
+		"lint:js": "wp-scripts lint-js",
+		"lint:style": "wp-scripts lint-style"
+	},
+	"devDependencies": {
+		"@wordpress/scripts": "^32.2.0"
+	}
+}

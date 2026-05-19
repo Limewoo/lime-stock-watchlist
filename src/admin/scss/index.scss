@@ -1,0 +1,42 @@
+@use 'variables' as *;
+
+.lswl-admin {
+	max-width: 960px;
+	padding: 16px 0;
+
+	&__title {
+		margin: 0 0 20px;
+		font-size: 23px;
+		font-weight: 400;
+		color: #1d2327;
+	}
+
+	&__panel {
+		padding: 24px 0;
+	}
+}
+
+.lswl-subscribers {
+	&__bulk-actions {
+		margin-bottom: 12px;
+	}
+
+	&__table {
+		margin-top: 0;
+
+		th,
+		td {
+			vertical-align: middle;
+		}
+	}
+}
+
+.lswl-settings {
+	max-width: 600px;
+
+	&__form {
+		.components-base-control {
+			margin-bottom: 20px;
+		}
+	}
+}

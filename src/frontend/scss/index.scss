@@ -1,0 +1,88 @@
+@use 'variables' as *;
+
+.lswl-notify-form {
+	margin: 24px 0;
+	padding: 20px;
+	border: 1px solid $lswl-border;
+	border-radius: $lswl-radius;
+	background: #fafafa;
+
+	&__heading {
+		margin: 0 0 16px;
+		font-weight: 600;
+		font-size: 1em;
+	}
+
+	&__form {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+
+	&__field {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	&__label {
+		font-size: $lswl-font-size;
+		font-weight: 500;
+	}
+
+	&__optional {
+		font-weight: 400;
+		color: #777;
+		margin-left: 4px;
+	}
+
+	&__input {
+		padding: 8px 10px;
+		border: 1px solid $lswl-border;
+		border-radius: $lswl-radius;
+		font-size: $lswl-font-size;
+		width: 100%;
+		box-sizing: border-box;
+
+		&:focus {
+			border-color: $lswl-lime;
+			outline: none;
+			box-shadow: 0 0 0 2px rgba($lswl-lime, 0.2);
+		}
+	}
+
+	&__button {
+		align-self: flex-start;
+		background: $lswl-lime !important;
+		color: #fff !important;
+		border-color: $lswl-lime !important;
+
+		&:hover {
+			background: $lswl-lime-dark !important;
+			border-color: $lswl-lime-dark !important;
+		}
+
+		&:disabled {
+			opacity: 0.65;
+			cursor: not-allowed;
+		}
+	}
+
+	&__message {
+		padding: 8px 12px;
+		border-radius: $lswl-radius;
+		font-size: $lswl-font-size;
+
+		&--success {
+			background: #edfaee;
+			border: 1px solid #aedcb1;
+			color: #276228;
+		}
+
+		&--error {
+			background: #fdf0f0;
+			border: 1px solid #e6a8a8;
+			color: #8a1c1c;
+		}
+	}
+}
