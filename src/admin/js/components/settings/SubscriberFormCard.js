@@ -42,6 +42,7 @@ export default function SubscriberFormCard( { settings, placeholders, update } )
 				/>
 			) }
 			<TextControl
+				className="lswl-field--section-start"
 				label={ __( 'Success message', 'lime-stock-watchlist' ) }
 				placeholder={ placeholders.msg_success }
 				value={ settings.msg_success }

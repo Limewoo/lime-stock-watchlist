@@ -1,7 +1,7 @@
 /**
  * User-based (flat) subscriber table using TanStack Table + Query.
  */
-import { useState } from '@wordpress/element';
+import { useState, useEffect } from '@wordpress/element';
 import { CheckboxControl, Notice, Spinner } from '@wordpress/components';
 import { __, sprintf } from '@wordpress/i18n';
 import {
@@ -18,7 +18,6 @@ import {
 } from '@tanstack/react-query';
 import { getSubscribers, deleteSubscriber, bulkDeleteSubscribers } from '../../api';
 import StatusBadge from './StatusBadge';
-import SubscriberFilters from './SubscriberFilters';
 import TablePagination from './TablePagination';
 
 /**
@@ -64,20 +63,23 @@ function ProductCell( { name, thumbnail, url } ) {
 const columnHelper = createColumnHelper();
 
 /**
- * @param {{ productId: number }} props
+ * @param {{ productId: number, search: string, status: string }} props
  * @return {JSX.Element}
  */
-export default function UserView( { productId } ) {
+export default function UserView( { productId, search, status } ) {
 	const queryClient = useQueryClient();
 
-	const [ search, setSearch ]         = useState( '' );
-	const [ status, setStatus ]         = useState( 'all' );
-	const [ pagination, setPagination ] = useState( { pageIndex: 0, pageSize: 25 } );
+	const [ pagination, setPagination ]     = useState( { pageIndex: 0, pageSize: 20 } );
 	const [ rowSelection, setRowSelection ] = useState( {} );
-	const [ notice, setNotice ] = useState( '' );
-	const [ error, setError ]   = useState( '' );
+	const [ notice, setNotice ]             = useState( '' );
+	const [ error, setError ]               = useState( '' );
 
 	const { pageIndex, pageSize } = pagination;
+
+	// Reset to page 1 when filters change from parent
+	useEffect( () => {
+		setPagination( ( prev ) => ( { ...prev, pageIndex: 0 } ) );
+	}, [ search, status ] );
 
 	const { data, isFetching, isLoading, isError } = useQuery( {
 		queryKey: [ 'subscribers', 'users', { productId, search, status, pageIndex, pageSize } ],
@@ -123,16 +125,6 @@ export default function UserView( { productId } ) {
 	} );
 
 	const busy = deleteMutation.isPending || bulkDeleteMutation.isPending;
-
-	function handleSearchChange( value ) {
-		setSearch( value );
-		setPagination( ( prev ) => ( { ...prev, pageIndex: 0 } ) );
-	}
-
-	function handleStatusChange( value ) {
-		setStatus( value );
-		setPagination( ( prev ) => ( { ...prev, pageIndex: 0 } ) );
-	}
 
 	function handleDelete( id ) {
 		if ( ! window.confirm( __( 'Delete this subscriber?', 'lime-stock-watchlist' ) ) ) return;
@@ -262,14 +254,6 @@ export default function UserView( { productId } ) {
 				</Notice>
 			) }
 
-			<SubscriberFilters
-				view="users"
-				search={ search }
-				onSearchChange={ handleSearchChange }
-				status={ status }
-				onStatusChange={ handleStatusChange }
-			/>
-
 			{ selectedIds.length > 0 && (
 				<div className="lswl-subscribers__toolbar">
 					<button
@@ -292,6 +276,12 @@ export default function UserView( { productId } ) {
 
 			{ data?.items?.length === 0 && ! isFetching ? (
 				<div className="lswl-empty">
+					<div className="lswl-empty__icon">
+						<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+							<path d="M22 12h-6l-2 3h-4l-2-3H2" />
+							<path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+						</svg>
+					</div>
 					<h2 className="lswl-empty__title">
 						{ __( 'No subscribers found', 'lime-stock-watchlist' ) }
 					</h2>
@@ -346,11 +336,7 @@ export default function UserView( { productId } ) {
 						onNextPage={ () => table.nextPage() }
 						onFirstPage={ () => table.setPageIndex( 0 ) }
 						onLastPage={ () => table.setPageIndex( table.getPageCount() - 1 ) }
-						pageSize={ table.getState().pagination.pageSize }
-						onPageSizeChange={ ( size ) => {
-							table.setPageSize( size );
-							table.setPageIndex( 0 );
-						} }
+						onGoToPage={ ( idx ) => table.setPageIndex( idx ) }
 						totalItems={ data?.total ?? 0 }
 					/>
 				</div>

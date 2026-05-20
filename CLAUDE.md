@@ -50,11 +50,11 @@ Also hooks `before_woocommerce_init` (top-level, outside init) to declare HPOS +
 |-------|------|----------------|
 | `Subscriber` | `class-subscriber.php` | Value object for a watchlist row — `from_row()` factory, status helpers (`is_watching/notifying/notified/unsubscribed`), `display_name()` |
 | `Plugin` | `class-plugin.php` | Orchestrator — instantiates all classes, wires hooks, handles unsubscribe token on `init` |
-| `Database` | `class-database.php` | `dbDelta` table install, all CRUD (`$wpdb->prepare()` everywhere); all read methods return `Subscriber` instances |
+| `Database` | `class-database.php` | `dbDelta` table install, all CRUD (`$wpdb->prepare()` everywhere); CRUD methods return `Subscriber` instances; paginated read methods (`get_subscribers_paginated`, `get_products_with_counts`, `get_stats`) return raw arrays for REST layer |
 | `Frontend` | `class-frontend.php` | Renders notify form on out-of-stock product pages, enqueues frontend assets (resolves i18n messages from settings) |
 | `Admin` | `class-admin.php` | WC submenu "Lime Watchlist" (`lime-stock-watchlist`), enqueues React bundle on plugin page |
 | `Product_Settings` | `class-product-settings.php` | WC Product Data tab "Watchlist" — per-product enable/disable |
-| `Rest_API` | `class-rest-api.php` | Registers all 6 REST routes; `settings_with_placeholders()` private helper used by both GET and POST settings handlers |
+| `Rest_API` | `class-rest-api.php` | Registers all 7 REST routes; `settings_with_placeholders()` private helper used by both GET and POST settings handlers |
 | `Email` | `class-email.php` | `send_to_one()` — back-in-stock per-subscriber; `send_confirmation()` — subscription confirmation; `handle_queued_notification()` — AS callback; `send_notifications()` — sync fallback; `process_shortcodes()` — token replacement |
 | `Stock_Watcher` | `class-stock-watcher.php` | Hooks all 4 WC stock hooks (see below) → guards on `notifications_enabled` AND `notification_email_enabled` → queues AS actions + calls `Database::mark_notifying()` (sync fallback skips mark_notifying) |
 
@@ -155,30 +155,78 @@ Namespace: `lime-stock-watchlist/v1`
 |--------|-------|------|
 | `POST` | `/subscribe` | public — 200 new, 409 already active, 503 disabled, 404 no product, 409 in-stock |
 | `GET` | `/subscribers` | `manage_woocommerce` |
+| `GET` | `/subscribers/stats` | `manage_woocommerce` |
 | `DELETE` | `/subscribers/{id}` | `manage_woocommerce` |
 | `DELETE` | `/subscribers` | `manage_woocommerce` (bulk, `ids[]` in body) |
 | `GET` | `/settings` | `manage_woocommerce` |
 | `POST` | `/settings` | `manage_woocommerce` |
 
+**`/subscribers/stats` must be registered BEFORE the `(?P<id>\d+)` route** to prevent regex collision.
+
+**GET `/subscribers` query params:**
+
+| Param | Type | Default | Notes |
+|-------|------|---------|-------|
+| `view` | string | `users` | `users` or `products` |
+| `page` | int | `1` | 1-based |
+| `per_page` | int | `20` | |
+| `status` | string | `all` | `all`, `watching`, `notifying`, `notified`, `unsubscribed` |
+| `search` | string | `''` | email LIKE (users view); product name filter (products view) |
+| `product_id` | int | `0` | `0` = all products; `>0` = drill-down for one product |
+
+**Response shapes:**
+
+`view=users` → `{ items: [...], total: int, pages: int }` — each item includes `product_name`, `product_thumbnail`, `product_url` augmented from `wc_get_product()`.
+
+`view=products` → `{ items: [{ product_id, product_name, product_thumbnail, product_url, subscriber_count }], total: int, pages: int }`.
+
+`/subscribers/stats` → `{ total, watching, notifying, notified, unsubscribed }`.
+
 Subscriber rows return `notified` as **integer** (0/2/1), not bool. React uses strict `=== 0/2/1` comparisons.
 
 ### Admin UI
 
-WC submenu: **"Lime Watchlist"** — `PAGE_SLUG = 'lime-stock-watchlist'`, hook suffix `woocommerce_page_lime-stock-watchlist`.
+WC submenu: **"Stock watchlist"** — `PAGE_SLUG = 'lime-stock-watchlist'`, hook suffix `woocommerce_page_lime-stock-watchlist`.
 
-Single React SPA rendered in `<div id="lswl-admin-root">`. Two tabs via `@wordpress/components` `TabPanel`:
+`render_page()` outputs `<div class="wrap"><div id="lswl-admin-root"></div></div>` — the `.wrap` class is required for standard WP admin margins.
 
-- **Subscribers** — stats bar (Total / Watching / Notifying / Notified / Unsubscribed), subscribers grouped into per-product cards with status badges, per-group checkbox, single + bulk delete. Warning notice appears when `stats.notifying > 0` (singular/plural via `sprintf`). Both delete paths show `window.confirm()`. Column order: Name | Email | Status | Date subscribed | action.
-- **Settings** — five grouped cards; all but the first hidden when `notifications_enabled` is false:
-  1. **Enable Stock Watchlist** — master toggle
-  2. **Subscriber Form** — form title, button label, name field toggles, success/duplicate/error messages
-  3. **Email Configuration** — shared from name + from email (placeholders = computed site name / admin email)
-  4. **Subscription Confirmation Email** — toggle (default on), subject + body textarea (fields hidden when toggle off)
-  5. **Back-in-Stock Notification Email** — toggle (default on), subject + body textarea (fields hidden when toggle off)
+Single React SPA. Two tabs via `@wordpress/components` `TabPanel`:
+
+**Subscribers tab** — TanStack Table v8 + TanStack Query v5. Both packages are **bundled** (not WP externals) — `build/admin.asset.php` does NOT list them.
+
+Layout:
+- Stats bar: Total / Watching / Notifying / Notified / Unsubscribed (from `GET /subscribers/stats`)
+- `NotifyingNotice` when `stats.notifying > 0`
+- Controls row: **By Subscriber** / **By Product** toggle (left) + search input + status select (right, native HTML elements — not WP SearchControl/SelectControl)
+- View area: `UserView` or `ProductView` (or `ProductDrillDown` when drilling into a product)
+
+`UserView` columns: checkbox | email | product | status badge | date subscribed | delete icon. Product column hidden when `productId > 0` (drill-down). Single + bulk delete with `window.confirm()`. `pageSize: 20`.
+
+`ProductView` columns: product (thumbnail + linked name) | subscriber count | "View Subscribers" button. No delete, no bulk select.
+
+`ProductDrillDown`: back button → controls row with "Subscribers for: [linked product name]" left + search/status filters right → `UserView` with `productId` set.
+
+Component tree:
+```
+SubscribersTab
+├── UserView       src/admin/js/components/subscribers/UserView.js
+├── ProductView    src/admin/js/components/subscribers/ProductView.js
+├── ProductDrillDown  src/admin/js/components/subscribers/ProductDrillDown.js
+├── TablePagination   src/admin/js/components/subscribers/TablePagination.js
+└── StatusBadge    src/admin/js/components/subscribers/StatusBadge.js
+```
+
+**Settings tab** — five grouped cards; all but the first hidden when `notifications_enabled` is false:
+1. **Enable Stock Watchlist** — master toggle
+2. **Subscriber Form** — form title, button label, name field toggles, success/duplicate/error messages
+3. **Email Configuration** — shared from name + from email (placeholders = computed site name / admin email)
+4. **Subscription Confirmation Email** — toggle (default on), subject + body textarea (fields hidden when toggle off)
+5. **Back-in-Stock Notification Email** — toggle (default on), subject + body textarea (fields hidden when toggle off)
 
 Settings component tree: `SettingsTab` → `settings/WatchlistEnableCard`, `SubscriberFormCard`, `EmailConfigCard`, `ConfirmationEmailCard`, `NotificationEmailCard`. Each card in its own file under `src/admin/js/components/settings/`. Icons in `settings/icons.js`, generic card wrapper in `settings/SettingsCard.js`.
 
-React entry: `src/admin/js/index.js` → `build/admin.js` + `build/admin.css`. Uses `createRoot` (React 18 API).  
+React entry: `src/admin/js/index.js` → `build/admin.js` + `build/admin.css`. Uses `createRoot` (React 18 API). Wrapped with `QueryClientProvider` (singleton `QueryClient` at module level, `staleTime: 30_000, retry: 1`).
+
 Data layer: `@wordpress/api-fetch` + `wp_rest` nonce. Uses `url:` (not `path:`) in all `apiFetch` calls.  
 `CheckboxControl` and `ToggleControl` require `__nextHasNoMarginBottom` prop (deprecation since `@wordpress/components` 6.7).
 
@@ -190,6 +238,8 @@ Data layer: `@wordpress/api-fetch` + `wp_rest` nonce. Uses `url:` (not `path:`) 
 | `notified=2, unsub=0` | Notifying | green (`#c6e1c6`, pulsing dot) | `$lswl-notifying-dot` |
 | `notified=1, unsub=0` | Notified | blue | `$lswl-notified-dot` |
 | `unsubscribed=1` | Unsubscribed | grey | `$lswl-unsub-dot` |
+
+Each badge has a `data-tooltip` attribute with a concise description shown on hover via CSS `::after` pseudo-element (no JS). Tooltip text lives in `StatusBadge.js` and is i18n-wrapped.
 
 ### Frontend form
 
@@ -247,7 +297,7 @@ Notice via `Frontend::maybe_show_unsubscribe_notice()` on `woocommerce_before_si
 Entry: `src/admin/scss/index.scss` and `src/frontend/scss/index.scss`.  
 Variables in `src/admin/scss/_variables.scss`. BEM under `.lswl-`. Brand accent: `$lswl-lime: #5d9e3f`.
 
-**Admin SCSS** — full design system: brand header, lime tab underline, product-group cards, status badge pills (including `--notifying` with pulsing dot animation), stats bar (5 columns), settings cards.
+**Admin SCSS** — full design system: light page header with lime bar accent, lime tab underline, stats bar (5 columns), TanStack Table styles (thead caps-label, zebra stripe, lime hover), number-based pagination, filter controls (native inputs), settings cards, status badge pills (including `--notifying` with pulsing dot animation). See "Limewoo Admin UI Design System" section for full token reference.
 
 **Frontend SCSS** — intentionally minimal: inherits theme styles. Only lime `3px` top-border, lime focus ring, lime button colour.
 
@@ -306,3 +356,376 @@ Never edit `build/` manually.
 - All user-facing strings via `@wordpress/i18n`. Text domain: `lime-stock-watchlist`.
 - Admin: React + `@wordpress/components`. No custom UI framework.
 - `@wordpress/components` `Notice` does not forward `style` prop — use CSS class instead.
+- For filter controls (search, select), use native `<input type="search">` and `<select>` — NOT `SearchControl`/`SelectControl`. WP wrappers add DOM layers that make consistent height/border impossible via CSS alone.
+- TanStack Table v8 (`@tanstack/react-table`) and TanStack Query v5 (`@tanstack/react-query`) are bundled — import from the packages directly, do not add them to WP script dependencies.
+
+---
+
+## Limewoo Admin UI Design System
+
+> **Portable section.** Copy this entire block into any future Limewoo plugin's `CLAUDE.md`. It defines the shared visual language so all admin pages look like one product family.
+
+### Guiding principles
+
+- Match WordPress admin norms (`.wrap` container, WP typography scale) — don't fight them.
+- Use native HTML `<input>`/`<select>` instead of WP `SearchControl`/`SelectControl` for filter controls — WP wrappers make consistent height impossible.
+- No full-width overrides. Let WP's `.wrap` class provide standard page margins.
+- All colours are WP-standard greys (`#dcdcde`, `#f6f7f7`, `#1d2327`, `#646970`) plus the brand accent. Never use green-tinted greys for borders or backgrounds.
+
+### Brand tokens
+
+| Token | Value | Use |
+|-------|-------|-----|
+| `$lswl-lime` | `#5d9e3f` | Primary accent — active states, buttons, focus rings |
+| `$lswl-lime-dark` | `#4a8030` | Button hover bg |
+| `$lswl-lime-darker` | `#3a6626` | Text links, icon fills |
+| `$lswl-lime-light` | `#ecf7e4` | Badge/icon background tint |
+| `$lswl-lime-mid` | `#c5e6a8` | Subtle borders on tinted surfaces |
+
+### Neutral tokens (WP-standard)
+
+| Value | Use |
+|-------|-----|
+| `#dcdcde` | All borders — cards, inputs, table, pagination, dividers |
+| `#f6f7f7` | Surface 2 — card headers, table `thead`, input background, pagination bg |
+| `#f0f0f1` | Row dividers inside tables and toggle lists |
+| `#1d2327` | Primary text |
+| `#646970` | Secondary text, help text, column labels |
+| `#fff` | Card / table body background |
+
+### Shape & shadow
+
+| Property | Value |
+|----------|-------|
+| Card / table border-radius | `6px` |
+| Input / button border-radius | `3px` |
+| Icon container border-radius | `6px` |
+| Card box-shadow | `0 1px 3px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04)` |
+| Input inset shadow | `inset 0 1px 2px rgba(0,0,0,0.04)` |
+| Transition | `160ms cubic-bezier(0.25,0.46,0.45,0.94)` on border-color, box-shadow, background |
+
+### Focus ring (all interactive elements)
+
+```scss
+border-color: $lswl-lime;
+box-shadow: 0 0 0 2px rgba(93, 158, 63, 0.2);
+outline: none;
+```
+
+### Page layout
+
+PHP `render_page()` must output `<div class="wrap"><div id="plugin-root"></div></div>` — the `.wrap` class provides standard WP admin margins and max-width.
+
+```scss
+.plugin-admin {
+    margin-top: 24px;  // matches WP admin spacing
+}
+```
+
+### Page header
+
+```scss
+.plugin-admin__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid #dcdcde;
+}
+
+.plugin-admin__title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-size: 1.375rem;
+    font-weight: 600;
+    color: #1d2327;
+
+    &::before {                   // 4px lime accent bar
+        content: '';
+        display: block;
+        width: 4px;
+        height: 1.3em;
+        background: $lswl-lime;
+        border-radius: 2px;
+        flex-shrink: 0;
+    }
+}
+```
+
+### Tab panel (WP TabPanel override)
+
+```scss
+.plugin-admin .components-tab-panel__tabs {
+    padding: 0;
+    border-bottom: 1px solid #dcdcde;
+    margin-bottom: 20px;
+
+    button.components-tab-panel__tabs-item {
+        border: none;
+        border-bottom: 2px solid transparent;
+        border-radius: 0;
+        margin-bottom: -1px;
+        padding: 0 18px;
+        height: 40px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #646970;
+        background: none;
+        box-shadow: none;
+
+        &:hover:not(.is-active) { color: #1d2327; background: none; }
+        &.is-active { color: #1d2327; border-bottom-color: $lswl-lime; font-weight: 600; }
+    }
+}
+
+.plugin-admin .components-tab-panel__tab-content { padding: 0; }
+```
+
+### Filter controls row (native HTML)
+
+Use native `<input type="search">` and `<select>` — never WP `SearchControl`/`SelectControl`.
+
+```scss
+// Shared base — apply to both
+.plugin-filter-search,
+.plugin-filter-select {
+    height: 32px;
+    border: 1px solid #dcdcde;
+    border-radius: 3px;
+    padding: 0 8px;
+    font-size: 13px;
+    background: #f6f7f7;
+    color: #1d2327;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);
+    transition: border-color 160ms, box-shadow 160ms;
+    outline: none;
+    box-sizing: border-box;
+
+    &:focus {
+        border-color: $lswl-lime;
+        box-shadow: 0 0 0 2px rgba(93, 158, 63, 0.2);
+    }
+}
+
+.plugin-filter-search { width: 200px; flex-shrink: 0; }
+.plugin-filter-select { min-width: 150px; flex-shrink: 0; cursor: pointer; }
+
+// Layout: toggle buttons left, filters right
+.plugin-controls-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+
+    &__filters { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
+}
+```
+
+### Data table
+
+```scss
+.plugin-table-wrap {
+    position: relative;
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04);
+
+    &--fetching { pointer-events: none; opacity: 0.6; transition: opacity 0.15s; }
+}
+
+.plugin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 0;
+    border: none;
+
+    thead tr { background: #f6f7f7; }
+
+    thead th {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: #646970;
+        padding: 14px;
+        border-bottom: 1px solid #dcdcde;
+        text-align: left;
+        white-space: nowrap;
+    }
+
+    th, td {
+        padding: 12px 14px;
+        border-bottom: 1px solid #f0f0f1;
+        vertical-align: middle;
+    }
+
+    tbody {
+        tr:last-child td { border-bottom: none; }
+
+        tr {
+            transition: background 160ms cubic-bezier(0.25,0.46,0.45,0.94);
+            &:nth-child(odd) td  { background: #f6f7f7; }
+            &:nth-child(even) td { background: #fff; }
+            &:hover td           { background: #f5fbf2; }  // lime tint on hover
+        }
+    }
+}
+```
+
+### Pagination (number-based, no per-page select)
+
+Layout: total count left, numbered buttons right. Use a delta=2 range-with-dots algorithm.
+
+```scss
+.plugin-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-top: 1px solid #dcdcde;
+    background: #f6f7f7;
+
+    &__total { font-size: 12px; color: #646970; }
+    &__right  { display: flex; align-items: center; gap: 4px; }
+
+    &__btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 30px;
+        height: 30px;
+        padding: 0 6px;
+        font-size: 12px;
+        color: #1d2327;
+        background: #fff;
+        border: 1px solid #dcdcde;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s, color 0.15s;
+
+        &:hover:not(:disabled) { background: $lswl-lime-light; border-color: $lswl-lime; color: $lswl-lime; }
+        &.is-current           { background: $lswl-lime; border-color: $lswl-lime; color: #fff; cursor: default; }
+        &:disabled:not(.is-current) { opacity: 0.4; cursor: default; }
+    }
+
+    &__dots { display: inline-flex; align-items: center; justify-content: center; min-width: 30px; height: 30px; font-size: 12px; color: #646970; user-select: none; }
+}
+```
+
+Default page size: **20**. No per-page selector.
+
+### Settings cards
+
+```scss
+.plugin-settings-card {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04);
+
+    &__header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 13px 20px;
+        border-bottom: 1px solid #dcdcde;
+        background: #f6f7f7;
+    }
+
+    &__icon {
+        width: 28px; height: 28px;
+        background: $lswl-lime-light;
+        border-radius: 6px;
+        display: flex; align-items: center; justify-content: center;
+        color: $lswl-lime-darker;
+        flex-shrink: 0;
+    }
+
+    &__title { font-size: 13px; font-weight: 600; color: #1d2327; margin: 0; }
+
+    &__body { padding: 20px 24px; }
+}
+```
+
+WP component overrides inside `.plugin-settings-card__body`:
+
+```scss
+// Labels & help
+.components-base-control__label { font-size: 13px; font-weight: 500; color: #1d2327; margin-bottom: 5px; }
+.components-base-control__help  { font-size: 12px; color: #646970; margin-top: 5px; }
+
+// Text inputs
+.components-text-control__input {
+    height: 36px; padding: 0 10px;
+    border: 1px solid #dcdcde; border-radius: 3px;
+    background: #f6f7f7; color: #1d2327; font-size: 13px;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);
+    transition: border-color 160ms, box-shadow 160ms;
+    outline: none; width: 100%; box-sizing: border-box;
+    &:focus { border-color: $lswl-lime; box-shadow: 0 0 0 2px rgba(93,158,63,0.2); }
+}
+
+// Textareas
+.components-textarea-control__input {
+    padding: 9px 10px;
+    border: 1px solid #dcdcde; border-radius: 3px;
+    background: #f6f7f7; color: #1d2327; font-size: 13px;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);
+    resize: vertical; min-height: 96px; width: 100%;
+    &:focus { border-color: $lswl-lime; box-shadow: 0 0 0 2px rgba(93,158,63,0.2); }
+}
+
+// Toggle rows
+.components-toggle-control {
+    padding: 14px 0;
+    border-bottom: 1px solid #f0f0f1;
+    margin-bottom: 0 !important;
+    &:last-child  { border-bottom: none; padding-bottom: 0; }
+    &:first-child { padding-top: 0; }
+}
+
+// Toggle track colour
+.components-form-toggle__track                              { background: #c8cace; }
+.components-form-toggle.is-checked .components-form-toggle__track { background: $lswl-lime; }
+```
+
+### Primary button (WP `is-primary` override)
+
+```scss
+.plugin-admin .components-button.is-primary {
+    background: $lswl-lime;
+    border-color: $lswl-lime-dark;
+    color: #fff;
+    box-shadow: none;
+    font-weight: 500;
+    border-radius: 6px;
+
+    &:hover:not(:disabled) {
+        background: $lswl-lime-dark;
+        border-color: $lswl-lime-darker;
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(93,158,63,0.26);
+    }
+
+    &:focus:not(:disabled) { box-shadow: 0 0 0 2px #fff, 0 0 0 4px $lswl-lime; }
+    &:disabled { opacity: 0.45; }
+}
+```
+
+### SCSS file structure
+
+```
+src/admin/scss/
+├── _variables.scss   ← brand + neutral tokens, shadows, radii
+└── index.scss        ← all component styles, no sub-partials needed
+```
+
+`_variables.scss` must be imported via `@use 'variables' as *;` at the top of `index.scss`.

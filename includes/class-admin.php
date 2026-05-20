@@ -42,7 +42,7 @@ class Admin {
 		add_submenu_page(
 			'woocommerce',
 			__( 'Lime Stock Watchlist', 'lime-stock-watchlist' ),
-			__( 'Stock watchlist', 'lime-stock-watchlist' ),
+			__( 'Stock Watchlist', 'lime-stock-watchlist' ),
 			'manage_woocommerce',
 			self::PAGE_SLUG,
 			array( $this, 'render_page' )
@@ -55,7 +55,7 @@ class Admin {
 	 * @return void
 	 */
 	public function render_page(): void {
-		echo '<div id="lswl-admin-root"></div>';
+		echo '<div class="wrap"><div id="lswl-admin-root"></div></div>';
 	}
 
 	/**

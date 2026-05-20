@@ -1,8 +1,8 @@
 /**
  * Product-based subscriber table (aggregate view) using TanStack Table + Query.
  */
-import { useState } from '@wordpress/element';
-import { Button, Notice, Spinner } from '@wordpress/components';
+import { useState, useEffect } from '@wordpress/element';
+import { Notice, Spinner } from '@wordpress/components';
 import { __, sprintf } from '@wordpress/i18n';
 import {
 	useReactTable,
@@ -12,7 +12,6 @@ import {
 } from '@tanstack/react-table';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { getSubscribers } from '../../api';
-import SubscriberFilters from './SubscriberFilters';
 import TablePagination from './TablePagination';
 
 /**
@@ -37,14 +36,18 @@ function ProductCell( { name, thumbnail, url } ) {
 const columnHelper = createColumnHelper();
 
 /**
- * @param {{ onDrillDown: (productId: number, productName: string) => void }} props
+ * @param {{ search: string, onDrillDown: (productId: number, productName: string) => void }} props
  * @return {JSX.Element}
  */
-export default function ProductView( { onDrillDown } ) {
-	const [ search, setSearch ]         = useState( '' );
-	const [ pagination, setPagination ] = useState( { pageIndex: 0, pageSize: 25 } );
+export default function ProductView( { search, onDrillDown } ) {
+	const [ pagination, setPagination ] = useState( { pageIndex: 0, pageSize: 20 } );
 
 	const { pageIndex, pageSize } = pagination;
+
+	// Reset to page 1 when search changes from parent
+	useEffect( () => {
+		setPagination( ( prev ) => ( { ...prev, pageIndex: 0 } ) );
+	}, [ search ] );
 
 	const { data, isFetching, isLoading, isError } = useQuery( {
 		queryKey: [ 'subscribers', 'products', { search, pageIndex, pageSize } ],
@@ -56,11 +59,6 @@ export default function ProductView( { onDrillDown } ) {
 		} ),
 		placeholderData: keepPreviousData,
 	} );
-
-	function handleSearchChange( value ) {
-		setSearch( value );
-		setPagination( ( prev ) => ( { ...prev, pageIndex: 0 } ) );
-	}
 
 	const columns = [
 		columnHelper.display( {
@@ -90,13 +88,16 @@ export default function ProductView( { onDrillDown } ) {
 			id: 'actions',
 			header: '',
 			cell: ( { row } ) => (
-				<Button
-					variant="secondary"
-					size="small"
-					onClick={ () => onDrillDown( row.original.product_id, row.original.product_name ) }
+				<button
+					type="button"
+					className="lswl-view-btn"
+					onClick={ () => onDrillDown( row.original.product_id, row.original.product_name, row.original.product_url ) }
 				>
 					{ __( 'View Subscribers', 'lime-stock-watchlist' ) }
-				</Button>
+					<svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+						<path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+					</svg>
+				</button>
 			),
 		} ),
 	];
@@ -131,16 +132,16 @@ export default function ProductView( { onDrillDown } ) {
 
 	return (
 		<div className="lswl-product-view">
-			<SubscriberFilters
-				view="products"
-				search={ search }
-				onSearchChange={ handleSearchChange }
-				status="all"
-				onStatusChange={ () => {} }
-			/>
-
 			{ data?.items?.length === 0 && ! isFetching ? (
 				<div className="lswl-empty">
+					<div className="lswl-empty__icon">
+						<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+							<rect x="3" y="3" width="7" height="7" rx="1" />
+							<rect x="14" y="3" width="7" height="7" rx="1" />
+							<rect x="3" y="14" width="7" height="7" rx="1" />
+							<path d="M14 17.5h7M17.5 14v7" strokeWidth="2" strokeLinecap="round" />
+						</svg>
+					</div>
 					<h2 className="lswl-empty__title">
 						{ __( 'No products found', 'lime-stock-watchlist' ) }
 					</h2>
@@ -169,7 +170,10 @@ export default function ProductView( { onDrillDown } ) {
 							{ table.getRowModel().rows.map( ( row ) => (
 								<tr key={ row.id }>
 									{ row.getVisibleCells().map( ( cell ) => (
-										<td key={ cell.id }>
+										<td
+											key={ cell.id }
+											className={ cell.column.id === 'actions' ? 'lswl-table__actions' : '' }
+										>
 											{ flexRender( cell.column.columnDef.cell, cell.getContext() ) }
 										</td>
 									) ) }
@@ -186,11 +190,7 @@ export default function ProductView( { onDrillDown } ) {
 						onNextPage={ () => table.nextPage() }
 						onFirstPage={ () => table.setPageIndex( 0 ) }
 						onLastPage={ () => table.setPageIndex( table.getPageCount() - 1 ) }
-						pageSize={ table.getState().pagination.pageSize }
-						onPageSizeChange={ ( size ) => {
-							table.setPageSize( size );
-							table.setPageIndex( 0 );
-						} }
+						onGoToPage={ ( idx ) => table.setPageIndex( idx ) }
 						totalItems={ data?.total ?? 0 }
 					/>
 				</div>

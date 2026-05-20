@@ -1,709 +1,1002 @@
 @use 'variables' as *;
 
 // ═══════════════════════════════════════════════════════════
-// Shell
+// Admin Shell
 // ═══════════════════════════════════════════════════════════
 
 .lswl-admin {
-	max-width: 1100px;
-	margin-top: 12px;
+    margin-top: 24px;
 }
 
-// ── Brand header ───────────────────────────────────────────
+// ── Page Header ────────────────────────────────────────────
 
 .lswl-admin__header {
-	background: linear-gradient(135deg, $lswl-forest 0%, $lswl-forest-mid 100%);
-	padding: 26px 32px;
-	border-radius: $lswl-radius-lg $lswl-radius-lg 0 0;
-	display: flex;
-	align-items: center;
-	gap: 18px;
-	position: relative;
-	overflow: hidden;
-
-	// decorative ring
-	&::after {
-		content: '';
-		position: absolute;
-		right: -60px;
-		top: -60px;
-		width: 200px;
-		height: 200px;
-		border-radius: 50%;
-		border: 40px solid rgba($lswl-lime, 0.07);
-		pointer-events: none;
-	}
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid #dcdcde;
 }
 
-.lswl-admin__logo-icon {
-	width: 44px;
-	height: 44px;
-	background: rgba($lswl-lime, 0.18);
-	border-radius: $lswl-radius;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	color: $lswl-lime;
-	flex-shrink: 0;
-	border: 1px solid rgba($lswl-lime, 0.3);
+.lswl-admin__title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-size: 1.375rem;
+    font-weight: 600;
+    color: #1d2327;
+    letter-spacing: -0.01em;
+
+    &::before {
+        content: '';
+        display: block;
+        width: 4px;
+        height: 1.3em;
+        background: $lswl-lime;
+        border-radius: 2px;
+        flex-shrink: 0;
+    }
 }
 
-.lswl-admin__logo-text {
-	h1 {
-		font-size: 21px;
-		font-weight: 600;
-		color: #fff;
-		margin: 0;
-		letter-spacing: -0.3px;
-	}
+// ── Tab Container ──────────────────────────────────────────
 
-	p {
-		margin: 3px 0 0;
-		font-size: 12.5px;
-		color: rgba(255, 255, 255, 0.45);
-		letter-spacing: 0.01em;
-	}
-}
-
-// ── Tab container ──────────────────────────────────────────
-
-.lswl-admin__tabs-container {
-	background: #fff;
-	border-radius: 0 0 $lswl-radius-lg $lswl-radius-lg;
-	box-shadow: $lswl-shadow-card;
-	overflow: visible;
-}
-
-// Override @wordpress/components TabPanel nav
 .lswl-admin .components-tab-panel__tabs {
-	display: flex;
-	padding: 0 20px;
-	border-bottom: 1px solid #eaeaea;
-	background: #fff;
-	gap: 4px;
+    display: flex;
+    padding: 0;
+    border-bottom: 1px solid #dcdcde;
+    gap: 0;
+    margin-bottom: 20px;
 
-	button.components-button.components-tab-panel__tabs-item {
-		border: none;
-		border-bottom: 3px solid transparent;
-		border-radius: 0;
-		margin-bottom: -1px;
-		padding: 14px 18px;
-		font-size: 13.5px;
-		font-weight: 500;
-		color: #777;
-		background: none;
-		box-shadow: none;
-		transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    button.components-button.components-tab-panel__tabs-item {
+        border: none;
+        border-bottom: 2px solid transparent;
+        border-radius: 0;
+        margin-bottom: -1px;
+        padding: 0 18px;
+        height: 40px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #646970;
+        background: none;
+        box-shadow: none;
+        transition: color 0.15s, border-color 0.15s;
 
-		&:hover:not(.is-active) {
-			color: $lswl-lime-dark;
-			background: $lswl-lime-light;
-			border-radius: $lswl-radius-sm $lswl-radius-sm 0 0;
-		}
+        &:hover:not(.is-active) {
+            color: #1d2327;
+            background: none;
+        }
 
-		&.is-active {
-			color: $lswl-lime-darker;
-			border-bottom-color: $lswl-lime;
-			font-weight: 600;
-		}
-	}
+        &.is-active {
+            color: #1d2327;
+            border-bottom-color: $lswl-lime;
+            font-weight: 600;
+        }
+    }
 }
 
 .lswl-admin .components-tab-panel__tab-content {
-	padding: 0;
+    padding: 0;
 }
 
 .lswl-admin__panel {
-	padding: 28px 32px 36px;
+    padding-bottom: 40px;
 }
 
-// ── WP primary button override ─────────────────────────────
+// ── Global WP Component Overrides ─────────────────────────
 
 .lswl-admin .components-button.is-primary {
-	background: $lswl-lime;
-	border-color: $lswl-lime-dark;
-	color: #fff;
-	box-shadow: 0 2px 8px rgba($lswl-lime, 0.28);
-	font-weight: 500;
+    background: $lswl-lime;
+    border-color: $lswl-lime-dark;
+    color: #fff;
+    box-shadow: none;
+    font-weight: 500;
+    border-radius: $lswl-radius-sm;
 
-	&:hover:not(:disabled) {
-		background: $lswl-lime-dark;
-		border-color: $lswl-lime-darker;
-		box-shadow: 0 4px 14px rgba($lswl-lime, 0.38);
-		color: #fff;
-	}
+    &:hover:not(:disabled) {
+        background: $lswl-lime-dark;
+        border-color: $lswl-lime-darker;
+        color: #fff;
+        box-shadow: 0 2px 8px rgba($lswl-lime, 0.26);
+    }
 
-	&:focus:not(:disabled) {
-		box-shadow: 0 0 0 2px #fff, 0 0 0 4px $lswl-lime;
-	}
+    &:focus:not(:disabled) {
+        box-shadow: 0 0 0 2px #fff, 0 0 0 4px $lswl-lime;
+    }
 
-	&:disabled {
-		opacity: 0.6;
-	}
+    &:disabled {
+        opacity: 0.45;
+    }
 }
 
 // ═══════════════════════════════════════════════════════════
-// Subscribers tab
+// Subscribers Tab
 // ═══════════════════════════════════════════════════════════
 
-// ── Stats bar ──────────────────────────────────────────────
+// ── Stats Bar ──────────────────────────────────────────────
 
 .lswl-stats {
-	display: grid;
-	grid-template-columns: repeat(5, 1fr);
-	border: 1px solid #e8ede8;
-	border-radius: $lswl-radius;
-	overflow: hidden;
-	margin-bottom: 20px;
-	background: #e8ede8; // acts as gap colour
-	gap: 1px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 24px;
 }
 
 .lswl-stat {
-	background: #fff;
-	padding: 18px 24px;
-	position: relative;
+    background: $lswl-surface;
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    padding: 18px 20px 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07), 0 0 0 1px rgba(0, 0, 0, 0.04);
 
-	&__value {
-		font-size: 28px;
-		font-weight: 700;
-		line-height: 1;
-		color: #1a2e1a;
-	}
+    &__value {
+        font-size: 32px;
+        font-weight: 800;
+        line-height: 1.1;
+        color: #1a1a1a;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -1.5px;
+    }
 
-	&__label {
-		margin-top: 5px;
-		font-size: 11px;
-		text-transform: uppercase;
-		letter-spacing: 0.07em;
-		color: #999;
-		font-weight: 600;
-	}
+    &__label {
+        margin-top: 5px;
+        font-size: 9.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #bbb;
+        font-weight: 700;
+    }
 
-	&--lime .lswl-stat__value {
-		color: $lswl-lime;
-	}
+    &--lime .lswl-stat__value { color: $lswl-lime; }
+    &--blue .lswl-stat__value { color: $lswl-notified-text; }
+    &--purple .lswl-stat__value { color: $lswl-notifying-text; }
+    &--grey .lswl-stat__value { color: #c8c8c8; }
+}
 
-	&--blue .lswl-stat__value {
-		color: $lswl-notified-text;
-	}
+// ── Notifying Notice ───────────────────────────────────────
 
-	&--purple .lswl-stat__value {
-		color: $lswl-notifying-text;
-	}
+.lswl-notifying-notice.components-notice {
+    margin-bottom: 20px;
+    border-radius: $lswl-radius-sm;
+}
 
-	&--grey .lswl-stat__value {
-		color: #aaa;
-	}
+// ── Controls Row (toggle + filters in one line) ────────────
+
+.lswl-controls-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+
+    &--drill-down {
+        margin-top: -4px;
+        margin-bottom: 16px;
+    }
+
+    &__toggle {
+        display: inline-flex;
+        background: rgba($lswl-lime, 0.06);
+        border: 1px solid rgba($lswl-lime, 0.15);
+        border-radius: 8px;
+        padding: 3px;
+        gap: 2px;
+        flex-shrink: 0;
+
+        .components-button {
+            border-radius: 5px;
+            height: 32px;
+            padding: 0 16px;
+            font-size: 12px;
+            font-weight: 500;
+            border: none;
+            box-shadow: none !important;
+            color: #777;
+            background: transparent;
+            min-width: 116px;
+            justify-content: center;
+            letter-spacing: 0.01em;
+            transition: color 0.1s, background 0.1s;
+
+            &:hover:not(:disabled) {
+                color: $lswl-lime-darker;
+                background: rgba($lswl-lime, 0.06);
+            }
+
+            &.is-primary {
+                background: $lswl-surface;
+                color: $lswl-lime-darker;
+                box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12) !important;
+                border: none;
+                font-weight: 600;
+
+                &:hover:not(:disabled) {
+                    background: $lswl-surface;
+                    color: $lswl-lime-darker;
+                }
+            }
+        }
+    }
+
+    &__filters {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+        margin-left: auto;
+    }
+}
+
+// ── Filter controls — native elements, lon form-input-base equivalent ──
+
+.lswl-filter-search,
+.lswl-filter-select {
+    height: 32px;
+    border: 1px solid #dcdcde;
+    border-radius: 3px;
+    padding: 0 8px;
+    font-size: 13px;
+    background: #f6f7f7;
+    color: #1d2327;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: border-color 160ms, box-shadow 160ms;
+    outline: none;
+    box-sizing: border-box;
+
+    &:focus {
+        border-color: $lswl-lime;
+        box-shadow: 0 0 0 2px rgba(93, 158, 63, 0.2);
+    }
+}
+
+.lswl-filter-search {
+    width: 200px;
+    flex-shrink: 0;
+}
+
+.lswl-filter-select {
+    min-width: 150px;
+    flex-shrink: 0;
+    cursor: pointer;
 }
 
 // ── Toolbar ────────────────────────────────────────────────
 
 .lswl-subscribers__toolbar {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding: 9px 14px;
+    background: rgba($lswl-lime, 0.04);
+    border: 1px solid rgba($lswl-lime, 0.12);
+    border-radius: 8px;
 }
 
 .lswl-btn {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	padding: 7px 14px;
-	border-radius: $lswl-radius-sm;
-	font-size: 13px;
-	font-weight: 500;
-	border: 1px solid transparent;
-	cursor: pointer;
-	transition: all 0.15s ease;
-	background: none;
-	line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 13px;
+    border-radius: $lswl-radius-sm;
+    font-size: 12.5px;
+    font-weight: 500;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.1s ease;
+    background: none;
+    line-height: 1;
 
-	&--danger {
-		color: #b01b1b;
-		background: #fff5f5;
-		border-color: #f5c5c5;
+    &--danger {
+        color: #b91c1c;
+        background: #fef2f2;
+        border-color: #fca5a5;
 
-		&:hover:not(:disabled) {
-			background: #c0392b;
-			border-color: #c0392b;
-			color: #fff;
-		}
+        &:hover:not(:disabled) {
+            background: #dc2626;
+            border-color: #dc2626;
+            color: #fff;
+        }
 
-		&:disabled {
-			opacity: 0.4;
-			cursor: not-allowed;
-		}
-	}
+        &:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+    }
 }
 
 .lswl-selection-count {
-	font-size: 12.5px;
-	color: $lswl-lime-darker;
-	background: $lswl-lime-light;
-	border: 1px solid $lswl-lime-mid;
-	padding: 4px 12px;
-	border-radius: 20px;
-	font-weight: 500;
+    font-size: 12px;
+    color: $lswl-lime-darker;
+    background: $lswl-lime-light;
+    border: 1px solid $lswl-lime-mid;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-weight: 600;
 }
 
-// ── Product group cards ────────────────────────────────────
+// ── Table Wrap ─────────────────────────────────────────────
 
-.lswl-product-group {
-	background: #fff;
-	border: 1px solid #e8ede8;
-	border-radius: $lswl-radius;
-	overflow: hidden;
-	margin-bottom: 14px;
-	box-shadow: $lswl-shadow-card;
-	transition: box-shadow 0.15s ease;
+.lswl-table-wrap {
+    position: relative;
+    background: $lswl-surface;
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07), 0 0 0 1px rgba(0, 0, 0, 0.04);
 
-	&:hover {
-		box-shadow: $lswl-shadow-lift;
-	}
-
-	&:last-child {
-		margin-bottom: 0;
-	}
-
-	&__header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 13px 20px;
-		background: linear-gradient(to right, $lswl-lime-light, #f5fbf0);
-		border-bottom: 1px solid $lswl-lime-mid;
-		border-left: 4px solid $lswl-lime;
-	}
-
-	&__name {
-		font-weight: 600;
-		font-size: 13.5px;
-		color: #1a3010;
-	}
-
-	&__count {
-		font-size: 11.5px;
-		color: $lswl-lime-darker;
-		background: rgba($lswl-lime, 0.14);
-		padding: 3px 10px;
-		border-radius: 20px;
-		font-weight: 600;
-	}
+    &--fetching {
+        pointer-events: none;
+        opacity: 0.6;
+        transition: opacity 0.15s;
+    }
 }
 
-// ── Data table ─────────────────────────────────────────────
+// ── Data Table ─────────────────────────────────────────────
 
 .lswl-table {
-	width: 100%;
-	border-collapse: collapse;
-	font-size: 13.5px;
+    margin: 0;
+    border: none;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
 
-	th {
-		font-size: 10.5px;
-		text-transform: uppercase;
-		letter-spacing: 0.07em;
-		color: #aaa;
-		font-weight: 700;
-		padding: 9px 16px;
-		text-align: left;
-		background: #fafdf8;
-		border-bottom: 1px solid #f0f0f0;
-	}
+    thead tr {
+        background: #f6f7f7;
+    }
 
-	td {
-		padding: 11px 16px;
-		border-bottom: 1px solid #f5f7f5;
-		color: #333;
-		vertical-align: middle;
-	}
+    thead th {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: #646970;
+        line-height: 1;
+        padding: 14px;
+        text-align: left;
+        border-bottom: 1px solid #dcdcde;
+        border-top: none;
+        border-left: none;
+        border-right: none;
+        white-space: nowrap;
+    }
 
-	tr:last-child td {
-		border-bottom: none;
-	}
+    th,
+    td {
+        padding: 12px 14px;
+        border-bottom: 1px solid #f0f0f1;
+        vertical-align: middle;
+        border-left: none;
+        border-right: none;
+    }
 
-	tr.is-checked {
-		background: rgba($lswl-lime, 0.04);
+    tbody {
+        tr:last-child td {
+            border-bottom: none;
+        }
 
-		td {
-			border-bottom-color: rgba($lswl-lime, 0.1);
-		}
-	}
+        tr {
+            transition: background 160ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
-	tr:hover td {
-		background: rgba($lswl-lime, 0.025);
-	}
+            &:nth-child(odd) td {
+                background: #f6f7f7;
+            }
 
-	&__check {
-		width: 40px;
-		padding-right: 4px;
-	}
+            &:nth-child(even) td {
+                background: #fff;
+            }
 
-	&__email {
-		font-size: 12.5px;
-		color: #444;
-	}
+            &:hover td {
+                background: #f5fbf2;
+            }
 
-	&__date {
-		color: #999;
-		font-size: 12.5px;
-		white-space: nowrap;
-	}
+            &.is-checked td {
+                background: rgba($lswl-lime, 0.05);
+            }
+        }
+    }
 
-	&__muted {
-		color: #ccc;
-	}
+    // Override WP striped default
+    &.striped > tbody > :nth-child(odd) > td,
+    &.striped > tbody > :nth-child(odd) > th {
+        background: transparent;
+    }
+
+    &.widefat {
+        border: none;
+    }
+
+    &__check {
+        width: 44px;
+        padding-right: 0 !important;
+    }
+
+    &__email {
+        font-size: 12.5px;
+        color: #1d2327;
+        font-family: $lswl-font-mono;
+        letter-spacing: -0.02em;
+    }
+
+    &__date {
+        color: #646970;
+        font-size: 12px;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+    }
+
+    &__muted {
+        color: #d0d0d0;
+    }
 }
 
-// ── Status badges ──────────────────────────────────────────
+// ── Status Badges ──────────────────────────────────────────
 
 .lswl-badge {
-	display: inline-flex;
-	align-items: center;
-	gap: 5px;
-	padding: 4px 10px;
-	border-radius: 20px;
-	font-size: 11.5px;
-	font-weight: 600;
-	letter-spacing: 0.02em;
-	white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+    white-space: nowrap;
+    position: relative;
+    cursor: default;
 
-	&__dot {
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		flex-shrink: 0;
-	}
+    &[data-tooltip] {
+        &::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: calc(100% + 7px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1d2327;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 400;
+            letter-spacing: 0;
+            white-space: nowrap;
+            padding: 5px 9px;
+            border-radius: 4px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s;
+            z-index: 100;
+        }
 
-	&--waiting {
-		background: $lswl-waiting-bg;
-		color: $lswl-waiting-text;
+        &::before {
+            content: '';
+            position: absolute;
+            bottom: calc(100% + 3px);
+            left: 50%;
+            transform: translateX(-50%);
+            border: 4px solid transparent;
+            border-top-color: #1d2327;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s;
+            z-index: 100;
+        }
 
-		.lswl-badge__dot { background: $lswl-waiting-dot; }
-	}
+        &:hover::after,
+        &:hover::before {
+            opacity: 1;
+        }
+    }
 
-	&--notifying {
-		background: $lswl-notifying-bg;
-		color: $lswl-notifying-text;
+    &__dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
 
-		.lswl-badge__dot {
-			background: $lswl-notifying-dot;
-			animation: lswl-pulse 1.4s ease-in-out infinite;
-		}
-	}
+    &--waiting {
+        background: $lswl-waiting-bg;
+        color: $lswl-waiting-text;
+        .lswl-badge__dot { background: $lswl-waiting-dot; }
+    }
 
-	&--notified {
-		background: $lswl-notified-bg;
-		color: $lswl-notified-text;
+    &--notifying {
+        background: $lswl-notifying-bg;
+        color: $lswl-notifying-text;
+        .lswl-badge__dot {
+            background: $lswl-notifying-dot;
+            animation: lswl-pulse 1.4s ease-in-out infinite;
+        }
+    }
 
-		.lswl-badge__dot { background: $lswl-notified-dot; }
-	}
+    &--notified {
+        background: $lswl-notified-bg;
+        color: $lswl-notified-text;
+        .lswl-badge__dot { background: $lswl-notified-dot; }
+    }
 
-	&--unsubscribed {
-		background: $lswl-unsub-bg;
-		color: $lswl-unsub-text;
-
-		.lswl-badge__dot { background: $lswl-unsub-dot; }
-	}
+    &--unsubscribed {
+        background: $lswl-unsub-bg;
+        color: $lswl-unsub-text;
+        .lswl-badge__dot { background: $lswl-unsub-dot; }
+    }
 }
 
 @keyframes lswl-pulse {
-	0%, 100% { opacity: 1; }
-	50%       { opacity: 0.35; }
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.25; }
 }
 
-.lswl-notifying-notice.components-notice {
-	margin-bottom: 20px;
-}
-
-// ── Icon delete button ─────────────────────────────────────
+// ── Icon Delete Button ─────────────────────────────────────
 
 .lswl-icon-btn {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 28px;
-	height: 28px;
-	border-radius: $lswl-radius-sm;
-	border: 1px solid transparent;
-	background: none;
-	cursor: pointer;
-	color: #ccc;
-	transition: all 0.15s ease;
-	padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: $lswl-radius-sm;
+    border: 1px solid transparent;
+    background: none;
+    cursor: pointer;
+    color: #ccc;
+    transition: all 0.1s ease;
+    padding: 0;
 
-	&--danger {
-		&:hover:not(:disabled) {
-			color: #c0392b;
-			background: #fff5f5;
-			border-color: #f5c5c5;
-		}
+    &--danger {
+        &:hover:not(:disabled) {
+            color: #dc2626;
+            background: #fef2f2;
+            border-color: #fca5a5;
+        }
 
-		&:disabled {
-			opacity: 0.3;
-			cursor: not-allowed;
-		}
-	}
+        &:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+    }
 }
 
-// ── Empty state ────────────────────────────────────────────
-
-.lswl-empty {
-	text-align: center;
-	padding: 60px 20px;
-
-	&__icon {
-		width: 56px;
-		height: 56px;
-		background: $lswl-lime-light;
-		border-radius: 50%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		color: $lswl-lime;
-		margin: 0 auto 16px;
-	}
-
-	&__title {
-		font-size: 17px;
-		font-weight: 600;
-		color: #333;
-		margin: 0 0 8px;
-	}
-
-	&__text {
-		font-size: 13.5px;
-		color: #999;
-		margin: 0;
-		line-height: 1.5;
-	}
-}
-
-// ── View toggle ────────────────────────────────────────────
-
-.lswl-view-toggle {
-	display: flex;
-	gap: 8px;
-	margin-bottom: 20px;
-}
-
-// ── Filters ────────────────────────────────────────────────
-
-.lswl-filters {
-	display: flex;
-	align-items: flex-end;
-	gap: 12px;
-	margin-bottom: 16px;
-	flex-wrap: wrap;
-
-	.components-search-control {
-		flex: 1 1 220px;
-		min-width: 180px;
-		margin: 0;
-	}
-
-	&__status.components-base-control {
-		min-width: 160px;
-		margin: 0;
-	}
-}
-
-// ── Product cell (thumbnail + title link) ──────────────────
+// ── Product Cell (thumbnail + linked title) ────────────────
 
 .lswl-product-cell {
-	display: inline-flex;
-	align-items: center;
-	gap: 8px;
-	text-decoration: none;
-	color: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: inherit;
+    max-width: 300px;
 
-	&__thumb {
-		width: 32px;
-		height: 32px;
-		border-radius: $lswl-radius-sm;
-		object-fit: cover;
-		border: 1px solid #eee;
-		flex-shrink: 0;
-		display: block;
+    &__thumb {
+        width: 34px;
+        height: 34px;
+        border-radius: 6px;
+        object-fit: cover;
+        border: 1px solid $lswl-border;
+        flex-shrink: 0;
+        display: block;
+        background: $lswl-surface-2;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 
-		&--placeholder {
-			background: rgba($lswl-lime, 0.15);
-		}
-	}
+        &--placeholder {
+            background: $lswl-lime-light;
+            border-color: $lswl-lime-mid;
+        }
+    }
 
-	&__name {
-		font-weight: 500;
-		color: $lswl-lime-darker;
+    &__name {
+        font-size: 13px;
+        font-weight: 500;
+        color: $lswl-lime-darker;
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
 
-		&:hover {
-			text-decoration: underline;
-		}
-	}
-}
-
-// ── Table wrap (fetching overlay) ──────────────────────────
-
-.lswl-table-wrap {
-	&--fetching {
-		opacity: 0.55;
-		pointer-events: none;
-		transition: opacity 0.15s ease;
-	}
+        &:hover { text-decoration: underline; }
+    }
 }
 
 // ── Pagination ─────────────────────────────────────────────
 
 .lswl-pagination {
-	display: flex;
-	align-items: center;
-	gap: 4px;
-	margin-top: 16px;
-	flex-wrap: wrap;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 12px 16px;
+    border-top: 1px solid #dcdcde;
+    background: #f6f7f7;
 
-	&__info {
-		padding: 0 10px;
-		font-size: 13px;
-		color: #555;
-		white-space: nowrap;
-	}
+    &__total {
+        font-size: 12px;
+        color: #646970;
+        white-space: nowrap;
+    }
 
-	&__total {
-		margin-left: auto;
-		font-size: 12.5px;
-		color: #999;
-		white-space: nowrap;
-	}
+    &__right {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
 
-	&__per-page.components-base-control {
-		margin: 0 0 0 8px;
+    &__btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 30px;
+        height: 30px;
+        padding: 0 6px;
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
+        color: #1d2327;
+        background: #fff;
+        border: 1px solid #dcdcde;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s, color 0.15s;
 
-		select {
-			height: 30px;
-			font-size: 12.5px;
-		}
-	}
+        &:hover:not(:disabled) {
+            background: $lswl-lime-light;
+            border-color: $lswl-lime;
+            color: $lswl-lime;
+        }
+
+        &.is-current,
+        &:disabled.is-current {
+            background: $lswl-lime;
+            border-color: $lswl-lime;
+            color: #fff;
+            cursor: default;
+        }
+
+        &:disabled:not(.is-current) {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        svg { display: block; }
+    }
+
+    &__dots {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 30px;
+        height: 30px;
+        font-size: 12px;
+        color: #646970;
+        user-select: none;
+    }
 }
 
-// ── Drill-down header ──────────────────────────────────────
+// ── Drill-Down Header ──────────────────────────────────────
 
 .lswl-drill-down {
-	&__header {
-		display: flex;
-		align-items: center;
-		gap: 16px;
-		margin-bottom: 20px;
-		padding-bottom: 14px;
-		border-bottom: 1px solid #eaeaea;
-	}
+    &__header {
+        margin-bottom: 14px;
+    }
 
-	&__title {
-		font-size: 15px;
-		font-weight: 600;
-		color: #1a2e1a;
-		margin: 0;
-	}
+    &__title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1d2327;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    &__product-link {
+        color: $lswl-lime-darker;
+        text-decoration: none;
+
+        &:hover { text-decoration: underline; }
+    }
+}
+
+// ── Empty State ────────────────────────────────────────────
+
+.lswl-empty {
+    text-align: center;
+    padding: 64px 24px;
+
+    &__icon {
+        width: 48px;
+        height: 48px;
+        background: $lswl-lime-light;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: $lswl-lime;
+        margin: 0 auto 14px;
+    }
+
+    &__title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #2a3a2a;
+        margin: 0 0 6px;
+    }
+
+    &__text {
+        font-size: 13px;
+        color: #aaa;
+        margin: 0;
+        line-height: 1.55;
+    }
+}
+
+// ── Product group cards (kept for compatibility) ───────────
+
+.lswl-product-group {
+    background: $lswl-surface;
+    border: 1px solid $lswl-border;
+    border-radius: $lswl-radius-md;
+    overflow: hidden;
+    margin-bottom: 12px;
+    box-shadow: $lswl-shadow-card;
+
+    &:last-child { margin-bottom: 0; }
+
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 11px 18px;
+        background: $lswl-surface-2;
+        border-bottom: 1px solid $lswl-border-soft;
+        border-left: 3px solid $lswl-lime;
+    }
+
+    &__name {
+        font-weight: 600;
+        font-size: 13px;
+        color: #1a3010;
+    }
+
+    &__count {
+        font-size: 11px;
+        color: $lswl-lime-darker;
+        background: $lswl-lime-light;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+}
+
+// ── Product row subscriber count ───────────────────────────
+
+.lswl-product-row__count {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: #555;
+}
+
+// ── Product view actions cell ──────────────────────────────
+
+.lswl-table__actions {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.lswl-view-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 28px;
+    padding: 0 10px;
+    font-size: 12px;
+    font-weight: 500;
+    color: $lswl-lime-darker;
+    background: $lswl-lime-light;
+    border: 1px solid rgba(93, 158, 63, 0.28);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+    line-height: 1;
+
+    &:hover {
+        background: $lswl-lime;
+        border-color: $lswl-lime-dark;
+        color: #fff;
+    }
+
+    svg { display: block; flex-shrink: 0; }
 }
 
 // ═══════════════════════════════════════════════════════════
-// Settings tab
+// Settings Tab
 // ═══════════════════════════════════════════════════════════
 
 .lswl-settings {
-	max-width: 660px;
+    max-width: 800px;
 }
 
 .lswl-settings-card {
-	background: #fff;
-	border: 1px solid #e8ede8;
-	border-radius: $lswl-radius;
-	margin-bottom: 16px;
-	overflow: hidden;
-	box-shadow: $lswl-shadow-card;
+    background: $lswl-surface;
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07), 0 0 0 1px rgba(0, 0, 0, 0.04);
 
-	&__header {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		padding: 15px 22px;
-		border-bottom: 1px solid #f2f2f2;
-		background: #fafdf8;
-	}
+    &__header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 13px 20px;
+        border-bottom: 1px solid #dcdcde;
+        background: #f6f7f7;
+    }
 
-	&__icon {
-		width: 32px;
-		height: 32px;
-		background: $lswl-lime-light;
-		border-radius: 8px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		color: $lswl-lime-darker;
-		flex-shrink: 0;
-	}
+    &__icon {
+        width: 28px;
+        height: 28px;
+        background: $lswl-lime-light;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: $lswl-lime-darker;
+        flex-shrink: 0;
+    }
 
-	&__title {
-		font-size: 14px;
-		font-weight: 600;
-		color: #1a2e1a;
-		margin: 0;
-	}
+    &__title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #1d2327;
+        margin: 0;
+    }
 
-	&__body {
-		padding: 20px 22px;
+    &__body {
+        padding: 20px 24px;
 
-		.components-base-control {
-			margin-bottom: 18px;
+        .components-base-control {
+            margin-bottom: 20px;
 
-			&:last-child {
-				margin-bottom: 0;
-			}
-		}
+            &:last-child { margin-bottom: 0; }
+        }
 
-		// Style toggle controls
-		.components-toggle-control {
-			padding: 14px 0;
-			border-bottom: 1px solid #f5f5f5;
-			margin-bottom: 0 !important;
+        // Labels
+        .components-base-control__label,
+        .components-toggle-control .components-base-control__label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #1d2327;
+            margin-bottom: 14px;
+            display: block;
+        }
 
-			&:last-child {
-				border-bottom: none;
-				padding-bottom: 0;
-			}
+        // Help text
+        .components-base-control__help {
+            font-size: 12px;
+            color: #646970;
+            margin-top: 5px;
+            line-height: 1.5;
+        }
 
-			&:first-child {
-				padding-top: 0;
-			}
-		}
-	}
+        // TextControl input
+        .components-text-control__input {
+            height: 36px;
+            padding: 0 10px;
+            border: 1px solid #dcdcde;
+            border-radius: 3px;
+            background: #f6f7f7;
+            color: #1d2327;
+            font-size: 13px;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+            transition: border-color 160ms, box-shadow 160ms;
+            outline: none;
+            width: 100%;
+            box-sizing: border-box;
+
+            &:focus {
+                border-color: $lswl-lime;
+                box-shadow: 0 0 0 2px rgba(93, 158, 63, 0.2);
+            }
+        }
+
+        // TextareaControl textarea
+        .components-textarea-control__input {
+            padding: 9px 10px;
+            border: 1px solid #dcdcde;
+            border-radius: 3px;
+            background: #f6f7f7;
+            color: #1d2327;
+            font-size: 13px;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+            transition: border-color 160ms, box-shadow 160ms;
+            outline: none;
+            resize: vertical;
+            min-height: 96px;
+            width: 100%;
+            box-sizing: border-box;
+            font-family: $lswl-font-mono;
+            line-height: 1.55;
+
+            &:focus {
+                border-color: $lswl-lime;
+                box-shadow: 0 0 0 2px rgba(93, 158, 63, 0.2);
+            }
+        }
+
+        // Section break — extra top spacing before a field group
+        .lswl-field--section-start > .components-base-control__field > label,
+        .lswl-field--section-start .components-base-control__label {
+            margin-top: 14px;
+            display: block;
+        }
+
+        // ToggleControl rows
+        .components-toggle-control {
+            padding: 14px 0;
+            border-bottom: 1px solid #f0f0f1;
+            margin-bottom: 0 !important;
+
+            &:last-child {
+                border-bottom: none;
+                padding-bottom: 0;
+            }
+
+            &:first-child { padding-top: 0; }
+        }
+
+        // Toggle track — off state
+        .components-form-toggle__track {
+            background: #c8cace;
+        }
+
+        // Toggle track — on state
+        .components-form-toggle.is-checked .components-form-toggle__track {
+            background: $lswl-lime;
+        }
+
+        // Toggle focus ring
+        .components-form-toggle__input:focus + .components-form-toggle__track {
+            box-shadow: 0 0 0 2px rgba(93, 158, 63, 0.25);
+        }
+
+        // Toggle thumb
+        .components-form-toggle__thumb {
+            background: #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+    }
 }
 
 .lswl-settings__footer {
-	display: flex;
-	align-items: center;
-	gap: 14px;
-	padding: 4px 0 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 0 8px;
+    margin-top: 4px;
 }
 
 .lswl-settings__saved-msg {
-	font-size: 13px;
-	color: $lswl-lime-darker;
-	font-weight: 500;
-	display: flex;
-	align-items: center;
-	gap: 5px;
+    font-size: 13px;
+    color: $lswl-lime-darker;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 
-	&::before {
-		content: '✓';
-		display: inline-block;
-		width: 18px;
-		height: 18px;
-		background: $lswl-lime;
-		color: #fff;
-		border-radius: 50%;
-		font-size: 11px;
-		line-height: 18px;
-		text-align: center;
-		font-weight: 700;
-	}
+    &::before {
+        content: '✓';
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 17px;
+        height: 17px;
+        background: $lswl-lime;
+        color: #fff;
+        border-radius: 50%;
+        font-size: 10.5px;
+        font-weight: 700;
+        line-height: 1;
+    }
 }

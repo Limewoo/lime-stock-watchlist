@@ -6,7 +6,7 @@ import { SearchControl, SelectControl } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
 const STATUS_OPTIONS = [
-	{ label: __( 'All statuses', 'lime-stock-watchlist' ), value: 'all' },
+	{ label: __( 'All Statuses', 'lime-stock-watchlist' ), value: 'all' },
 	{ label: __( 'Watching', 'lime-stock-watchlist' ), value: 'watching' },
 	{ label: __( 'Notifying', 'lime-stock-watchlist' ), value: 'notifying' },
 	{ label: __( 'Notified', 'lime-stock-watchlist' ), value: 'notified' },
