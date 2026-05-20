@@ -6,6 +6,8 @@ import { __ } from '@wordpress/i18n';
 import SubscribersTab from './SubscribersTab';
 import SettingsTab from './SettingsTab';
 
+const TAB_NAMES = [ 'subscribers', 'settings' ];
+
 const TABS = [
 	{
 		name: 'subscribers',
@@ -16,6 +18,25 @@ const TABS = [
 		title: __( 'Settings', 'lime-stock-watchlist' ),
 	},
 ];
+
+function getInitialTab() {
+	const tab = new URLSearchParams( window.location.search ).get( 'tab' );
+	return TAB_NAMES.includes( tab ) ? tab : 'subscribers';
+}
+
+/**
+ * @param {string} tabName
+ * @return {void}
+ */
+function syncTabToUrl( tabName ) {
+	const urlObj = new URL( window.location.href );
+	if ( tabName === 'subscribers' ) {
+		urlObj.searchParams.delete( 'tab' );
+	} else {
+		urlObj.searchParams.set( 'tab', tabName );
+	}
+	history.replaceState( null, '', urlObj.toString() );
+}
 
 /**
  * @return {JSX.Element}
@@ -30,7 +51,11 @@ export default function App() {
 			</div>
 
 			<div className="lswl-admin__tabs-container">
-				<TabPanel tabs={ TABS }>
+				<TabPanel
+					tabs={ TABS }
+					initialTabName={ getInitialTab() }
+					onSelect={ syncTabToUrl }
+				>
 					{ ( tab ) => (
 						<div className="lswl-admin__panel">
 							{ tab.name === 'subscribers' && <SubscribersTab /> }

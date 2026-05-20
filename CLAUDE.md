@@ -206,6 +206,10 @@ Layout:
 
 `ProductDrillDown`: back button → controls row with "Subscribers for: [linked product name]" left + search/status filters right → `UserView` with `productId` set.
 
+**`view` URL param** — `SubscribersTab` reads `?view=` on mount via `getInitialView()` to restore the active toggle (`users`/`products`). `handleViewChange` calls `syncViewToUrl(newView)` via `history.replaceState`. Omits param for `'users'` (default). Unknown values fall back to `'users'`.
+
+**`paged` URL param** — both `UserView` and `ProductView` sync current page to the URL as `?paged=N` (1-based) via `history.replaceState`. On mount, `getInitialPageIndex()` reads `paged` from the URL so page survives a browser refresh. An `isFirstRender` ref prevents the filter-change `useEffect` from overwriting the URL-initialized page on first mount. `SubscribersTab` calls `clearPagedParam()` on view switch (`handleViewChange`), drill-down entry (`handleDrillDown`), and back (`handleBack`) to prevent stale `paged` leaking across views. Module-level helpers `getInitialPageIndex()` and `syncPageToUrl(pageIndex)` are duplicated in each view file.
+
 Component tree:
 ```
 SubscribersTab
@@ -226,6 +230,8 @@ SubscribersTab
 Settings component tree: `SettingsTab` → `settings/WatchlistEnableCard`, `SubscriberFormCard`, `EmailConfigCard`, `ConfirmationEmailCard`, `NotificationEmailCard`. Each card in its own file under `src/admin/js/components/settings/`. Icons in `settings/icons.js`, generic card wrapper in `settings/SettingsCard.js`.
 
 React entry: `src/admin/js/index.js` → `build/admin.js` + `build/admin.css`. Uses `createRoot` (React 18 API). Wrapped with `QueryClientProvider` (singleton `QueryClient` at module level, `staleTime: 30_000, retry: 1`).
+
+**`tab` URL param** — `App.js` reads `?tab=` on mount via `getInitialTab()` and passes it as `initialTabName` to `TabPanel`. `onSelect` calls `syncTabToUrl(tabName)` via `history.replaceState` — omits the param when tab is `'subscribers'` (default) to keep URLs clean. Only recognised tab names (`subscribers`, `settings`) are accepted; unknown values fall back to `'subscribers'`.
 
 Data layer: `@wordpress/api-fetch` + `wp_rest` nonce. Uses `url:` (not `path:`) in all `apiFetch` calls.  
 `CheckboxControl` and `ToggleControl` require `__nextHasNoMarginBottom` prop (deprecation since `@wordpress/components` 6.7).

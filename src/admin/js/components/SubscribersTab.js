@@ -10,6 +10,28 @@ import UserView from './subscribers/UserView';
 import ProductView from './subscribers/ProductView';
 import ProductDrillDown from './subscribers/ProductDrillDown';
 
+const VIEW_NAMES = [ 'users', 'products' ];
+
+/** @return {'users'|'products'} */
+function getInitialView() {
+	const v = new URLSearchParams( window.location.search ).get( 'view' );
+	return VIEW_NAMES.includes( v ) ? v : 'users';
+}
+
+/**
+ * @param {'users'|'products'} view
+ * @return {void}
+ */
+function syncViewToUrl( view ) {
+	const urlObj = new URL( window.location.href );
+	if ( view === 'users' ) {
+		urlObj.searchParams.delete( 'view' );
+	} else {
+		urlObj.searchParams.set( 'view', view );
+	}
+	history.replaceState( null, '', urlObj.toString() );
+}
+
 const STATUS_OPTIONS = [
 	{ label: __( 'All Statuses', 'lime-stock-watchlist' ), value: 'all' },
 	{ label: __( 'Watching', 'lime-stock-watchlist' ),     value: 'watching' },
@@ -72,7 +94,7 @@ function NotifyingNotice( { count } ) {
  * @return {JSX.Element}
  */
 export default function SubscribersTab() {
-	const [ view, setView ]           = useState( 'users' );
+	const [ view, setView ]           = useState( getInitialView() );
 	const [ drillDown, setDrillDown ] = useState( null );
 	const [ inputValue, setInputValue ] = useState( '' );
 	const [ search, setSearch ]         = useState( '' );
@@ -85,12 +107,20 @@ export default function SubscribersTab() {
 		staleTime: 60_000,
 	} );
 
+	function clearPagedParam() {
+		const urlObj = new URL( window.location.href );
+		urlObj.searchParams.delete( 'paged' );
+		history.replaceState( null, '', urlObj.toString() );
+	}
+
 	function handleViewChange( newView ) {
 		setView( newView );
 		setDrillDown( null );
 		setInputValue( '' );
 		setSearch( '' );
 		setStatus( 'all' );
+		syncViewToUrl( newView );
+		clearPagedParam();
 	}
 
 	function handleSearchInput( value ) {
@@ -105,10 +135,12 @@ export default function SubscribersTab() {
 
 	function handleDrillDown( productId, productName, productUrl ) {
 		setDrillDown( { productId, productName, productUrl } );
+		clearPagedParam();
 	}
 
 	function handleBack() {
 		setDrillDown( null );
+		clearPagedParam();
 	}
 
 	const searchPlaceholder = view === 'products'
