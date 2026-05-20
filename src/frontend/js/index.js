@@ -90,6 +90,12 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		const email      = emailInput ? emailInput.value.trim() : '';
 		const name       = nameInput  ? nameInput.value.trim()  : '';
 
+		if ( nameInput && nameInput.required && ! name ) {
+			showMessage( i18n.nameRequired, 'error' );
+			nameInput.focus();
+			return;
+		}
+
 		if ( ! email || ! /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test( email ) ) {
 			showMessage( i18n.invalidEmail, 'error' );
 			emailInput && emailInput.focus();

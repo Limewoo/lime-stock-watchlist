@@ -79,6 +79,7 @@ class Frontend {
 					'duplicate'    => ! empty( $settings['msg_duplicate'] )
 						? $settings['msg_duplicate']
 						: __( 'You\'re already on the waitlist for this product.', 'lime-stock-watchlist' ),
+					'nameRequired' => __( 'Please enter your name.', 'lime-stock-watchlist' ),
 					'invalidEmail' => __( 'Please enter a valid email address.', 'lime-stock-watchlist' ),
 					'error'        => ! empty( $settings['msg_error'] )
 						? $settings['msg_error']
