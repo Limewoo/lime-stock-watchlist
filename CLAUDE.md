@@ -107,7 +107,7 @@ Namespace: `lime-stock-watchlist/v1`
 ### Admin UI
 
 Single React SPA rendered in `<div id="lswl-admin-root">`. Two tabs via `@wordpress/components` `TabPanel`:
-- **Subscribers** — stats bar (total / waiting / notified / unsubscribed), subscribers grouped into per-product cards with status badges, per-group checkbox, single + bulk delete. Both delete paths show a `window.confirm()` before proceeding.
+- **Subscribers** — stats bar (total / waiting / notified / unsubscribed), subscribers grouped into per-product cards with status badges, per-group checkbox, single + bulk delete. Both delete paths show a `window.confirm()` before proceeding. Column order: Name | Email | Status | Date subscribed | action. Bulk-delete toolbar only renders when rows are selected.
 - **Settings** — three grouped cards (Notifications / Subscriber Form / Email Configuration) using `ToggleControl` / `TextControl`, saved via REST
 
 React entry: `src/admin/js/index.js` → `build/admin.js` + `build/admin.css`. Uses `createRoot` (React 18 API).  
@@ -126,6 +126,29 @@ On 200 success: heading + form elements removed from DOM, only success message r
 ### Email template (`templates/email-notification.php`)
 
 Greeter uses first name only: `explode( ' ', trim( $subscriber->name ) )[0]`. Falls back to "Hi there," when no name stored. Name field is off by default (`show_name_field: false`) so most installs will use the fallback unless admin enables it.
+
+Colors pulled from WC email settings (WooCommerce → Settings → Emails → Email template) — no hardcoded values:
+
+| PHP var | WC option | Used for |
+| ------- | --------- | -------- |
+| `$wc_base` | `woocommerce_email_base_color` | Header bg, CTA button bg |
+| `$wc_bg` | `woocommerce_email_background_color` | Outer email background |
+| `$wc_body_bg` | `woocommerce_email_body_background_color` | Email card background |
+| `$wc_text` | `woocommerce_email_text_color` | Body + footer text |
+| `$wc_header_text` | `wc_light_or_dark( $wc_base, … )` | Header title + CTA text (auto contrast) |
+
+### Unsubscribe flow
+
+URL: `?lswl_unsub=1&id={id}&token={token}` — handled in `Plugin::handle_unsubscribe()` on `init`.
+
+- Token verified via `wp_hash( $id . $email . NONCE_KEY )`
+- If already unsubscribed → redirect to product page with `?lswl_already_unsubscribed=1`
+- On success → `Database::mark_unsubscribed($id)` → redirect to product page with `?lswl_unsubscribed=1`
+- Falls back to `home_url('/')` if product is deleted
+
+Notice displayed via `Frontend::maybe_show_unsubscribe_notice()` hooked on `woocommerce_before_single_product`:
+- `?lswl_unsubscribed=1` → green `woocommerce-message` notice
+- `?lswl_already_unsubscribed=1` → blue `woocommerce-info` notice
 
 ### Styles
 

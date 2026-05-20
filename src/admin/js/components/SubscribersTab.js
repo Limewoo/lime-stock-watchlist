@@ -243,16 +243,16 @@ export default function SubscribersTab() {
 					</div>
 
 					{ /* Toolbar */ }
-					<div className="lswl-subscribers__toolbar">
-						<button
-							className="lswl-btn lswl-btn--danger"
-							disabled={ selected.size === 0 || busy }
-							onClick={ handleBulkDelete }
-						>
-							<TrashIcon />
-							{ __( 'Delete selected', 'lime-stock-watchlist' ) }
-						</button>
-						{ selected.size > 0 && (
+					{ selected.size > 0 && (
+						<div className="lswl-subscribers__toolbar">
+							<button
+								className="lswl-btn lswl-btn--danger"
+								disabled={ busy }
+								onClick={ handleBulkDelete }
+							>
+								<TrashIcon />
+								{ __( 'Delete selected', 'lime-stock-watchlist' ) }
+							</button>
 							<span className="lswl-selection-count">
 								{ sprintf(
 									/* translators: %d: number of selected rows */
@@ -260,8 +260,8 @@ export default function SubscribersTab() {
 									selected.size
 								) }
 							</span>
-						) }
-					</div>
+						</div>
+					) }
 
 					{ /* Product group cards */ }
 					{ groups.map( ( group ) => (
@@ -294,8 +294,8 @@ export default function SubscribersTab() {
 										</th>
 										<th>{ __( 'Name', 'lime-stock-watchlist' ) }</th>
 										<th>{ __( 'Email', 'lime-stock-watchlist' ) }</th>
-										<th>{ __( 'Date subscribed', 'lime-stock-watchlist' ) }</th>
 										<th>{ __( 'Status', 'lime-stock-watchlist' ) }</th>
+										<th>{ __( 'Date subscribed', 'lime-stock-watchlist' ) }</th>
 										<th />
 									</tr>
 								</thead>
@@ -321,11 +321,11 @@ export default function SubscribersTab() {
 											<td className="lswl-table__email">
 												{ subscriber.email }
 											</td>
-											<td className="lswl-table__date">
-												{ formatDate( subscriber.date_subscribed ) }
-											</td>
 											<td>
 												<StatusBadge subscriber={ subscriber } />
+											</td>
+											<td className="lswl-table__date">
+												{ formatDate( subscriber.date_subscribed ) }
 											</td>
 											<td>
 												<button
