@@ -48,8 +48,9 @@ Also hooks `before_woocommerce_init` (top-level, outside init) to declare HPOS +
 
 | Class | File | Responsibility |
 |-------|------|----------------|
+| `Subscriber` | `class-subscriber.php` | Value object for a watchlist row — `from_row()` factory, status helpers (`is_watching/notifying/notified/unsubscribed`), `display_name()` |
 | `Plugin` | `class-plugin.php` | Orchestrator — instantiates all classes, wires hooks, handles unsubscribe token on `init` |
-| `Database` | `class-database.php` | `dbDelta` table install, all CRUD (`$wpdb->prepare()` everywhere) |
+| `Database` | `class-database.php` | `dbDelta` table install, all CRUD (`$wpdb->prepare()` everywhere); all read methods return `Subscriber` instances |
 | `Frontend` | `class-frontend.php` | Renders notify form on out-of-stock product pages, enqueues frontend assets (resolves i18n messages from settings) |
 | `Admin` | `class-admin.php` | WC submenu "Lime Watchlist" (`lime-stock-watchlist`), enqueues React bundle on plugin page |
 | `Product_Settings` | `class-product-settings.php` | WC Product Data tab "Watchlist" — per-product enable/disable |

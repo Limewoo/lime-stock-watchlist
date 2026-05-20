@@ -212,7 +212,7 @@ class Rest_API {
 		}
 
 		if ( ! empty( $settings['confirmation_email_enabled'] ) ) {
-			Email::send_confirmation( $product, (object) array( 'email' => $email, 'name' => $name ), $settings );
+			Email::send_confirmation( $product, new Subscriber( 0, 0, $email, $name ), $settings );
 		}
 
 		return new \WP_REST_Response(

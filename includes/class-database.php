@@ -120,15 +120,15 @@ class Database {
 	 * Get all active (not notified, not unsubscribed) subscribers for a product.
 	 *
 	 * @param int $product_id Product ID.
-	 * @return array<int, object>
+	 * @return Subscriber[]
 	 */
 	public static function get_subscribers( int $product_id ): array {
 		global $wpdb;
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-		return $wpdb->get_results(
+		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT id, email, name, date_subscribed
+				"SELECT id, product_id, email, name, date_subscribed, notified, unsubscribed
 				FROM `{$wpdb->prefix}lime_watchlist`
 				WHERE product_id = %d
 				  AND notified    = 0
@@ -136,32 +136,36 @@ class Database {
 				$product_id
 			)
 		);
+
+		return array_map( array( Subscriber::class, 'from_row' ), $rows );
 	}
 
 	/**
 	 * Get a single subscriber row by ID.
 	 *
 	 * @param int $id Subscriber ID.
-	 * @return object|null
+	 * @return Subscriber|null
 	 */
-	public static function get_subscriber_by_id( int $id ): ?object {
+	public static function get_subscriber_by_id( int $id ): ?Subscriber {
 		global $wpdb;
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-		return $wpdb->get_row(
+		$row = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT id, product_id, email, name, date_subscribed, notified, unsubscribed
 				FROM `{$wpdb->prefix}lime_watchlist`
 				WHERE id = %d",
 				$id
 			)
-		) ?: null;
+		);
+
+		return $row ? Subscriber::from_row( $row ) : null;
 	}
 
 	/**
 	 * Get all subscribers grouped by product ID, for the admin table.
 	 *
-	 * @return array<int, array<int, object>>
+	 * @return array<int, Subscriber[]>
 	 */
 	public static function get_all_grouped(): array {
 		global $wpdb;
@@ -175,7 +179,7 @@ class Database {
 
 		$grouped = array();
 		foreach ( $rows as $row ) {
-			$grouped[ (int) $row->product_id ][] = $row;
+			$grouped[ (int) $row->product_id ][] = Subscriber::from_row( $row );
 		}
 
 		return $grouped;

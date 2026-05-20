@@ -61,7 +61,7 @@ class Email {
 	public static function handle_queued_notification( int $subscriber_id, int $product_id ): void {
 		$subscriber = Database::get_subscriber_by_id( $subscriber_id );
 
-		if ( ! $subscriber || 1 === (int) $subscriber->notified || (int) $subscriber->unsubscribed ) {
+		if ( ! $subscriber || $subscriber->is_notified() || $subscriber->is_unsubscribed() ) {
 			return;
 		}
 
@@ -81,12 +81,12 @@ class Email {
 	/**
 	 * Build and send a single back-in-stock notification email.
 	 *
-	 * @param object               $subscriber Subscriber row.
+	 * @param Subscriber           $subscriber Subscriber instance.
 	 * @param \WC_Product          $product    Product object.
 	 * @param array<string, mixed> $settings   Plugin settings.
 	 * @return bool Whether wp_mail() succeeded.
 	 */
-	private static function send_to_one( object $subscriber, \WC_Product $product, array $settings ): bool {
+	private static function send_to_one( Subscriber $subscriber, \WC_Product $product, array $settings ): bool {
 		$from_name  = ! empty( $settings['from_name'] )
 			? $settings['from_name']
 			: get_bloginfo( 'name' );
@@ -139,11 +139,11 @@ class Email {
 	 * Send a subscription confirmation email to a newly-subscribed customer.
 	 *
 	 * @param \WC_Product          $product    Product object.
-	 * @param object               $subscriber Object with email and name properties.
+	 * @param Subscriber           $subscriber Subscriber instance.
 	 * @param array<string, mixed> $settings   Plugin settings.
 	 * @return void
 	 */
-	public static function send_confirmation( \WC_Product $product, object $subscriber, array $settings ): void {
+	public static function send_confirmation( \WC_Product $product, Subscriber $subscriber, array $settings ): void {
 		$from_name  = ! empty( $settings['from_name'] )
 			? $settings['from_name']
 			: get_bloginfo( 'name' );
@@ -152,11 +152,7 @@ class Email {
 			? $settings['from_email']
 			: get_option( 'admin_email' );
 
-		$first_name = ! empty( $subscriber->name )
-			? explode( ' ', trim( $subscriber->name ) )[0]
-			: '';
-
-		$display_name = $first_name ?: __( 'there', 'lime-stock-watchlist' );
+		$display_name = $subscriber->display_name() ?: __( 'there', 'lime-stock-watchlist' );
 
 		$shortcode_map = array(
 			'{site_name}'        => get_bloginfo( 'name' ),
