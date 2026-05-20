@@ -52,7 +52,7 @@ function StatusBadge( { subscriber } ) {
 	return (
 		<span className="lswl-badge lswl-badge--waiting">
 			<span className="lswl-badge__dot" />
-			{ __( 'Waiting', 'lime-stock-watchlist' ) }
+			{ __( 'Watching', 'lime-stock-watchlist' ) }
 		</span>
 	);
 }
@@ -257,9 +257,9 @@ export default function SubscribersTab() {
 
 					{ /* Notifying in-progress notice */ }
 					{ stats.notifying > 0 && (
-						<Notice status="warning" isDismissible={ false } className="lswl-notifying-notice" style={ { marginBottom: '20px' } }>
+						<Notice status="warning" isDismissible={ false } className="lswl-notifying-notice">
 							{ stats.notifying === 1
-								? __( '1 email is currently being sent via WooCommerce Action Scheduler. Reload the page to see the updated status.', 'lime-stock-watchlist' )
+								? __( '1 email is currently being sent via WooCommerce Action Scheduler. Reload the page in a while to see the updated status.', 'lime-stock-watchlist' )
 								: sprintf(
 									/* translators: %d: number of emails being sent */
 									__( '%d emails are currently being sent via WooCommerce Action Scheduler. Reload the page to see updated statuses.', 'lime-stock-watchlist' ),

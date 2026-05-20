@@ -167,7 +167,7 @@ WC submenu: **"Lime Watchlist"** — `PAGE_SLUG = 'lime-stock-watchlist'`, hook 
 
 Single React SPA rendered in `<div id="lswl-admin-root">`. Two tabs via `@wordpress/components` `TabPanel`:
 
-- **Subscribers** — stats bar (Total / Waiting / Notifying / Notified / Unsubscribed), subscribers grouped into per-product cards with status badges, per-group checkbox, single + bulk delete. Warning notice appears when `stats.notifying > 0` (singular/plural via `sprintf`). Both delete paths show `window.confirm()`. Column order: Name | Email | Status | Date subscribed | action.
+- **Subscribers** — stats bar (Total / Watching / Notifying / Notified / Unsubscribed), subscribers grouped into per-product cards with status badges, per-group checkbox, single + bulk delete. Warning notice appears when `stats.notifying > 0` (singular/plural via `sprintf`). Both delete paths show `window.confirm()`. Column order: Name | Email | Status | Date subscribed | action.
 - **Settings** — five grouped cards; all but the first hidden when `notifications_enabled` is false:
   1. **Enable Stock Watchlist** — master toggle
   2. **Subscriber Form** — form title, button label, name field toggles, success/duplicate/error messages
@@ -185,8 +185,8 @@ Data layer: `@wordpress/api-fetch` + `wp_rest` nonce. Uses `url:` (not `path:`) 
 
 | Value | Badge | Color | Dot |
 |-------|-------|-------|-----|
-| `notified=0, unsub=0` | Waiting | amber | `$lswl-waiting-dot` |
-| `notified=2, unsub=0` | Notifying | purple (pulsing dot) | `$lswl-notifying-dot` |
+| `notified=0, unsub=0` | Watching | grey (`#e5e5e5`) | `$lswl-waiting-dot` |
+| `notified=2, unsub=0` | Notifying | green (`#c6e1c6`, pulsing dot) | `$lswl-notifying-dot` |
 | `notified=1, unsub=0` | Notified | blue | `$lswl-notified-dot` |
 | `unsubscribed=1` | Unsubscribed | grey | `$lswl-unsub-dot` |
 
