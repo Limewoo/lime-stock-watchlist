@@ -195,9 +195,16 @@ class Rest_API {
 			);
 		}
 
-		$success = Database::add_or_resubscribe( $product_id, $email, $name );
+		$status = Database::add_or_resubscribe( $product_id, $email, $name );
 
-		if ( ! $success ) {
+		if ( 'already_subscribed' === $status ) {
+			return new \WP_REST_Response(
+				array( 'message' => __( 'You\'re already on the waitlist for this product.', 'lime-stock-watchlist' ) ),
+				409
+			);
+		}
+
+		if ( 'error' === $status ) {
 			return new \WP_REST_Response(
 				array( 'message' => __( 'Could not save your subscription. Please try again.', 'lime-stock-watchlist' ) ),
 				500

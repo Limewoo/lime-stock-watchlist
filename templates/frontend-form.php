@@ -14,9 +14,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 ?>
 <div class="lswl-notify-form" id="lswl-notify-form" aria-live="polite">
-	<p class="lswl-notify-form__heading">
+	<div class="lswl-notify-form__heading">
 		<?php esc_html_e( 'Notify me when available', 'lime-stock-watchlist' ); ?>
-	</p>
+	</div>
 
 	<form class="lswl-notify-form__form" novalidate>
 		<?php if ( $show_name ) : ?>
@@ -61,6 +61,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 			</button>
 		</div>
 
-		<div class="lswl-notify-form__message" role="alert" aria-live="assertive" hidden></div>
 	</form>
+	<div class="lswl-notify-form__message" role="alert" aria-live="assertive" hidden></div>
 </div>

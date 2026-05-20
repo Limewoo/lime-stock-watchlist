@@ -64,7 +64,8 @@ document.addEventListener( 'DOMContentLoaded', () => {
 
 			if ( response.ok ) {
 				showMessage( data.message || i18n.success, 'success' );
-				form.reset();
+				wrapper.querySelector( '.lswl-notify-form__heading' )?.remove();
+				form.remove();
 			} else if ( response.status === 409 ) {
 				showMessage( i18n.duplicate, 'error' );
 			} else {

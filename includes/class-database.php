@@ -72,10 +72,24 @@ class Database {
 	 * @param int    $product_id Product ID.
 	 * @param string $email      Subscriber email.
 	 * @param string $name       Subscriber name (optional).
-	 * @return bool True on success.
+	 * @return string 'added' | 'already_subscribed' | 'error'
 	 */
-	public static function add_or_resubscribe( int $product_id, string $email, string $name = '' ): bool {
+	public static function add_or_resubscribe( int $product_id, string $email, string $name = '' ): string {
 		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		$existing = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT notified, unsubscribed FROM `{$wpdb->prefix}lime_watchlist`
+				WHERE product_id = %d AND email = %s",
+				$product_id,
+				$email
+			)
+		);
+
+		if ( $existing && ! (int) $existing->notified && ! (int) $existing->unsubscribed ) {
+			return 'already_subscribed';
+		}
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 		$result = $wpdb->query(
@@ -95,7 +109,7 @@ class Database {
 			)
 		);
 
-		return false !== $result;
+		return false !== $result ? 'added' : 'error';
 	}
 
 	/**

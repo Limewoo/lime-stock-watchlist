@@ -14,8 +14,11 @@
 }
 
 .lswl-notify-form {
-	margin: 24px 0 0;
-	padding: 20px 20px 20px 18px;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;;
+	margin: 20px 0 0;
+	padding: 20px;
 	border: 1px solid $lswl-border;
 	border-top: 3px solid $lswl-lime; // brand accent
 	border-radius: 0 0 $lswl-radius $lswl-radius;
@@ -24,7 +27,7 @@
 }
 
 .lswl-notify-form__heading {
-	margin: 0 0 14px;
+	margin: 0;
 	font-size: 1em;
 	font-weight: 600;
 }
@@ -85,7 +88,7 @@
 }
 
 .lswl-notify-form__submit {
-	margin-top: 4px;
+	margin: 0;
 	animation: lswl-fade-up 0.3s 0.18s ease both;
 }
 
@@ -132,6 +135,7 @@
 	font-size: 0.875em;
 	line-height: 1.5;
 	border: 1px solid transparent;
+	text-align: center;
 
 	&--success {
 		background: #edf7ec;
