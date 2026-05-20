@@ -85,12 +85,19 @@ export default function SubscribersTab() {
 		staleTime: 60_000,
 	} );
 
+	function clearPagedParam() {
+		const urlObj = new URL( window.location.href );
+		urlObj.searchParams.delete( 'paged' );
+		history.replaceState( null, '', urlObj.toString() );
+	}
+
 	function handleViewChange( newView ) {
 		setView( newView );
 		setDrillDown( null );
 		setInputValue( '' );
 		setSearch( '' );
 		setStatus( 'all' );
+		clearPagedParam();
 	}
 
 	function handleSearchInput( value ) {
@@ -105,10 +112,12 @@ export default function SubscribersTab() {
 
 	function handleDrillDown( productId, productName, productUrl ) {
 		setDrillDown( { productId, productName, productUrl } );
+		clearPagedParam();
 	}
 
 	function handleBack() {
 		setDrillDown( null );
+		clearPagedParam();
 	}
 
 	const searchPlaceholder = view === 'products'

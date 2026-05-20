@@ -1,7 +1,7 @@
 /**
  * User-based (flat) subscriber table using TanStack Table + Query.
  */
-import { useState, useEffect } from '@wordpress/element';
+import { useState, useEffect, useRef } from '@wordpress/element';
 import { CheckboxControl, Notice, Spinner } from '@wordpress/components';
 import { __, sprintf } from '@wordpress/i18n';
 import {
@@ -19,6 +19,26 @@ import {
 import { getSubscribers, deleteSubscriber, bulkDeleteSubscribers } from '../../api';
 import StatusBadge from './StatusBadge';
 import TablePagination from './TablePagination';
+
+/** @return {number} Zero-based page index from the URL `paged` param. */
+function getInitialPageIndex() {
+	const p = parseInt( new URLSearchParams( window.location.search ).get( 'paged' ), 10 );
+	return isNaN( p ) || p < 1 ? 0 : p - 1;
+}
+
+/**
+ * @param {number} pageIndex Zero-based page index to sync to the URL.
+ * @return {void}
+ */
+function syncPageToUrl( pageIndex ) {
+	const urlObj = new URL( window.location.href );
+	if ( pageIndex <= 0 ) {
+		urlObj.searchParams.delete( 'paged' );
+	} else {
+		urlObj.searchParams.set( 'paged', String( pageIndex + 1 ) );
+	}
+	history.replaceState( null, '', urlObj.toString() );
+}
 
 /**
  * @param {string} dateStr
@@ -69,16 +89,22 @@ const columnHelper = createColumnHelper();
 export default function UserView( { productId, search, status } ) {
 	const queryClient = useQueryClient();
 
-	const [ pagination, setPagination ]     = useState( { pageIndex: 0, pageSize: 20 } );
+	const [ pagination, setPagination ]     = useState( { pageIndex: getInitialPageIndex(), pageSize: 20 } );
 	const [ rowSelection, setRowSelection ] = useState( {} );
 	const [ notice, setNotice ]             = useState( '' );
 	const [ error, setError ]               = useState( '' );
+	const isFirstRender = useRef( true );
 
 	const { pageIndex, pageSize } = pagination;
 
-	// Reset to page 1 when filters change from parent
+	// Reset to page 1 when filters change from parent (skip on first mount).
 	useEffect( () => {
+		if ( isFirstRender.current ) {
+			isFirstRender.current = false;
+			return;
+		}
 		setPagination( ( prev ) => ( { ...prev, pageIndex: 0 } ) );
+		syncPageToUrl( 0 );
 	}, [ search, status ] );
 
 	const { data, isFetching, isLoading, isError } = useQuery( {
@@ -214,7 +240,13 @@ export default function UserView( { productId, search, status } ) {
 		columns,
 		pageCount: data?.pages ?? -1,
 		state: { pagination, rowSelection },
-		onPaginationChange: setPagination,
+		onPaginationChange: ( updater ) => {
+			setPagination( ( prev ) => {
+				const next = typeof updater === 'function' ? updater( prev ) : updater;
+				syncPageToUrl( next.pageIndex );
+				return next;
+			} );
+		},
 		onRowSelectionChange: setRowSelection,
 		getCoreRowModel: getCoreRowModel(),
 		manualPagination: true,

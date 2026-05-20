@@ -206,6 +206,8 @@ Layout:
 
 `ProductDrillDown`: back button → controls row with "Subscribers for: [linked product name]" left + search/status filters right → `UserView` with `productId` set.
 
+**`paged` URL param** — both `UserView` and `ProductView` sync current page to the URL as `?paged=N` (1-based) via `history.replaceState`. On mount, `getInitialPageIndex()` reads `paged` from the URL so page survives a browser refresh. An `isFirstRender` ref prevents the filter-change `useEffect` from overwriting the URL-initialized page on first mount. `SubscribersTab` calls `clearPagedParam()` on view switch (`handleViewChange`), drill-down entry (`handleDrillDown`), and back (`handleBack`) to prevent stale `paged` leaking across views. Module-level helpers `getInitialPageIndex()` and `syncPageToUrl(pageIndex)` are duplicated in each view file.
+
 Component tree:
 ```
 SubscribersTab
