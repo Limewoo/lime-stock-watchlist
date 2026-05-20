@@ -345,7 +345,7 @@ class Rest_API {
 			),
 			'show_name_field'       => array(
 				'type'    => 'boolean',
-				'default' => true,
+				'default' => false,
 			),
 			'name_field_required'   => array(
 				'type'    => 'boolean',

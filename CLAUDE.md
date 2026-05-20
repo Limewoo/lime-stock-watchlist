@@ -67,14 +67,14 @@ Also hooks `before_woocommerce_init` (top-level, outside init) to declare HPOS +
 | `notified` | `TINYINT(1)` | 0 = pending, 1 = notified |
 | `unsubscribed` | `TINYINT(1)` | 0 = active, 1 = unsubscribed |
 
-UNIQUE KEY on `(product_id, email)`. Re-subscribe resets `notified=0, unsubscribed=0`.
+UNIQUE KEY on `(product_id, email)`. Re-subscribe (reset `notified=0, unsubscribed=0`) only allowed when `notified=1` OR `unsubscribed=1`. Active subscription (`notified=0, unsubscribed=0`) returns `'already_subscribed'` from `Database::add_or_resubscribe()` → REST 409.
 
 ### Settings (`wp_options` key: `lswl_settings`)
 
 | Key | Default | Description |
 |-----|---------|-------------|
 | `notifications_enabled` | `true` | Global on/off |
-| `show_name_field` | `true` | Show name input on frontend form |
+| `show_name_field` | `false` | Show name input on frontend form |
 | `name_field_required` | `false` | Make name required |
 | `from_name` | site name | Notification from name |
 | `from_email` | admin email | Notification from address |
@@ -86,7 +86,7 @@ Namespace: `lime-stock-watchlist/v1`
 
 | Method | Route | Auth |
 |--------|-------|------|
-| `POST` | `/subscribe` | public |
+| `POST` | `/subscribe` | public — 200 new, 409 already active, 503 disabled, 404 no product, 409 in-stock |
 | `GET` | `/subscribers` | `manage_woocommerce` |
 | `DELETE` | `/subscribers/{id}` | `manage_woocommerce` |
 | `DELETE` | `/subscribers` | `manage_woocommerce` (bulk, `ids[]` in body) |
@@ -99,16 +99,22 @@ Single React SPA rendered in `<div id="lswl-admin-root">`. Two tabs via `@wordpr
 - **Subscribers** — stats bar (total / waiting / notified / unsubscribed), subscribers grouped into per-product cards with status badges, per-group checkbox, single + bulk delete
 - **Settings** — three grouped cards (Notifications / Subscriber Form / Email Configuration) using `ToggleControl` / `TextControl`, saved via REST
 
-React entry: `src/admin/js/index.js` → `build/admin.js` + `build/admin.css`.  
+React entry: `src/admin/js/index.js` → `build/admin.js` + `build/admin.css`. Uses `createRoot` (React 18 API).  
 Component tree: `App` → `SubscribersTab` / `SettingsTab`. API wrappers in `src/admin/js/api/index.js`.  
-Data layer: `@wordpress/api-fetch` + `wp_rest` nonce. Uses `url:` (not `path:`) in all `apiFetch` calls to bypass root-URL middleware resolution issues.
+Data layer: `@wordpress/api-fetch` + `wp_rest` nonce. Uses `url:` (not `path:`) in all `apiFetch` calls to bypass root-URL middleware resolution issues.  
+`CheckboxControl` requires `__nextHasNoMarginBottom` prop (deprecation since `@wordpress/components` 6.7).
 
 ### Frontend form
 
 PHP-rendered via `woocommerce_single_product_summary` (priority 31, after price).  
 Only shown when product is out-of-stock AND feature enabled (global + per-product check).  
 Template: `templates/frontend-form.php`. Variables: `$show_name` (bool), `$name_required` (bool).  
-Submits via `fetch()` → `POST /wp-json/lime-stock-watchlist/v1/subscribe`.
+Submits via `fetch()` → `POST /wp-json/lime-stock-watchlist/v1/subscribe`.  
+On 200 success: heading + form elements removed from DOM, only success message remains. On 409: inline error message shown, form stays visible.
+
+### Email template (`templates/email-notification.php`)
+
+Greeter uses first name only: `explode( ' ', trim( $subscriber->name ) )[0]`. Falls back to "Hi there," when no name stored. Name field is off by default (`show_name_field: false`) so most installs will use the fallback unless admin enables it.
 
 ### Styles
 
@@ -148,7 +154,7 @@ Never edit `build/` manually.
 ### Sanitization reference
 
 | Input type | Function |
-|------------|----------|
+| ---------- | -------- |
 | Email | `sanitize_email()` + `is_email()` |
 | Name / text | `sanitize_text_field()` |
 | Integer IDs | `absint()` |
@@ -158,7 +164,7 @@ Never edit `build/` manually.
 ### Escaping reference
 
 | Context | Function |
-|---------|----------|
+| ------- | -------- |
 | HTML text | `esc_html()` |
 | HTML attribute | `esc_attr()` |
 | URL | `esc_url()` |

@@ -23,7 +23,7 @@ class Plugin {
 	 */
 	public const DEFAULTS = array(
 		'notifications_enabled' => true,
-		'show_name_field'       => true,
+		'show_name_field'       => false,
 		'name_field_required'   => false,
 		'from_name'             => '',
 		'from_email'            => '',

@@ -18,6 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 $site_name   = get_bloginfo( 'name' );
 $product_url = get_permalink( $product->get_id() );
 $has_name    = ! empty( $subscriber->name );
+$first_name  = $has_name ? explode( ' ', trim( $subscriber->name ) )[0] : '';
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo esc_attr( get_locale() ); ?>">
@@ -49,7 +50,7 @@ $has_name    = ! empty( $subscriber->name );
 				printf(
 					/* translators: %s: subscriber first name */
 					esc_html__( 'Hi %s,', 'lime-stock-watchlist' ),
-					esc_html( $subscriber->name )
+					esc_html( $first_name )
 				);
 			} else {
 				esc_html_e( 'Hi there,', 'lime-stock-watchlist' );
