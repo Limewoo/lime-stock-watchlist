@@ -3,26 +3,30 @@
 // ─────────────────────────────────────────────────────────────
 // Notify-me form
 //
-// Design intent: inherit theme typography, colours, and button
-// styles. Only brand the focus ring, submit button, and the
-// lime top-border accent that separates the form from the
-// out-of-stock notice above it.
+// Design intent: inherit theme typography. Assert only what
+// the theme cannot give us — brand focus ring, validation
+// states, entrance animation, and lime button/accent colour.
 // ─────────────────────────────────────────────────────────────
+
+@keyframes lswl-fade-up {
+	from { opacity: 0; transform: translateY(8px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
 
 .lswl-notify-form {
 	margin: 24px 0 0;
 	padding: 20px 20px 20px 18px;
 	border: 1px solid $lswl-border;
-	border-top: 3px solid $lswl-lime; // brand accent — only visible colour touch
+	border-top: 3px solid $lswl-lime; // brand accent
 	border-radius: 0 0 $lswl-radius $lswl-radius;
-	background: transparent; // let theme background show through
+	background: transparent;
+	animation: lswl-fade-up 0.35s ease both;
 }
 
 .lswl-notify-form__heading {
 	margin: 0 0 14px;
 	font-size: 1em;
 	font-weight: 600;
-	// color, font-family — inherited from theme
 }
 
 .lswl-notify-form__form {
@@ -34,44 +38,63 @@
 .lswl-notify-form__field {
 	display: flex;
 	flex-direction: column;
-	gap: 4px;
+
+	&:nth-child(1) { animation: lswl-fade-up 0.3s 0.06s ease both; }
+	&:nth-child(2) { animation: lswl-fade-up 0.3s 0.12s ease both; }
 }
 
-.lswl-notify-form__label {
-	font-size: 0.875em;
-	font-weight: 500;
-	// color inherited from theme
-}
-
-.lswl-notify-form__optional {
-	font-weight: 400;
-	opacity: 0.6;
-	margin-left: 4px;
-	font-size: 0.9em;
-}
-
-// Inputs: let the theme do all the heavy lifting.
-// We only add a branded focus ring.
+// Inputs: assert explicit border + padding so appearance is
+// consistent across themes. Typography still fully inherited.
 .lswl-notify-form__input {
 	width: 100%;
 	box-sizing: border-box;
-	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+	padding: 10px 14px;
+	border: 1.5px solid $lswl-border;
+	border-radius: 5px;
+	background-color: rgba(0, 0, 0, 0.025);
+	font-size: inherit;
+	font-family: inherit;
+	color: inherit;
+	line-height: 1.5;
+	-webkit-appearance: none;
+	appearance: none;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+
+	&::placeholder {
+		color: currentColor;
+		opacity: 0.38;
+	}
 
 	&:focus {
 		border-color: $lswl-lime !important;
 		outline: none;
-		box-shadow: 0 0 0 2px rgba($lswl-lime, 0.18);
+		background-color: rgba($lswl-lime, 0.03);
+		box-shadow: 0 0 0 3px rgba($lswl-lime, 0.14);
+	}
+
+	// Positive validation: has content + valid
+	&:not(:placeholder-shown):valid {
+		border-color: rgba($lswl-lime, 0.55);
+	}
+
+	// Negative validation: has content, not focused, and invalid
+	&:not(:placeholder-shown):not(:focus):invalid {
+		border-color: rgba(#c00000, 0.38);
+		box-shadow: 0 0 0 2px rgba(#c00000, 0.08);
 	}
 }
 
 .lswl-notify-form__submit {
-	margin-top: 2px;
+	margin-top: 4px;
+	animation: lswl-fade-up 0.3s 0.18s ease both;
 }
 
 // Button: piggybacks on theme `.button` base styles.
-// Only asserts colour so the shape/size/font stays native.
+// Only asserts colour + a subtle lift interaction.
 .lswl-notify-form__button {
-	transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+	width: 100%;
+	transition: background-color 0.15s ease, border-color 0.15s ease,
+		opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 
 	&,
 	&:visited {
@@ -85,11 +108,20 @@
 		background-color: $lswl-lime-dark !important;
 		border-color: $lswl-lime-darker !important;
 		color: #fff !important;
+		transform: translateY(-1px);
+		box-shadow: 0 4px 10px rgba($lswl-lime, 0.28);
+	}
+
+	&:active {
+		transform: translateY(0);
+		box-shadow: none;
 	}
 
 	&:disabled {
 		opacity: 0.55 !important;
 		cursor: not-allowed;
+		transform: none !important;
+		box-shadow: none !important;
 	}
 }
 

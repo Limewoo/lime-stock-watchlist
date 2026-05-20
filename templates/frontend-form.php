@@ -21,13 +21,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<form class="lswl-notify-form__form" novalidate>
 		<?php if ( $show_name ) : ?>
 			<div class="lswl-notify-form__field">
-				<label for="lswl-name" class="lswl-notify-form__label">
+				<label for="lswl-name" class="screen-reader-text">
 					<?php esc_html_e( 'Your name', 'lime-stock-watchlist' ); ?>
-					<?php if ( ! $name_required ) : ?>
-						<span class="lswl-notify-form__optional">
-							<?php esc_html_e( '(optional)', 'lime-stock-watchlist' ); ?>
-						</span>
-					<?php endif; ?>
 				</label>
 				<input
 					type="text"
@@ -35,6 +30,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 					name="lswl_name"
 					class="lswl-notify-form__input"
 					autocomplete="name"
+					placeholder="<?php echo $name_required ? esc_attr__( 'Your name', 'lime-stock-watchlist' ) : esc_attr__( 'Your name (optional)', 'lime-stock-watchlist' ); ?>"
 					<?php if ( $name_required ) : ?>
 						required
 						aria-required="true"
@@ -44,9 +40,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<?php endif; ?>
 
 		<div class="lswl-notify-form__field">
-			<label for="lswl-email" class="lswl-notify-form__label">
+			<label for="lswl-email" class="screen-reader-text">
 				<?php esc_html_e( 'Your email address', 'lime-stock-watchlist' ); ?>
-				<span class="screen-reader-text"><?php esc_html_e( '(required)', 'lime-stock-watchlist' ); ?></span>
 			</label>
 			<input
 				type="email"
@@ -54,6 +49,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 				name="lswl_email"
 				class="lswl-notify-form__input"
 				autocomplete="email"
+				placeholder="<?php esc_attr_e( 'Your email address', 'lime-stock-watchlist' ); ?>"
 				required
 				aria-required="true"
 			/>
