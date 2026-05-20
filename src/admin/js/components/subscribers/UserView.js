@@ -196,6 +196,10 @@ export default function UserView( { productId, search, status } ) {
 			header: __( 'Email', 'lime-stock-watchlist' ),
 			cell: ( info ) => <span className="lswl-table__email">{ info.getValue() }</span>,
 		} ),
+		columnHelper.accessor( 'name', {
+			header: __( 'Name', 'lime-stock-watchlist' ),
+			cell: ( info ) => <span className="lswl-table__name">{ info.getValue() || '—' }</span>,
+		} ),
 		...( showProductColumn ? [
 			columnHelper.display( {
 				id: 'product',
