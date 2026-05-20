@@ -41,8 +41,8 @@ class Admin {
 	public function add_menu(): void {
 		add_submenu_page(
 			'woocommerce',
-			__( 'Lime Watchlist', 'lime-stock-watchlist' ),
-			__( 'Lime Watchlist', 'lime-stock-watchlist' ),
+			__( 'Lime Stock Watchlist', 'lime-stock-watchlist' ),
+			__( 'Stock watchlist', 'lime-stock-watchlist' ),
 			'manage_woocommerce',
 			self::PAGE_SLUG,
 			array( $this, 'render_page' )
