@@ -81,7 +81,7 @@ class Plugin {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT id, email FROM `{$wpdb->prefix}lime_watchlist` WHERE id = %d LIMIT 1",
+				"SELECT id, email, product_id, unsubscribed FROM `{$wpdb->prefix}lime_watchlist` WHERE id = %d LIMIT 1",
 				$id
 			)
 		);
@@ -96,11 +96,16 @@ class Plugin {
 			return;
 		}
 
+		$product_url = get_permalink( (int) $row->product_id ) ?: home_url( '/' );
+
+		if ( (int) $row->unsubscribed ) {
+			wp_safe_redirect( add_query_arg( 'lswl_already_unsubscribed', '1', $product_url ) );
+			exit;
+		}
+
 		Database::mark_unsubscribed( $id );
 
-		wp_safe_redirect(
-			add_query_arg( 'lswl_unsubscribed', '1', home_url( '/' ) )
-		);
+		wp_safe_redirect( add_query_arg( 'lswl_unsubscribed', '1', $product_url ) );
 		exit;
 	}
 

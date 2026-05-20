@@ -24,6 +24,7 @@ class Frontend {
 	public function register(): void {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue' ) );
 		add_action( 'woocommerce_single_product_summary', array( $this, 'render_form' ), 31 );
+		add_action( 'woocommerce_before_single_product', array( $this, 'maybe_show_unsubscribe_notice' ) );
 	}
 
 	/**
@@ -75,6 +76,20 @@ class Frontend {
 				),
 			)
 		);
+	}
+
+	/**
+	 * Show a notice on the product page after unsubscribe redirect.
+	 *
+	 * @return void
+	 */
+	public function maybe_show_unsubscribe_notice(): void {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( ! empty( $_GET['lswl_unsubscribed'] ) ) {
+			echo '<div role="alert" class="woocommerce-message">' . esc_html__( "You've been unsubscribed from back-in-stock notifications for this product.", 'lime-stock-watchlist' ) . '</div>';
+		} elseif ( ! empty( $_GET['lswl_already_unsubscribed'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			echo '<div role="alert" class="woocommerce-info">' . esc_html__( "You're already unsubscribed from notifications for this product.", 'lime-stock-watchlist' ) . '</div>';
+		}
 	}
 
 	/**

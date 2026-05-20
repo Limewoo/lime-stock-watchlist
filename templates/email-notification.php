@@ -15,10 +15,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$site_name   = get_bloginfo( 'name' );
-$product_url = get_permalink( $product->get_id() );
-$has_name    = ! empty( $subscriber->name );
-$first_name  = $has_name ? explode( ' ', trim( $subscriber->name ) )[0] : '';
+$site_name        = get_bloginfo( 'name' );
+$product_url      = get_permalink( $product->get_id() );
+$has_name         = ! empty( $subscriber->name );
+$first_name       = $has_name ? explode( ' ', trim( $subscriber->name ) )[0] : '';
+$wc_base          = get_option( 'woocommerce_email_base_color', '#7f54b3' );
+$wc_bg            = get_option( 'woocommerce_email_background_color', '#f7f7f7' );
+$wc_body_bg       = get_option( 'woocommerce_email_body_background_color', '#ffffff' );
+$wc_text          = get_option( 'woocommerce_email_text_color', '#3d3d3d' );
+$wc_header_text   = wc_light_or_dark( $wc_base, '#202020', '#ffffff' );
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo esc_attr( get_locale() ); ?>">
@@ -27,15 +32,15 @@ $first_name  = $has_name ? explode( ' ', trim( $subscriber->name ) )[0] : '';
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title><?php echo esc_html( $subject ); ?></title>
 <style>
-	body { margin: 0; padding: 0; background: #f5f5f5; font-family: Arial, sans-serif; color: #333; }
-	.lswl-email { max-width: 600px; margin: 32px auto; background: #ffffff; border-radius: 4px; overflow: hidden; }
-	.lswl-email__header { background: #5d9e3f; padding: 24px 32px; }
-	.lswl-email__header-title { margin: 0; color: #ffffff; font-size: 20px; }
-	.lswl-email__body { padding: 32px; }
+	body { margin: 0; padding: 0; background: <?php echo esc_attr( $wc_bg ); ?>; font-family: Arial, sans-serif; color: <?php echo esc_attr( $wc_text ); ?>; }
+	.lswl-email { max-width: 600px; margin: 32px auto; background: <?php echo esc_attr( $wc_body_bg ); ?>; border-radius: 4px; overflow: hidden; }
+	.lswl-email__header { background: <?php echo esc_attr( $wc_base ); ?>; padding: 24px 32px; }
+	.lswl-email__header-title { margin: 0; color: <?php echo esc_attr( $wc_header_text ); ?>; font-size: 20px; }
+	.lswl-email__body { padding: 32px; color: <?php echo esc_attr( $wc_text ); ?>; }
 	.lswl-email__body p { line-height: 1.6; margin: 0 0 16px; }
-	.lswl-email__cta { display: inline-block; margin: 8px 0 24px; padding: 12px 24px; background: #5d9e3f; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold; }
-	.lswl-email__footer { padding: 16px 32px; border-top: 1px solid #e0e0e0; font-size: 12px; color: #888; }
-	.lswl-email__footer a { color: #888; }
+	.lswl-email__cta { display: inline-block; margin: 8px 0 24px; padding: 12px 24px; background: <?php echo esc_attr( $wc_base ); ?>; color: <?php echo esc_attr( $wc_header_text ); ?>; text-decoration: none; border-radius: 4px; font-weight: bold; }
+	.lswl-email__footer { padding: 16px 32px; border-top: 1px solid rgba(0,0,0,0.1); font-size: 12px; color: <?php echo esc_attr( $wc_text ); ?>; opacity: 0.7; }
+	.lswl-email__footer a { color: <?php echo esc_attr( $wc_text ); ?>; }
 </style>
 </head>
 <body>
