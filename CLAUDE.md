@@ -229,6 +229,8 @@ Settings component tree: `SettingsTab` → `settings/WatchlistEnableCard`, `Subs
 
 React entry: `src/admin/js/index.js` → `build/admin.js` + `build/admin.css`. Uses `createRoot` (React 18 API). Wrapped with `QueryClientProvider` (singleton `QueryClient` at module level, `staleTime: 30_000, retry: 1`).
 
+**`tab` URL param** — `App.js` reads `?tab=` on mount via `getInitialTab()` and passes it as `initialTabName` to `TabPanel`. `onSelect` calls `syncTabToUrl(tabName)` via `history.replaceState` — omits the param when tab is `'subscribers'` (default) to keep URLs clean. Only recognised tab names (`subscribers`, `settings`) are accepted; unknown values fall back to `'subscribers'`.
+
 Data layer: `@wordpress/api-fetch` + `wp_rest` nonce. Uses `url:` (not `path:`) in all `apiFetch` calls.  
 `CheckboxControl` and `ToggleControl` require `__nextHasNoMarginBottom` prop (deprecation since `@wordpress/components` 6.7).
 
