@@ -79,7 +79,7 @@
 // Override @wordpress/components TabPanel nav
 .lswl-admin .components-tab-panel__tabs {
 	display: flex;
-	padding: 0 24px;
+	padding: 0 20px;
 	border-bottom: 1px solid #eaeaea;
 	background: #fff;
 	gap: 4px;
@@ -153,11 +153,11 @@
 
 .lswl-stats {
 	display: grid;
-	grid-template-columns: repeat(4, 1fr);
+	grid-template-columns: repeat(5, 1fr);
 	border: 1px solid #e8ede8;
 	border-radius: $lswl-radius;
 	overflow: hidden;
-	margin-bottom: 24px;
+	margin-bottom: 20px;
 	background: #e8ede8; // acts as gap colour
 	gap: 1px;
 }
@@ -190,6 +190,10 @@
 
 	&--blue .lswl-stat__value {
 		color: $lswl-notified-text;
+	}
+
+	&--purple .lswl-stat__value {
+		color: $lswl-notifying-text;
 	}
 
 	&--grey .lswl-stat__value {
@@ -385,6 +389,16 @@
 		.lswl-badge__dot { background: $lswl-waiting-dot; }
 	}
 
+	&--notifying {
+		background: $lswl-notifying-bg;
+		color: $lswl-notifying-text;
+
+		.lswl-badge__dot {
+			background: $lswl-notifying-dot;
+			animation: lswl-pulse 1.4s ease-in-out infinite;
+		}
+	}
+
 	&--notified {
 		background: $lswl-notified-bg;
 		color: $lswl-notified-text;
@@ -398,6 +412,15 @@
 
 		.lswl-badge__dot { background: $lswl-unsub-dot; }
 	}
+}
+
+@keyframes lswl-pulse {
+	0%, 100% { opacity: 1; }
+	50%       { opacity: 0.35; }
+}
+
+.lswl-notifying-notice.components-notice {
+	margin-bottom: 20px;
 }
 
 // ── Icon delete button ─────────────────────────────────────
@@ -434,7 +457,7 @@
 
 .lswl-empty {
 	text-align: center;
-	padding: 60px 24px;
+	padding: 60px 20px;
 
 	&__icon {
 		width: 56px;

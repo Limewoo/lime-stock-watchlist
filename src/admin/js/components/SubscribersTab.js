@@ -33,7 +33,15 @@ function StatusBadge( { subscriber } ) {
 			</span>
 		);
 	}
-	if ( subscriber.notified ) {
+	if ( subscriber.notified === 2 ) {
+		return (
+			<span className="lswl-badge lswl-badge--notifying">
+				<span className="lswl-badge__dot" />
+				{ __( 'Notifying', 'lime-stock-watchlist' ) }
+			</span>
+		);
+	}
+	if ( subscriber.notified === 1 ) {
 		return (
 			<span className="lswl-badge lswl-badge--notified">
 				<span className="lswl-badge__dot" />
@@ -114,8 +122,9 @@ export default function SubscribersTab() {
 		const all = groups.flatMap( ( g ) => g.subscribers );
 		return {
 			total:        all.length,
-			waiting:      all.filter( ( s ) => ! s.notified && ! s.unsubscribed ).length,
-			notified:     all.filter( ( s ) => s.notified && ! s.unsubscribed ).length,
+			waiting:      all.filter( ( s ) => s.notified === 0 && ! s.unsubscribed ).length,
+			notifying:    all.filter( ( s ) => s.notified === 2 && ! s.unsubscribed ).length,
+			notified:     all.filter( ( s ) => s.notified === 1 && ! s.unsubscribed ).length,
 			unsubscribed: all.filter( ( s ) => s.unsubscribed ).length,
 		};
 	}, [ groups ] );
@@ -232,6 +241,10 @@ export default function SubscribersTab() {
 							<div className="lswl-stat__value">{ stats.waiting }</div>
 							<div className="lswl-stat__label">{ __( 'Waiting', 'lime-stock-watchlist' ) }</div>
 						</div>
+						<div className="lswl-stat lswl-stat--purple">
+							<div className="lswl-stat__value">{ stats.notifying }</div>
+							<div className="lswl-stat__label">{ __( 'Notifying', 'lime-stock-watchlist' ) }</div>
+						</div>
 						<div className="lswl-stat lswl-stat--blue">
 							<div className="lswl-stat__value">{ stats.notified }</div>
 							<div className="lswl-stat__label">{ __( 'Notified', 'lime-stock-watchlist' ) }</div>
@@ -241,6 +254,20 @@ export default function SubscribersTab() {
 							<div className="lswl-stat__label">{ __( 'Unsubscribed', 'lime-stock-watchlist' ) }</div>
 						</div>
 					</div>
+
+					{ /* Notifying in-progress notice */ }
+					{ stats.notifying > 0 && (
+						<Notice status="warning" isDismissible={ false } className="lswl-notifying-notice" style={ { marginBottom: '20px' } }>
+							{ stats.notifying === 1
+								? __( '1 email is currently being sent via WooCommerce Action Scheduler. Reload the page to see the updated status.', 'lime-stock-watchlist' )
+								: sprintf(
+									/* translators: %d: number of emails being sent */
+									__( '%d emails are currently being sent via WooCommerce Action Scheduler. Reload the page to see updated statuses.', 'lime-stock-watchlist' ),
+									stats.notifying
+								)
+							}
+						</Notice>
+					) }
 
 					{ /* Toolbar */ }
 					{ selected.size > 0 && (

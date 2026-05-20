@@ -87,8 +87,12 @@ class Database {
 			)
 		);
 
-		if ( $existing && ! (int) $existing->notified && ! (int) $existing->unsubscribed ) {
-			return 'already_subscribed';
+		if ( $existing && ! (int) $existing->unsubscribed ) {
+			$notified_val = (int) $existing->notified;
+			// Active (pending=0) or queued for sending (notifying=2) — both count as already subscribed.
+			if ( 0 === $notified_val || 2 === $notified_val ) {
+				return 'already_subscribed';
+			}
 		}
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
@@ -179,6 +183,40 @@ class Database {
 
 	/**
 	 * Mark a list of subscriber IDs as notified.
+	 *
+	 * @param int[] $ids Subscriber IDs.
+	 * @return bool
+	 */
+	/**
+	 * Mark subscribers as notifying (notified = 2 — queued in Action Scheduler, email in flight).
+	 *
+	 * @param int[] $ids Subscriber IDs.
+	 * @return bool
+	 */
+	public static function mark_notifying( array $ids ): bool {
+		global $wpdb;
+
+		if ( empty( $ids ) ) {
+			return false;
+		}
+
+		$ids          = array_map( 'absint', $ids );
+		$placeholders = implode( ', ', array_fill( 0, count( $ids ), '%d' ) );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+		$result = $wpdb->query(
+			$wpdb->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				"UPDATE `{$wpdb->prefix}lime_watchlist` SET notified = 2 WHERE id IN ({$placeholders})",
+				...$ids
+			)
+		);
+
+		return false !== $result;
+	}
+
+	/**
+	 * Mark subscribers as notified (email sent successfully).
 	 *
 	 * @param int[] $ids Subscriber IDs.
 	 * @return bool

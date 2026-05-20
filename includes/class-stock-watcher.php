@@ -44,6 +44,10 @@ class Stock_Watcher {
 			return;
 		}
 
+		if ( empty( $settings['notification_email_enabled'] ) ) {
+			return;
+		}
+
 		$product_enabled = get_post_meta( $product_id, '_lswl_enabled', true );
 
 		if ( 'no' === $product_enabled ) {
@@ -57,12 +61,18 @@ class Stock_Watcher {
 
 		$subscribers = Database::get_subscribers( $product_id );
 
+		$queued_ids = array();
 		foreach ( $subscribers as $subscriber ) {
 			as_enqueue_async_action(
 				'lswl_send_notification',
 				array( absint( $subscriber->id ), $product_id ),
 				'lime-stock-watchlist'
 			);
+			$queued_ids[] = absint( $subscriber->id );
+		}
+
+		if ( ! empty( $queued_ids ) ) {
+			Database::mark_notifying( $queued_ids );
 		}
 	}
 }

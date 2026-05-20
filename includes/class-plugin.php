@@ -22,12 +22,22 @@ class Plugin {
 	 * @var array<string, mixed>
 	 */
 	public const DEFAULTS = array(
-		'notifications_enabled' => true,
-		'show_name_field'       => false,
-		'name_field_required'   => false,
-		'from_name'             => '',
-		'from_email'            => '',
-		'email_subject'         => '',
+		'notifications_enabled'       => true,
+		'form_title'                  => '',
+		'form_button_label'           => '',
+		'show_name_field'             => false,
+		'name_field_required'         => false,
+		'msg_success'                 => '',
+		'msg_duplicate'               => '',
+		'msg_error'                   => '',
+		'from_name'                   => '',
+		'from_email'                  => '',
+		'confirmation_email_enabled'  => true,
+		'confirmation_email_subject'  => '',
+		'confirmation_email_body'     => '',
+		'notification_email_enabled'  => true,
+		'email_subject'               => '',
+		'email_body'                  => '',
 	);
 
 	/**

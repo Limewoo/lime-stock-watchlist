@@ -60,6 +60,8 @@ class Frontend {
 			true
 		);
 
+		$settings = Plugin::get_settings();
+
 		wp_localize_script(
 			'lswl-frontend',
 			'lswlFrontend',
@@ -68,11 +70,17 @@ class Frontend {
 				'nonce'     => wp_create_nonce( 'wp_rest' ),
 				'productId' => get_the_ID(),
 				'i18n'      => array(
-					'success'    => __( 'Thank you! We\'ll notify you when this product is back in stock.', 'lime-stock-watchlist' ),
-					'duplicate'  => __( 'You\'re already on the waitlist for this product.', 'lime-stock-watchlist' ),
+					'success'      => ! empty( $settings['msg_success'] )
+						? $settings['msg_success']
+						: __( 'Thank you! We\'ll notify you when this product is back in stock.', 'lime-stock-watchlist' ),
+					'duplicate'    => ! empty( $settings['msg_duplicate'] )
+						? $settings['msg_duplicate']
+						: __( 'You\'re already on the waitlist for this product.', 'lime-stock-watchlist' ),
 					'invalidEmail' => __( 'Please enter a valid email address.', 'lime-stock-watchlist' ),
-					'error'      => __( 'Something went wrong. Please try again.', 'lime-stock-watchlist' ),
-					'submitting' => __( 'Please wait…', 'lime-stock-watchlist' ),
+					'error'        => ! empty( $settings['msg_error'] )
+						? $settings['msg_error']
+						: __( 'Something went wrong. Please try again.', 'lime-stock-watchlist' ),
+					'submitting'   => __( 'Please wait…', 'lime-stock-watchlist' ),
 				),
 			)
 		);
@@ -121,8 +129,10 @@ class Frontend {
 			return;
 		}
 
-		$show_name = ! empty( $settings['show_name_field'] );
-		$name_required = ! empty( $settings['name_field_required'] );
+		$show_name         = ! empty( $settings['show_name_field'] );
+		$name_required     = ! empty( $settings['name_field_required'] );
+		$form_title        = ! empty( $settings['form_title'] ) ? $settings['form_title'] : '';
+		$form_button_label = ! empty( $settings['form_button_label'] ) ? $settings['form_button_label'] : '';
 
 		include LSWL_PATH . 'templates/frontend-form.php';
 	}

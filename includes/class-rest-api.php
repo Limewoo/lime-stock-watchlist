@@ -211,6 +211,10 @@ class Rest_API {
 			);
 		}
 
+		if ( ! empty( $settings['confirmation_email_enabled'] ) ) {
+			Email::send_confirmation( $product, (object) array( 'email' => $email, 'name' => $name ), $settings );
+		}
+
 		return new \WP_REST_Response(
 			array( 'message' => __( 'You\'ve been added to the watchlist.', 'lime-stock-watchlist' ) ),
 			200
@@ -241,7 +245,7 @@ class Rest_API {
 						'email'           => esc_html( $row->email ),
 						'name'            => esc_html( $row->name ),
 						'date_subscribed' => esc_html( $row->date_subscribed ),
-						'notified'        => (bool) $row->notified,
+						'notified'        => (int) $row->notified,
 						'unsubscribed'    => (bool) $row->unsubscribed,
 					),
 					$rows
@@ -298,7 +302,35 @@ class Rest_API {
 	 * @return \WP_REST_Response
 	 */
 	public function handle_get_settings(): \WP_REST_Response {
-		return new \WP_REST_Response( Plugin::get_settings(), 200 );
+		return new \WP_REST_Response( $this->settings_with_placeholders(), 200 );
+	}
+
+	/**
+	 * Return plugin settings merged with computed placeholder defaults.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function settings_with_placeholders(): array {
+		$settings = Plugin::get_settings();
+
+		$settings['_placeholders'] = array(
+			'from_name'                  => get_bloginfo( 'name' ),
+			'from_email'                 => get_option( 'admin_email' ),
+			'confirmation_email_subject' => __( "You're on the waitlist for {product_name}!", 'lime-stock-watchlist' ),
+			/* translators: placeholders are literal shortcode tokens, not translated */
+			'confirmation_email_body'    => __( "Hi {subscriber_name},\n\nYou're on the waitlist for {product_name}. We'll let you know as soon as it's back.\n\nThank you for shopping with {site_name}.", 'lime-stock-watchlist' ),
+			/* translators: placeholder is a literal shortcode token, not translated */
+			'email_subject'              => __( '{product_name} is back in stock!', 'lime-stock-watchlist' ),
+			/* translators: placeholders are literal shortcode tokens, not translated */
+			'email_body'                 => __( "Great news! {product_name} is now back in stock.\n\nThank you for shopping with {site_name}.", 'lime-stock-watchlist' ),
+			'form_title'                 => __( 'Notify me when available', 'lime-stock-watchlist' ),
+			'form_button_label'          => __( 'Notify me', 'lime-stock-watchlist' ),
+			'msg_success'                => __( "Thank you! We'll notify you when this product is back in stock.", 'lime-stock-watchlist' ),
+			'msg_duplicate'              => __( "You're already on the waitlist for this product.", 'lime-stock-watchlist' ),
+			'msg_error'                  => __( 'Something went wrong. Please try again.', 'lime-stock-watchlist' ),
+		);
+
+		return $settings;
 	}
 
 	/**
@@ -311,12 +343,22 @@ class Rest_API {
 		$current = Plugin::get_settings();
 
 		$updated = array(
-			'notifications_enabled' => (bool) $request->get_param( 'notifications_enabled' ),
-			'show_name_field'       => (bool) $request->get_param( 'show_name_field' ),
-			'name_field_required'   => (bool) $request->get_param( 'name_field_required' ),
-			'from_name'             => sanitize_text_field( (string) $request->get_param( 'from_name' ) ),
-			'from_email'            => sanitize_email( (string) $request->get_param( 'from_email' ) ),
-			'email_subject'         => sanitize_text_field( (string) $request->get_param( 'email_subject' ) ),
+			'notifications_enabled'       => (bool) $request->get_param( 'notifications_enabled' ),
+			'form_title'                  => sanitize_text_field( (string) $request->get_param( 'form_title' ) ),
+			'form_button_label'           => sanitize_text_field( (string) $request->get_param( 'form_button_label' ) ),
+			'show_name_field'             => (bool) $request->get_param( 'show_name_field' ),
+			'name_field_required'         => (bool) $request->get_param( 'name_field_required' ),
+			'msg_success'                 => sanitize_text_field( (string) $request->get_param( 'msg_success' ) ),
+			'msg_duplicate'               => sanitize_text_field( (string) $request->get_param( 'msg_duplicate' ) ),
+			'msg_error'                   => sanitize_text_field( (string) $request->get_param( 'msg_error' ) ),
+			'from_name'                   => sanitize_text_field( (string) $request->get_param( 'from_name' ) ),
+			'from_email'                  => sanitize_email( (string) $request->get_param( 'from_email' ) ),
+			'confirmation_email_enabled'  => (bool) $request->get_param( 'confirmation_email_enabled' ),
+			'confirmation_email_subject'  => sanitize_text_field( (string) $request->get_param( 'confirmation_email_subject' ) ),
+			'confirmation_email_body'     => wp_kses_post( (string) $request->get_param( 'confirmation_email_body' ) ),
+			'notification_email_enabled'  => (bool) $request->get_param( 'notification_email_enabled' ),
+			'email_subject'               => sanitize_text_field( (string) $request->get_param( 'email_subject' ) ),
+			'email_body'                  => wp_kses_post( (string) $request->get_param( 'email_body' ) ),
 		);
 
 		// Validate email if provided.
@@ -329,7 +371,7 @@ class Rest_API {
 
 		update_option( 'lswl_settings', array_merge( $current, $updated ) );
 
-		return new \WP_REST_Response( Plugin::get_settings(), 200 );
+		return new \WP_REST_Response( $this->settings_with_placeholders(), 200 );
 	}
 
 	/**
@@ -339,33 +381,22 @@ class Rest_API {
 	 */
 	private function settings_args(): array {
 		return array(
-			'notifications_enabled' => array(
-				'type'    => 'boolean',
-				'default' => true,
-			),
-			'show_name_field'       => array(
-				'type'    => 'boolean',
-				'default' => false,
-			),
-			'name_field_required'   => array(
-				'type'    => 'boolean',
-				'default' => false,
-			),
-			'from_name'             => array(
-				'type'              => 'string',
-				'default'           => '',
-				'sanitize_callback' => 'sanitize_text_field',
-			),
-			'from_email'            => array(
-				'type'              => 'string',
-				'default'           => '',
-				'sanitize_callback' => 'sanitize_email',
-			),
-			'email_subject'         => array(
-				'type'              => 'string',
-				'default'           => '',
-				'sanitize_callback' => 'sanitize_text_field',
-			),
+			'notifications_enabled'      => array( 'type' => 'boolean', 'default' => true ),
+			'form_title'                 => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
+			'form_button_label'          => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
+			'show_name_field'            => array( 'type' => 'boolean', 'default' => false ),
+			'name_field_required'        => array( 'type' => 'boolean', 'default' => false ),
+			'msg_success'                => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
+			'msg_duplicate'              => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
+			'msg_error'                  => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
+			'from_name'                  => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
+			'from_email'                 => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_email' ),
+			'confirmation_email_enabled' => array( 'type' => 'boolean', 'default' => true ),
+			'confirmation_email_subject' => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
+			'confirmation_email_body'    => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'wp_kses_post' ),
+			'notification_email_enabled' => array( 'type' => 'boolean', 'default' => true ),
+			'email_subject'              => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
+			'email_body'                 => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'wp_kses_post' ),
 		);
 	}
 }

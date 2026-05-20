@@ -3,8 +3,10 @@
  * Frontend "Notify me when available" form template.
  *
  * Available variables:
- *   $show_name     bool — whether to show the name field.
- *   $name_required bool — whether the name field is required.
+ *   $show_name         bool   — whether to show the name field.
+ *   $name_required     bool   — whether the name field is required.
+ *   $form_title        string — custom form heading (empty = default).
+ *   $form_button_label string — custom button label (empty = default).
  *
  * @package Lime_Stock_Watchlist
  */
@@ -15,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 <div class="lswl-notify-form" id="lswl-notify-form" aria-live="polite">
 	<div class="lswl-notify-form__heading">
-		<?php esc_html_e( 'Notify me when available', 'lime-stock-watchlist' ); ?>
+		<?php echo esc_html( ! empty( $form_title ) ? $form_title : __( 'Notify me when available', 'lime-stock-watchlist' ) ); ?>
 	</div>
 
 	<form class="lswl-notify-form__form" novalidate>
@@ -57,7 +59,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 		<div class="lswl-notify-form__submit">
 			<button type="submit" class="lswl-notify-form__button button">
-				<?php esc_html_e( 'Notify Me', 'lime-stock-watchlist' ); ?>
+				<?php echo esc_html( ! empty( $form_button_label ) ? $form_button_label : __( 'Notify me', 'lime-stock-watchlist' ) ); ?>
 			</button>
 		</div>
 
