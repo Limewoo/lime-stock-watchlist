@@ -236,6 +236,8 @@ React entry: `src/admin/js/index.js` → `build/admin.js` + `build/admin.css`. U
 Data layer: `@wordpress/api-fetch` + `wp_rest` nonce. Uses `url:` (not `path:`) in all `apiFetch` calls.  
 `CheckboxControl` and `ToggleControl` require `__nextHasNoMarginBottom` prop (deprecation since `@wordpress/components` 6.7).
 
+`lswlAdmin` JS object includes `restUrl`, `nonce`, and `dateFormat` (`get_option('date_format')`). `UserView` uses `@wordpress/date` `dateI18n( dateFormat, dateStr )` to format the Date Subscribed column — respects the site's date format from Settings → General. `wp-date` is listed in script dependencies (auto-detected by webpack from the import and present in `build/admin.asset.php`).
+
 ### Status badges
 
 | Value | Badge | Color | Dot |
