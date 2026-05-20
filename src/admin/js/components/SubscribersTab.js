@@ -149,6 +149,7 @@ export default function SubscribersTab() {
 	 * @param {number} id
 	 */
 	async function handleDelete( id ) {
+		if ( ! window.confirm( __( 'Delete this subscriber?', 'lime-stock-watchlist' ) ) ) return;
 		setBusy( true );
 		try {
 			await deleteSubscriber( id );
@@ -171,6 +172,13 @@ export default function SubscribersTab() {
 	 */
 	async function handleBulkDelete() {
 		if ( selected.size === 0 ) return;
+		if ( ! window.confirm(
+			sprintf(
+				/* translators: %d: number of subscribers to delete */
+				__( 'Delete %d subscriber(s)?', 'lime-stock-watchlist' ),
+				selected.size
+			)
+		) ) return;
 		const count = selected.size;
 		setBusy( true );
 		try {
