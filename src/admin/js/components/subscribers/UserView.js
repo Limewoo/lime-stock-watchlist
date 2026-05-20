@@ -2,6 +2,7 @@
  * User-based (flat) subscriber table using TanStack Table + Query.
  */
 import { useState, useEffect, useRef } from '@wordpress/element';
+import { dateI18n } from '@wordpress/date';
 import { CheckboxControl, Notice, Spinner } from '@wordpress/components';
 import { __, sprintf } from '@wordpress/i18n';
 import {
@@ -40,14 +41,15 @@ function syncPageToUrl( pageIndex ) {
 	history.replaceState( null, '', urlObj.toString() );
 }
 
+const { dateFormat } = window.lswlAdmin || {};
+
 /**
  * @param {string} dateStr
  * @return {string}
  */
 function formatDate( dateStr ) {
 	if ( ! dateStr ) return '—';
-	const d = new Date( dateStr );
-	return d.toLocaleDateString( undefined, { year: 'numeric', month: 'short', day: 'numeric' } );
+	return dateI18n( dateFormat || 'F j, Y', dateStr );
 }
 
 function TrashIcon() {

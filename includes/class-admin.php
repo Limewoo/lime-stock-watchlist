@@ -80,7 +80,7 @@ class Admin {
 		$deps = array_unique(
 			array_merge(
 				$asset['dependencies'],
-				array( 'wp-element', 'wp-components', 'wp-api-fetch', 'wp-i18n', 'wp-data' )
+				array( 'wp-element', 'wp-components', 'wp-api-fetch', 'wp-i18n', 'wp-data', 'wp-date' )
 			)
 		);
 
@@ -109,8 +109,9 @@ class Admin {
 			'lswl-admin',
 			'lswlAdmin',
 			array(
-				'restUrl' => esc_url_raw( rest_url( 'lime-stock-watchlist/v1/' ) ),
-				'nonce'   => wp_create_nonce( 'wp_rest' ),
+				'restUrl'    => esc_url_raw( rest_url( 'lime-stock-watchlist/v1/' ) ),
+				'nonce'      => wp_create_nonce( 'wp_rest' ),
+				'dateFormat' => get_option( 'date_format' ),
 			)
 		);
 	}
