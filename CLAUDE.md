@@ -55,7 +55,7 @@ Also hooks `before_woocommerce_init` (top-level, outside init) to declare HPOS +
 | `Product_Settings` | `class-product-settings.php` | WC Product Data tab "Watchlist" — per-product enable/disable |
 | `Rest_API` | `class-rest-api.php` | Registers all 6 REST routes; `settings_with_placeholders()` private helper used by both GET and POST settings handlers |
 | `Email` | `class-email.php` | `send_to_one()` — back-in-stock per-subscriber; `send_confirmation()` — subscription confirmation; `handle_queued_notification()` — AS callback; `send_notifications()` — sync fallback; `process_shortcodes()` — token replacement |
-| `Stock_Watcher` | `class-stock-watcher.php` | `woocommerce_product_set_stock_status` hook → guards on `notifications_enabled` AND `notification_email_enabled` → queues AS actions + calls `Database::mark_notifying()` (sync fallback skips mark_notifying) |
+| `Stock_Watcher` | `class-stock-watcher.php` | Hooks all 4 WC stock hooks (see below) → guards on `notifications_enabled` AND `notification_email_enabled` → queues AS actions + calls `Database::mark_notifying()` (sync fallback skips mark_notifying) |
 
 ### DB table: `{prefix}lime_watchlist`
 
@@ -91,6 +91,17 @@ AS action details:
 - Fallback: if `as_enqueue_async_action()` unavailable, falls back to synchronous `Email::send_notifications()` (no intermediate notifying state)
 
 Viewable/retryable in WooCommerce → Status → Action Scheduler.
+
+**WooCommerce stock hooks — WC fires separate hooks for variations vs. other products:**
+
+| Hook | Fires for | Trigger |
+|------|-----------|---------|
+| `woocommerce_variation_set_stock_status` | variations | status change |
+| `woocommerce_variation_set_stock` | variations | quantity change |
+| `woocommerce_product_set_stock_status` | simple / variable parent | status change |
+| `woocommerce_product_set_stock` | simple / variable parent | quantity change |
+
+All four are hooked. When variable parent fires instock, `Stock_Watcher` also iterates child variations and notifies each variation's subscribers (using `get_post_meta($variation_id, '_stock_status', true)` to bypass WC object cache). Double-send is impossible — `get_subscribers()` only returns `notified=0` rows.
 
 ### Subscription confirmation email
 
@@ -182,11 +193,24 @@ Data layer: `@wordpress/api-fetch` + `wp_rest` nonce. Uses `url:` (not `path:`) 
 ### Frontend form
 
 PHP-rendered via `woocommerce_single_product_summary` (priority 31, after price).  
-Only shown when product is out-of-stock AND feature enabled (global + per-product check).  
-Template: `templates/frontend-form.php`. Variables: `$show_name` (bool), `$name_required` (bool), `$form_title` (string), `$form_button_label` (string). Empty string = use translatable default.  
+Template: `templates/frontend-form.php`. Variables: `$show_name` (bool), `$name_required` (bool), `$form_title` (string), `$form_button_label` (string), `$is_hidden` (bool). Empty string = use translatable default.  
 Submits via `fetch()` → `POST /wp-json/lime-stock-watchlist/v1/subscribe`.  
-i18n strings (success / duplicate / error) resolved from settings in `Frontend::enqueue()` and passed via `lswlFrontend.i18n`.  
-On 200 success: heading + form elements removed from DOM, only success message remains. On 409: inline error shown, form stays visible.
+i18n strings (success / duplicate / error) resolved from settings in `Frontend::enqueue()` and passed via `lswlFrontend.i18n`.
+
+**Simple products:** only rendered when product is OOS. On 200 success: heading + form removed from DOM. On 409: inline error, form stays.
+
+**Variable products:** form always rendered with `hidden` attribute (`$is_hidden = true`) regardless of parent stock. JS reveals it only when user selects an OOS variation. On 200 success: heading + form hidden (not removed) so they can be reset if user selects another OOS variation. `subscribedVariations` Set (session-scoped) tracks subscribed variation IDs — re-selecting a subscribed variation shows the success message without resetting the form.
+
+`lswlFrontend` JS object includes:
+- `restUrl`, `nonce`, `productId` (parent ID), `isVariable` (bool), `i18n`
+
+**Variable product JS flow:**
+- Listens to WC jQuery events `found_variation` + `reset_data` on `.variations_form`
+- `found_variation` + `!variation.is_in_stock` → set `currentProductId = variation.variation_id`, show form (or success message if already subscribed this session)
+- `found_variation` + in-stock, or `reset_data` → hide wrapper
+- Submit uses `currentProductId` (variation ID) as `product_id` in REST body
+
+**CSS note:** `.lswl-notify-form`, `.lswl-notify-form__form`, `.lswl-notify-form__heading` all have explicit `display` set — `[hidden]` selectors with `!important` are required to override them.
 
 ### Email templates
 
