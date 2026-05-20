@@ -276,6 +276,7 @@ export default function SubscribersTab() {
 									<tr>
 										<th className="lswl-table__check">
 											<CheckboxControl
+												__nextHasNoMarginBottom
 												checked={ group.subscribers.every( ( s ) => selected.has( s.id ) ) }
 												onChange={ ( checked ) =>
 													group.subscribers.forEach( ( s ) => toggleOne( s.id, checked ) )
@@ -298,6 +299,7 @@ export default function SubscribersTab() {
 										>
 											<td className="lswl-table__check">
 												<CheckboxControl
+													__nextHasNoMarginBottom
 													checked={ selected.has( subscriber.id ) }
 													onChange={ ( checked ) => toggleOne( subscriber.id, checked ) }
 													aria-label={ subscriber.email }
