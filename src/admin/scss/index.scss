@@ -480,6 +480,131 @@
 	}
 }
 
+// ── View toggle ────────────────────────────────────────────
+
+.lswl-view-toggle {
+	display: flex;
+	gap: 8px;
+	margin-bottom: 20px;
+}
+
+// ── Filters ────────────────────────────────────────────────
+
+.lswl-filters {
+	display: flex;
+	align-items: flex-end;
+	gap: 12px;
+	margin-bottom: 16px;
+	flex-wrap: wrap;
+
+	.components-search-control {
+		flex: 1 1 220px;
+		min-width: 180px;
+		margin: 0;
+	}
+
+	&__status.components-base-control {
+		min-width: 160px;
+		margin: 0;
+	}
+}
+
+// ── Product cell (thumbnail + title link) ──────────────────
+
+.lswl-product-cell {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	text-decoration: none;
+	color: inherit;
+
+	&__thumb {
+		width: 32px;
+		height: 32px;
+		border-radius: $lswl-radius-sm;
+		object-fit: cover;
+		border: 1px solid #eee;
+		flex-shrink: 0;
+		display: block;
+
+		&--placeholder {
+			background: rgba($lswl-lime, 0.15);
+		}
+	}
+
+	&__name {
+		font-weight: 500;
+		color: $lswl-lime-darker;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+}
+
+// ── Table wrap (fetching overlay) ──────────────────────────
+
+.lswl-table-wrap {
+	&--fetching {
+		opacity: 0.55;
+		pointer-events: none;
+		transition: opacity 0.15s ease;
+	}
+}
+
+// ── Pagination ─────────────────────────────────────────────
+
+.lswl-pagination {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	margin-top: 16px;
+	flex-wrap: wrap;
+
+	&__info {
+		padding: 0 10px;
+		font-size: 13px;
+		color: #555;
+		white-space: nowrap;
+	}
+
+	&__total {
+		margin-left: auto;
+		font-size: 12.5px;
+		color: #999;
+		white-space: nowrap;
+	}
+
+	&__per-page.components-base-control {
+		margin: 0 0 0 8px;
+
+		select {
+			height: 30px;
+			font-size: 12.5px;
+		}
+	}
+}
+
+// ── Drill-down header ──────────────────────────────────────
+
+.lswl-drill-down {
+	&__header {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+		margin-bottom: 20px;
+		padding-bottom: 14px;
+		border-bottom: 1px solid #eaeaea;
+	}
+
+	&__title {
+		font-size: 15px;
+		font-weight: 600;
+		color: #1a2e1a;
+		margin: 0;
+	}
+}
+
 // ═══════════════════════════════════════════════════════════
 // Settings tab
 // ═══════════════════════════════════════════════════════════

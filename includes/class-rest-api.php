@@ -78,6 +78,38 @@ class Rest_API {
 					'methods'             => \WP_REST_Server::READABLE,
 					'callback'            => array( $this, 'handle_get_subscribers' ),
 					'permission_callback' => array( $this, 'admin_permission' ),
+					'args'                => array(
+						'view'       => array(
+							'type'    => 'string',
+							'default' => 'users',
+							'enum'    => array( 'users', 'products' ),
+						),
+						'page'       => array(
+							'type'              => 'integer',
+							'default'           => 1,
+							'sanitize_callback' => 'absint',
+						),
+						'per_page'   => array(
+							'type'              => 'integer',
+							'default'           => 25,
+							'sanitize_callback' => 'absint',
+						),
+						'status'     => array(
+							'type'    => 'string',
+							'default' => 'all',
+							'enum'    => array( 'all', 'watching', 'notifying', 'notified', 'unsubscribed' ),
+						),
+						'search'     => array(
+							'type'              => 'string',
+							'default'           => '',
+							'sanitize_callback' => 'sanitize_text_field',
+						),
+						'product_id' => array(
+							'type'              => 'integer',
+							'default'           => 0,
+							'sanitize_callback' => 'absint',
+						),
+					),
 				),
 				// DELETE /subscribers — bulk.
 				array(
@@ -94,6 +126,17 @@ class Rest_API {
 						),
 					),
 				),
+			)
+		);
+
+		// GET /subscribers/stats — admin. Must be registered before the /{id} route.
+		register_rest_route(
+			self::NAMESPACE,
+			'/subscribers/stats',
+			array(
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'handle_get_stats' ),
+				'permission_callback' => array( $this, 'admin_permission' ),
 			)
 		);
 
@@ -224,36 +267,81 @@ class Rest_API {
 	/**
 	 * GET /subscribers
 	 *
+	 * @param \WP_REST_Request $request Request object.
 	 * @return \WP_REST_Response
 	 */
-	public function handle_get_subscribers(): \WP_REST_Response {
-		$grouped = Database::get_all_grouped();
-		$data    = array();
+	public function handle_get_subscribers( \WP_REST_Request $request ): \WP_REST_Response {
+		$view = $request->get_param( 'view' );
 
-		foreach ( $grouped as $product_id => $rows ) {
-			$product = wc_get_product( $product_id );
-			$data[]  = array(
-				'product_id'   => $product_id,
-				'product_name' => $product ? esc_html( $product->get_name() ) : sprintf(
-					/* translators: %d: product ID */
-					__( 'Deleted product #%d', 'lime-stock-watchlist' ),
-					$product_id
-				),
-				'subscribers'  => array_map(
-					fn( $row ) => array(
+		if ( 'products' === $view ) {
+			$result = Database::get_products_with_counts(
+				array(
+					'page'     => $request->get_param( 'page' ),
+					'per_page' => $request->get_param( 'per_page' ),
+					'search'   => $request->get_param( 'search' ),
+				)
+			);
+			return new \WP_REST_Response( $result, 200 );
+		}
+
+		$result        = Database::get_subscribers_paginated(
+			array(
+				'page'       => $request->get_param( 'page' ),
+				'per_page'   => $request->get_param( 'per_page' ),
+				'status'     => $request->get_param( 'status' ),
+				'search'     => $request->get_param( 'search' ),
+				'product_id' => $request->get_param( 'product_id' ),
+				'orderby'    => 'date_subscribed',
+				'order'      => 'DESC',
+			)
+		);
+		$product_cache = array();
+
+		$result['items'] = array_map(
+			function ( $row ) use ( &$product_cache ) {
+				$pid = (int) $row->product_id;
+
+				if ( ! isset( $product_cache[ $pid ] ) ) {
+					$product               = wc_get_product( $pid );
+					$product_cache[ $pid ] = array(
+						'product_name'      => $product
+							? esc_html( $product->get_name() )
+							: sprintf(
+								/* translators: %d: product ID */
+								__( 'Deleted product #%d', 'lime-stock-watchlist' ),
+								$pid
+							),
+						'product_thumbnail' => $product ? ( get_the_post_thumbnail_url( $pid, 'thumbnail' ) ?: '' ) : '',
+						'product_url'       => $product ? esc_url( get_permalink( $pid ) ) : '',
+					);
+				}
+
+				return array_merge(
+					array(
 						'id'              => (int) $row->id,
+						'product_id'      => $pid,
 						'email'           => esc_html( $row->email ),
 						'name'            => esc_html( $row->name ),
 						'date_subscribed' => esc_html( $row->date_subscribed ),
 						'notified'        => (int) $row->notified,
 						'unsubscribed'    => (bool) $row->unsubscribed,
 					),
-					$rows
-				),
-			);
-		}
+					$product_cache[ $pid ]
+				);
+			},
+			$result['items']
+		);
 
-		return new \WP_REST_Response( $data, 200 );
+		return new \WP_REST_Response( $result, 200 );
+	}
+
+	/**
+	 * GET /subscribers/stats
+	 *
+	 * @return \WP_REST_Response
+	 */
+	public function handle_get_stats(): \WP_REST_Response {
+		return new \WP_REST_Response( Database::get_stats(), 200 );
 	}
 
 	/**

@@ -21,12 +21,32 @@ function url( endpoint ) {
 }
 
 /**
- * Fetch all subscribers grouped by product.
+ * Fetch subscribers (paginated, filtered).
  *
- * @return {Promise<Array>}
+ * @param {Object} params
+ * @param {'users'|'products'} [params.view]
+ * @param {number}             [params.page]
+ * @param {number}             [params.per_page]
+ * @param {string}             [params.status]
+ * @param {string}             [params.search]
+ * @param {number}             [params.product_id]
+ * @return {Promise<{items: Array, total: number, pages: number}>}
  */
-export function getSubscribers() {
-	return apiFetch( { url: url( 'subscribers' ) } );
+export function getSubscribers( params = {} ) {
+	const entries = Object.entries( params ).filter(
+		( [ , v ] ) => v !== undefined && v !== '' && v !== 0
+	);
+	const qs = entries.length ? '?' + new URLSearchParams( Object.fromEntries( entries ) ).toString() : '';
+	return apiFetch( { url: url( 'subscribers' ) + qs } );
+}
+
+/**
+ * Fetch aggregate subscriber stats for the stats bar.
+ *
+ * @return {Promise<{total: number, watching: number, notifying: number, notified: number, unsubscribed: number}>}
+ */
+export function getSubscriberStats() {
+	return apiFetch( { url: url( 'subscribers/stats' ) } );
 }
 
 /**

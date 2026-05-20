@@ -186,6 +186,169 @@ class Database {
 	}
 
 	/**
+	 * Get aggregate subscriber counts per status, for the admin stats bar.
+	 *
+	 * @return array{ total: int, watching: int, notifying: int, notified: int, unsubscribed: int }
+	 */
+	public static function get_stats(): array {
+		global $wpdb;
+		$table = self::table();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$row = $wpdb->get_row(
+			"SELECT
+				COUNT(*) AS total,
+				SUM(notified = 0 AND unsubscribed = 0) AS watching,
+				SUM(notified = 2 AND unsubscribed = 0) AS notifying,
+				SUM(notified = 1 AND unsubscribed = 0) AS notified_count,
+				SUM(unsubscribed = 1) AS unsubscribed_count
+			FROM `{$table}`"
+		);
+
+		return array(
+			'total'        => (int) ( $row->total ?? 0 ),
+			'watching'     => (int) ( $row->watching ?? 0 ),
+			'notifying'    => (int) ( $row->notifying ?? 0 ),
+			'notified'     => (int) ( $row->notified_count ?? 0 ),
+			'unsubscribed' => (int) ( $row->unsubscribed_count ?? 0 ),
+		);
+	}
+
+	/**
+	 * Get a paginated, filtered list of subscribers.
+	 *
+	 * @param array{
+	 *   page: int,
+	 *   per_page: int,
+	 *   status: string,
+	 *   search: string,
+	 *   product_id: int,
+	 *   orderby: string,
+	 *   order: string,
+	 * } $args Query arguments.
+	 * @return array{ items: array, total: int, pages: int }
+	 */
+	public static function get_subscribers_paginated( array $args ): array {
+		global $wpdb;
+		$table = self::table();
+
+		$page       = max( 1, (int) ( $args['page'] ?? 1 ) );
+		$per_page   = max( 1, min( 100, (int) ( $args['per_page'] ?? 25 ) ) );
+		$status     = $args['status'] ?? 'all';
+		$search     = $args['search'] ?? '';
+		$product_id = (int) ( $args['product_id'] ?? 0 );
+		$orderby    = in_array( $args['orderby'] ?? '', array( 'date_subscribed', 'email' ), true ) ? $args['orderby'] : 'date_subscribed';
+		$order      = 'ASC' === strtoupper( $args['order'] ?? 'DESC' ) ? 'ASC' : 'DESC';
+		$offset     = ( $page - 1 ) * $per_page;
+
+		$where  = array( '1=1' );
+		$values = array();
+
+		switch ( $status ) {
+			case 'watching':
+				$where[] = 'notified = 0 AND unsubscribed = 0';
+				break;
+			case 'notifying':
+				$where[] = 'notified = 2 AND unsubscribed = 0';
+				break;
+			case 'notified':
+				$where[] = 'notified = 1 AND unsubscribed = 0';
+				break;
+			case 'unsubscribed':
+				$where[] = 'unsubscribed = 1';
+				break;
+		}
+
+		if ( '' !== $search ) {
+			$where[]  = 'email LIKE %s';
+			$values[] = '%' . $wpdb->esc_like( $search ) . '%';
+		}
+
+		if ( $product_id > 0 ) {
+			$where[]  = 'product_id = %d';
+			$values[] = $product_id;
+		}
+
+		$where_sql = implode( ' AND ', $where );
+		$count_sql = "SELECT COUNT(*) FROM `{$table}` WHERE {$where_sql}";
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+		$total = (int) $wpdb->get_var( empty( $values ) ? $count_sql : $wpdb->prepare( $count_sql, ...$values ) );
+
+		$select_sql  = "SELECT id, product_id, email, name, date_subscribed, notified, unsubscribed FROM `{$table}` WHERE {$where_sql} ORDER BY `{$orderby}` {$order} LIMIT %d OFFSET %d";
+		$select_args = array_merge( $values, array( $per_page, $offset ) );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+		$rows = $wpdb->get_results( $wpdb->prepare( $select_sql, ...$select_args ) );
+
+		return array(
+			'items' => $rows ?? array(),
+			'total' => $total,
+			'pages' => $total > 0 ? (int) ceil( $total / $per_page ) : 0,
+		);
+	}
+
+	/**
+	 * Get products with subscriber counts, for the product-based admin view.
+	 *
+	 * @param array{ page: int, per_page: int, search: string } $args Query arguments.
+	 * @return array{ items: array, total: int, pages: int }
+	 */
+	public static function get_products_with_counts( array $args ): array {
+		global $wpdb;
+		$table = self::table();
+
+		$page     = max( 1, (int) ( $args['page'] ?? 1 ) );
+		$per_page = max( 1, min( 100, (int) ( $args['per_page'] ?? 25 ) ) );
+		$search   = $args['search'] ?? '';
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$rows = $wpdb->get_results(
+			"SELECT product_id, COUNT(*) AS subscriber_count
+			FROM `{$table}`
+			GROUP BY product_id
+			ORDER BY subscriber_count DESC"
+		);
+
+		if ( empty( $rows ) ) {
+			return array( 'items' => array(), 'total' => 0, 'pages' => 0 );
+		}
+
+		$items = array();
+
+		foreach ( $rows as $row ) {
+			$pid     = (int) $row->product_id;
+			$product = wc_get_product( $pid );
+			$name    = $product
+				? $product->get_name()
+				: sprintf(
+					/* translators: %d: product ID */
+					__( 'Deleted product #%d', 'lime-stock-watchlist' ),
+					$pid
+				);
+
+			if ( '' !== $search && false === stripos( $name, $search ) ) {
+				continue;
+			}
+
+			$items[] = array(
+				'product_id'        => $pid,
+				'product_name'      => esc_html( $name ),
+				'product_thumbnail' => $product ? ( get_the_post_thumbnail_url( $pid, 'thumbnail' ) ?: '' ) : '',
+				'product_url'       => $product ? esc_url( get_permalink( $pid ) ) : '',
+				'subscriber_count'  => (int) $row->subscriber_count,
+			);
+		}
+
+		$total = count( $items );
+		$slice = array_slice( $items, ( $page - 1 ) * $per_page, $per_page );
+
+		return array(
+			'items' => $slice,
+			'total' => $total,
+			'pages' => $total > 0 ? (int) ceil( $total / $per_page ) : 0,
+		);
+	}
+
+	/**
 	 * Mark a list of subscriber IDs as notified.
 	 *
 	 * @param int[] $ids Subscriber IDs.
