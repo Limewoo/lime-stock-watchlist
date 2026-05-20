@@ -50,6 +50,19 @@ class Stock_Watcher {
 			return;
 		}
 
-		Email::send_notifications( $product_id );
+		if ( ! function_exists( 'as_enqueue_async_action' ) ) {
+			Email::send_notifications( $product_id );
+			return;
+		}
+
+		$subscribers = Database::get_subscribers( $product_id );
+
+		foreach ( $subscribers as $subscriber ) {
+			as_enqueue_async_action(
+				'lswl_send_notification',
+				array( absint( $subscriber->id ), $product_id ),
+				'lime-stock-watchlist'
+			);
+		}
 	}
 }

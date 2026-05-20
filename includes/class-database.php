@@ -135,6 +135,26 @@ class Database {
 	}
 
 	/**
+	 * Get a single subscriber row by ID.
+	 *
+	 * @param int $id Subscriber ID.
+	 * @return object|null
+	 */
+	public static function get_subscriber_by_id( int $id ): ?object {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		return $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT id, product_id, email, name, date_subscribed, notified, unsubscribed
+				FROM `{$wpdb->prefix}lime_watchlist`
+				WHERE id = %d",
+				$id
+			)
+		) ?: null;
+	}
+
+	/**
 	 * Get all subscribers grouped by product ID, for the admin table.
 	 *
 	 * @return array<int, array<int, object>>

@@ -52,8 +52,8 @@ Also hooks `before_woocommerce_init` (top-level, outside init) to declare HPOS +
 | `Admin` | `class-admin.php` | WC submenu, enqueues React bundle on plugin page |
 | `Product_Settings` | `class-product-settings.php` | WC Product Data tab "Watchlist" — per-product enable/disable |
 | `Rest_API` | `class-rest-api.php` | Registers all 6 REST routes |
-| `Email` | `class-email.php` | Builds + sends `wp_mail()` notifications, generates unsubscribe URL |
-| `Stock_Watcher` | `class-stock-watcher.php` | `woocommerce_product_set_stock_status` hook → triggers `Email` |
+| `Email` | `class-email.php` | Builds + sends `wp_mail()` notifications, generates unsubscribe URL. `send_to_one()` is the per-subscriber helper; `handle_queued_notification()` is the AS action callback; `send_notifications()` is the sync fallback. |
+| `Stock_Watcher` | `class-stock-watcher.php` | `woocommerce_product_set_stock_status` hook → queues one Action Scheduler action per subscriber (falls back to sync if AS unavailable) |
 
 ### DB table: `{prefix}lime_watchlist`
 
@@ -68,6 +68,17 @@ Also hooks `before_woocommerce_init` (top-level, outside init) to declare HPOS +
 | `unsubscribed` | `TINYINT(1)` | 0 = active, 1 = unsubscribed |
 
 UNIQUE KEY on `(product_id, email)`. Re-subscribe (reset `notified=0, unsubscribed=0`) only allowed when `notified=1` OR `unsubscribed=1`. Active subscription (`notified=0, unsubscribed=0`) returns `'already_subscribed'` from `Database::add_or_resubscribe()` → REST 409.
+
+### Email delivery (Action Scheduler)
+
+On stock change, `Stock_Watcher` enqueues one AS async action per subscriber:
+- Hook: `lswl_send_notification( int $subscriber_id, int $product_id )`
+- Group: `lime-stock-watchlist`
+- Unique: `false` — AS unique flag collapsed all per-subscriber actions to one in some AS versions; double-send prevented instead by the `notified=1` guard in the callback
+- Callback: `Email::handle_queued_notification()` — re-checks subscriber is still active before sending, marks `notified=1` only on successful `wp_mail()`
+- Fallback: if `as_enqueue_async_action()` unavailable, falls back to synchronous `Email::send_notifications()`
+
+Viewable/retryable in WooCommerce → Status → Action Scheduler.
 
 ### Settings (`wp_options` key: `lswl_settings`)
 

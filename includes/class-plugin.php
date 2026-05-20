@@ -40,6 +40,7 @@ class Plugin {
 		( new Rest_API() )->register();
 		( new Stock_Watcher() )->register();
 
+		add_action( 'lswl_send_notification', array( Email::class, 'handle_queued_notification' ), 10, 2 );
 		add_action( 'init', array( $this, 'handle_unsubscribe' ) );
 		add_action( 'plugins_loaded', array( $this, 'load_textdomain' ) );
 	}
