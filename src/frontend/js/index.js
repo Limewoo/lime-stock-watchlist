@@ -1,5 +1,6 @@
 /**
  * Frontend: AJAX subscribe form via the REST API.
+ * Supports simple (static) and variable products (variation-aware).
  */
 import '../scss/index.scss';
 
@@ -13,18 +14,71 @@ document.addEventListener( 'DOMContentLoaded', () => {
 
 	if ( ! form || ! message || ! button ) return;
 
-	const { restUrl, nonce, productId, i18n } = window.lswlFrontend || {};
+	const { restUrl, nonce, productId, isVariable, i18n } = window.lswlFrontend || {};
+
+	// Tracks the ID to subscribe against — updated per selected variation.
+	let currentProductId = productId;
+
+	// Variation IDs successfully subscribed this page session.
+	const subscribedVariations = new Set();
 
 	/**
-	 * Show an inline message inside the form.
+	 * Show an inline message inside the form wrapper.
 	 *
-	 * @param {string}  text
+	 * @param {string}            text
 	 * @param {'success'|'error'} type
 	 */
 	function showMessage( text, type ) {
 		message.textContent = text;
 		message.className   = `lswl-notify-form__message lswl-notify-form__message--${ type }`;
 		message.removeAttribute( 'hidden' );
+	}
+
+	/**
+	 * Reset the form to its initial visible state (used when a new OOS variation is selected).
+	 */
+	function resetForm() {
+		const heading = wrapper.querySelector( '.lswl-notify-form__heading' );
+		if ( heading ) heading.removeAttribute( 'hidden' );
+		form.removeAttribute( 'hidden' );
+
+		const emailInput = form.querySelector( '#lswl-email' );
+		if ( emailInput ) emailInput.value = '';
+		const nameInput = form.querySelector( '#lswl-name' );
+		if ( nameInput ) nameInput.value = '';
+
+		button.disabled    = false;
+		button.textContent = button.dataset.label;
+
+		message.setAttribute( 'hidden', '' );
+		message.textContent = '';
+	}
+
+	// Variable product: listen to WooCommerce jQuery variation events.
+	if ( isVariable && window.jQuery ) {
+		const $ = window.jQuery;
+
+		$( document ).on( 'found_variation', '.variations_form', ( _event, variation ) => {
+			if ( ! variation.is_in_stock ) {
+				currentProductId = variation.variation_id;
+
+				if ( subscribedVariations.has( variation.variation_id ) ) {
+					// Already subscribed this session — show success message, not the form.
+					wrapper.removeAttribute( 'hidden' );
+					return;
+				}
+
+				resetForm();
+				wrapper.removeAttribute( 'hidden' );
+			} else {
+				wrapper.setAttribute( 'hidden', '' );
+			}
+		} );
+
+		$( document ).on( 'reset_data', '.variations_form', () => {
+			wrapper.setAttribute( 'hidden', '' );
+			currentProductId = productId;
+		} );
 	}
 
 	form.addEventListener( 'submit', async ( e ) => {
@@ -45,7 +99,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		button.disabled    = true;
 		button.textContent = i18n.submitting;
 
-		const body = { product_id: Number( productId ), email };
+		const body = { product_id: Number( currentProductId ), email };
 		if ( name ) {
 			body.name = name;
 		}
@@ -64,8 +118,14 @@ document.addEventListener( 'DOMContentLoaded', () => {
 
 			if ( response.ok ) {
 				showMessage( data.message || i18n.success, 'success' );
-				wrapper.querySelector( '.lswl-notify-form__heading' )?.remove();
-				form.remove();
+				if ( isVariable ) {
+					subscribedVariations.add( Number( currentProductId ) );
+					wrapper.querySelector( '.lswl-notify-form__heading' )?.setAttribute( 'hidden', '' );
+					form.setAttribute( 'hidden', '' );
+				} else {
+					wrapper.querySelector( '.lswl-notify-form__heading' )?.remove();
+					form.remove();
+				}
 			} else if ( response.status === 409 ) {
 				showMessage( i18n.duplicate, 'error' );
 			} else {
@@ -74,8 +134,10 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		} catch {
 			showMessage( i18n.error, 'error' );
 		} finally {
-			button.disabled    = false;
-			button.textContent = button.dataset.label || button.textContent;
+			if ( ! isVariable || ! form.hidden ) {
+				button.disabled    = false;
+				button.textContent = button.dataset.label;
+			}
 		}
 	} );
 

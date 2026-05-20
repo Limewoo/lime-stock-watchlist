@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 ?>
-<div class="lswl-notify-form" id="lswl-notify-form" aria-live="polite">
+<div class="lswl-notify-form" id="lswl-notify-form" aria-live="polite"<?php echo ! empty( $is_hidden ) ? ' hidden' : ''; ?>>
 	<div class="lswl-notify-form__heading">
 		<?php echo esc_html( ! empty( $form_title ) ? $form_title : __( 'Notify me when available', 'lime-stock-watchlist' ) ); ?>
 	</div>

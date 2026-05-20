@@ -62,14 +62,17 @@ class Frontend {
 
 		$settings = Plugin::get_settings();
 
+		$current_product = wc_get_product( get_the_ID() );
+
 		wp_localize_script(
 			'lswl-frontend',
 			'lswlFrontend',
 			array(
-				'restUrl'   => esc_url_raw( rest_url( 'lime-stock-watchlist/v1/' ) ),
-				'nonce'     => wp_create_nonce( 'wp_rest' ),
-				'productId' => get_the_ID(),
-				'i18n'      => array(
+				'restUrl'    => esc_url_raw( rest_url( 'lime-stock-watchlist/v1/' ) ),
+				'nonce'      => wp_create_nonce( 'wp_rest' ),
+				'productId'  => get_the_ID(),
+				'isVariable' => $current_product && $current_product->is_type( 'variable' ),
+				'i18n'       => array(
 					'success'      => ! empty( $settings['msg_success'] )
 						? $settings['msg_success']
 						: __( 'Thank you! We\'ll notify you when this product is back in stock.', 'lime-stock-watchlist' ),
@@ -113,10 +116,6 @@ class Frontend {
 			return;
 		}
 
-		if ( $product->is_in_stock() ) {
-			return;
-		}
-
 		$settings = Plugin::get_settings();
 
 		if ( empty( $settings['notifications_enabled'] ) ) {
@@ -129,10 +128,20 @@ class Frontend {
 			return;
 		}
 
+		$is_variable = $product->is_type( 'variable' );
+
+		// Simple (and other non-variable) products: only render when out of stock.
+		if ( ! $is_variable && $product->is_in_stock() ) {
+			return;
+		}
+
 		$show_name         = ! empty( $settings['show_name_field'] );
 		$name_required     = ! empty( $settings['name_field_required'] );
 		$form_title        = ! empty( $settings['form_title'] ) ? $settings['form_title'] : '';
 		$form_button_label = ! empty( $settings['form_button_label'] ) ? $settings['form_button_label'] : '';
+
+		// Variable products render hidden; JS reveals the form when an OOS variation is selected.
+		$is_hidden = $is_variable;
 
 		include LSWL_PATH . 'templates/frontend-form.php';
 	}

@@ -7,7 +7,6 @@
 .lswl-admin {
 	max-width: 1100px;
 	margin-top: 12px;
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 // ── Brand header ───────────────────────────────────────────
@@ -51,7 +50,6 @@
 
 .lswl-admin__logo-text {
 	h1 {
-		font-family: $lswl-font-brand;
 		font-size: 21px;
 		font-weight: 600;
 		color: #fff;
@@ -126,7 +124,6 @@
 	border-color: $lswl-lime-dark;
 	color: #fff;
 	box-shadow: 0 2px 8px rgba($lswl-lime, 0.28);
-	font-family: $lswl-font-brand;
 	font-weight: 500;
 
 	&:hover:not(:disabled) {
@@ -168,7 +165,6 @@
 	position: relative;
 
 	&__value {
-		font-family: $lswl-font-brand;
 		font-size: 28px;
 		font-weight: 700;
 		line-height: 1;
@@ -285,7 +281,6 @@
 		font-weight: 600;
 		font-size: 13.5px;
 		color: #1a3010;
-		font-family: $lswl-font-brand;
 	}
 
 	&__count {
@@ -346,7 +341,6 @@
 	}
 
 	&__email {
-		font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
 		font-size: 12.5px;
 		color: #444;
 	}
@@ -472,7 +466,6 @@
 	}
 
 	&__title {
-		font-family: $lswl-font-brand;
 		font-size: 17px;
 		font-weight: 600;
 		color: #333;
@@ -525,7 +518,6 @@
 	}
 
 	&__title {
-		font-family: $lswl-font-brand;
 		font-size: 14px;
 		font-weight: 600;
 		color: #1a2e1a;

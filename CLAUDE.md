@@ -48,14 +48,15 @@ Also hooks `before_woocommerce_init` (top-level, outside init) to declare HPOS +
 
 | Class | File | Responsibility |
 |-------|------|----------------|
+| `Subscriber` | `class-subscriber.php` | Value object for a watchlist row — `from_row()` factory, status helpers (`is_watching/notifying/notified/unsubscribed`), `display_name()` |
 | `Plugin` | `class-plugin.php` | Orchestrator — instantiates all classes, wires hooks, handles unsubscribe token on `init` |
-| `Database` | `class-database.php` | `dbDelta` table install, all CRUD (`$wpdb->prepare()` everywhere) |
+| `Database` | `class-database.php` | `dbDelta` table install, all CRUD (`$wpdb->prepare()` everywhere); all read methods return `Subscriber` instances |
 | `Frontend` | `class-frontend.php` | Renders notify form on out-of-stock product pages, enqueues frontend assets (resolves i18n messages from settings) |
 | `Admin` | `class-admin.php` | WC submenu "Lime Watchlist" (`lime-stock-watchlist`), enqueues React bundle on plugin page |
 | `Product_Settings` | `class-product-settings.php` | WC Product Data tab "Watchlist" — per-product enable/disable |
 | `Rest_API` | `class-rest-api.php` | Registers all 6 REST routes; `settings_with_placeholders()` private helper used by both GET and POST settings handlers |
 | `Email` | `class-email.php` | `send_to_one()` — back-in-stock per-subscriber; `send_confirmation()` — subscription confirmation; `handle_queued_notification()` — AS callback; `send_notifications()` — sync fallback; `process_shortcodes()` — token replacement |
-| `Stock_Watcher` | `class-stock-watcher.php` | `woocommerce_product_set_stock_status` hook → guards on `notifications_enabled` AND `notification_email_enabled` → queues AS actions + calls `Database::mark_notifying()` (sync fallback skips mark_notifying) |
+| `Stock_Watcher` | `class-stock-watcher.php` | Hooks all 4 WC stock hooks (see below) → guards on `notifications_enabled` AND `notification_email_enabled` → queues AS actions + calls `Database::mark_notifying()` (sync fallback skips mark_notifying) |
 
 ### DB table: `{prefix}lime_watchlist`
 
@@ -91,6 +92,17 @@ AS action details:
 - Fallback: if `as_enqueue_async_action()` unavailable, falls back to synchronous `Email::send_notifications()` (no intermediate notifying state)
 
 Viewable/retryable in WooCommerce → Status → Action Scheduler.
+
+**WooCommerce stock hooks — WC fires separate hooks for variations vs. other products:**
+
+| Hook | Fires for | Trigger |
+|------|-----------|---------|
+| `woocommerce_variation_set_stock_status` | variations | status change |
+| `woocommerce_variation_set_stock` | variations | quantity change |
+| `woocommerce_product_set_stock_status` | simple / variable parent | status change |
+| `woocommerce_product_set_stock` | simple / variable parent | quantity change |
+
+All four are hooked. When variable parent fires instock, `Stock_Watcher` also iterates child variations and notifies each variation's subscribers (using `get_post_meta($variation_id, '_stock_status', true)` to bypass WC object cache). Double-send is impossible — `get_subscribers()` only returns `notified=0` rows.
 
 ### Subscription confirmation email
 
@@ -156,7 +168,7 @@ WC submenu: **"Lime Watchlist"** — `PAGE_SLUG = 'lime-stock-watchlist'`, hook 
 
 Single React SPA rendered in `<div id="lswl-admin-root">`. Two tabs via `@wordpress/components` `TabPanel`:
 
-- **Subscribers** — stats bar (Total / Waiting / Notifying / Notified / Unsubscribed), subscribers grouped into per-product cards with status badges, per-group checkbox, single + bulk delete. Warning notice appears when `stats.notifying > 0` (singular/plural via `sprintf`). Both delete paths show `window.confirm()`. Column order: Name | Email | Status | Date subscribed | action.
+- **Subscribers** — stats bar (Total / Watching / Notifying / Notified / Unsubscribed), subscribers grouped into per-product cards with status badges, per-group checkbox, single + bulk delete. Warning notice appears when `stats.notifying > 0` (singular/plural via `sprintf`). Both delete paths show `window.confirm()`. Column order: Name | Email | Status | Date subscribed | action.
 - **Settings** — five grouped cards; all but the first hidden when `notifications_enabled` is false:
   1. **Enable Stock Watchlist** — master toggle
   2. **Subscriber Form** — form title, button label, name field toggles, success/duplicate/error messages
@@ -174,19 +186,32 @@ Data layer: `@wordpress/api-fetch` + `wp_rest` nonce. Uses `url:` (not `path:`) 
 
 | Value | Badge | Color | Dot |
 |-------|-------|-------|-----|
-| `notified=0, unsub=0` | Waiting | amber | `$lswl-waiting-dot` |
-| `notified=2, unsub=0` | Notifying | purple (pulsing dot) | `$lswl-notifying-dot` |
+| `notified=0, unsub=0` | Watching | grey (`#e5e5e5`) | `$lswl-waiting-dot` |
+| `notified=2, unsub=0` | Notifying | green (`#c6e1c6`, pulsing dot) | `$lswl-notifying-dot` |
 | `notified=1, unsub=0` | Notified | blue | `$lswl-notified-dot` |
 | `unsubscribed=1` | Unsubscribed | grey | `$lswl-unsub-dot` |
 
 ### Frontend form
 
 PHP-rendered via `woocommerce_single_product_summary` (priority 31, after price).  
-Only shown when product is out-of-stock AND feature enabled (global + per-product check).  
-Template: `templates/frontend-form.php`. Variables: `$show_name` (bool), `$name_required` (bool), `$form_title` (string), `$form_button_label` (string). Empty string = use translatable default.  
+Template: `templates/frontend-form.php`. Variables: `$show_name` (bool), `$name_required` (bool), `$form_title` (string), `$form_button_label` (string), `$is_hidden` (bool). Empty string = use translatable default.  
 Submits via `fetch()` → `POST /wp-json/lime-stock-watchlist/v1/subscribe`.  
-i18n strings (success / duplicate / error) resolved from settings in `Frontend::enqueue()` and passed via `lswlFrontend.i18n`.  
-On 200 success: heading + form elements removed from DOM, only success message remains. On 409: inline error shown, form stays visible.
+i18n strings (success / duplicate / error) resolved from settings in `Frontend::enqueue()` and passed via `lswlFrontend.i18n`.
+
+**Simple products:** only rendered when product is OOS. On 200 success: heading + form removed from DOM. On 409: inline error, form stays.
+
+**Variable products:** form always rendered with `hidden` attribute (`$is_hidden = true`) regardless of parent stock. JS reveals it only when user selects an OOS variation. On 200 success: heading + form hidden (not removed) so they can be reset if user selects another OOS variation. `subscribedVariations` Set (session-scoped) tracks subscribed variation IDs — re-selecting a subscribed variation shows the success message without resetting the form.
+
+`lswlFrontend` JS object includes:
+- `restUrl`, `nonce`, `productId` (parent ID), `isVariable` (bool), `i18n`
+
+**Variable product JS flow:**
+- Listens to WC jQuery events `found_variation` + `reset_data` on `.variations_form`
+- `found_variation` + `!variation.is_in_stock` → set `currentProductId = variation.variation_id`, show form (or success message if already subscribed this session)
+- `found_variation` + in-stock, or `reset_data` → hide wrapper
+- Submit uses `currentProductId` (variation ID) as `product_id` in REST body
+
+**CSS note:** `.lswl-notify-form`, `.lswl-notify-form__form`, `.lswl-notify-form__heading` all have explicit `display` set — `[hidden]` selectors with `!important` are required to override them.
 
 ### Email templates
 
