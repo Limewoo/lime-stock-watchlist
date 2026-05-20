@@ -96,7 +96,7 @@ Namespace: `lime-stock-watchlist/v1`
 ### Admin UI
 
 Single React SPA rendered in `<div id="lswl-admin-root">`. Two tabs via `@wordpress/components` `TabPanel`:
-- **Subscribers** — stats bar (total / waiting / notified / unsubscribed), subscribers grouped into per-product cards with status badges, per-group checkbox, single + bulk delete
+- **Subscribers** — stats bar (total / waiting / notified / unsubscribed), subscribers grouped into per-product cards with status badges, per-group checkbox, single + bulk delete. Both delete paths show a `window.confirm()` before proceeding.
 - **Settings** — three grouped cards (Notifications / Subscriber Form / Email Configuration) using `ToggleControl` / `TextControl`, saved via REST
 
 React entry: `src/admin/js/index.js` → `build/admin.js` + `build/admin.css`. Uses `createRoot` (React 18 API).  
