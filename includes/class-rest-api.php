@@ -232,7 +232,7 @@ class Rest_API {
 					fn( $row ) => array(
 						'id'              => (int) $row->id,
 						'email'           => esc_html( $row->email ),
-						'subscriber_name' => esc_html( $row->subscriber_name ),
+						'name'            => esc_html( $row->name ),
 						'date_subscribed' => esc_html( $row->date_subscribed ),
 						'notified'        => (bool) $row->notified,
 						'unsubscribed'    => (bool) $row->unsubscribed,

@@ -62,7 +62,7 @@ Also hooks `before_woocommerce_init` (top-level, outside init) to declare HPOS +
 | `id` | `BIGINT UNSIGNED` | Primary key |
 | `product_id` | `BIGINT UNSIGNED` | Indexed |
 | `email` | `VARCHAR(200)` | Unique per product |
-| `subscriber_name` | `VARCHAR(100)` | Optional, default `''` |
+| `name` | `VARCHAR(100)` | Optional, default `''` |
 | `date_subscribed` | `DATETIME` | Default `CURRENT_TIMESTAMP` |
 | `notified` | `TINYINT(1)` | 0 = pending, 1 = notified |
 | `unsubscribed` | `TINYINT(1)` | 0 = active, 1 = unsubscribed |

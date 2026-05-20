@@ -304,7 +304,7 @@ export default function SubscribersTab() {
 												/>
 											</td>
 											<td>
-												{ subscriber.subscriber_name || (
+												{ subscriber.name || (
 													<span className="lswl-table__muted">—</span>
 												) }
 											</td>

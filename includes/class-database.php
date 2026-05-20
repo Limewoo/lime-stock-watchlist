@@ -51,7 +51,7 @@ class Database {
 			id              BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
 			product_id      BIGINT UNSIGNED  NOT NULL,
 			email           VARCHAR(200)     NOT NULL,
-			subscriber_name VARCHAR(100)     NOT NULL DEFAULT '',
+			name            VARCHAR(100)     NOT NULL DEFAULT '',
 			date_subscribed DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			notified        TINYINT(1)       NOT NULL DEFAULT 0,
 			unsubscribed    TINYINT(1)       NOT NULL DEFAULT 0,
@@ -81,11 +81,11 @@ class Database {
 		$result = $wpdb->query(
 			$wpdb->prepare(
 				"INSERT INTO `{$wpdb->prefix}lime_watchlist`
-					(product_id, email, subscriber_name, date_subscribed, notified, unsubscribed)
+					(product_id, email, name, date_subscribed, notified, unsubscribed)
 				VALUES
 					(%d, %s, %s, NOW(), 0, 0)
 				ON DUPLICATE KEY UPDATE
-					subscriber_name  = VALUES(subscriber_name),
+					name             = VALUES(name),
 					date_subscribed  = NOW(),
 					notified         = 0,
 					unsubscribed     = 0",
@@ -110,7 +110,7 @@ class Database {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 		return $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT id, email, subscriber_name, date_subscribed
+				"SELECT id, email, name, date_subscribed
 				FROM `{$wpdb->prefix}lime_watchlist`
 				WHERE product_id = %d
 				  AND notified    = 0
@@ -130,7 +130,7 @@ class Database {
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 		$rows = $wpdb->get_results(
-			"SELECT id, product_id, email, subscriber_name, date_subscribed, notified, unsubscribed
+			"SELECT id, product_id, email, name, date_subscribed, notified, unsubscribed
 			FROM `{$wpdb->prefix}lime_watchlist`
 			ORDER BY product_id ASC, date_subscribed DESC"
 		);
