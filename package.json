@@ -8,7 +8,8 @@
 		"build": "wp-scripts build",
 		"start": "wp-scripts start",
 		"lint:js": "wp-scripts lint-js",
-		"lint:style": "wp-scripts lint-style"
+		"lint:style": "wp-scripts lint-style",
+		"zip": "bun run build && composer install --no-dev && rm -f lime-stock-watchlist.zip && rm -rf /tmp/lswl-dist && rsync -aq --exclude-from=.distignore --exclude='*.zip' . /tmp/lswl-dist/lime-stock-watchlist/ && sh -c 'cd /tmp/lswl-dist && zip -rq \"$1\" lime-stock-watchlist' _ \"$(pwd)/lime-stock-watchlist.zip\" && rm -rf /tmp/lswl-dist && composer install && echo 'Done: lime-stock-watchlist.zip'"
 	},
 	"devDependencies": {
 		"@wordpress/scripts": "^32.2.0"

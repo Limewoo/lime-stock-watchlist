@@ -15,6 +15,7 @@ bun run build        # production build → build/
 bun run start        # watch mode (dev)
 bun run lint:js      # ESLint via wp-scripts
 bun run lint:style   # stylelint via wp-scripts
+bun run zip          # production zip → lime-stock-watchlist.zip
 ```
 
 ### PHP Lint
@@ -25,7 +26,17 @@ composer lint        # phpcs — check WP coding standards
 composer lint-fix    # phpcbf — auto-fix what it can
 ```
 
-Note: WPCS sniffs are incompatible with PHP_CodeSniffer 4.x — lint command currently errors. Use `php -l` for syntax checking.
+### Vendor / Composer
+
+`vendor/` is gitignored — never committed. `composer install` is dev-only (phpcs tools).
+
+`bun run zip` handles production automatically:
+1. Builds JS assets
+2. Runs `composer install --no-dev` → lean 72KB vendor/ (autoloader only)
+3. rsyncs to `/tmp`, excluding `.distignore` entries
+4. Zips, then runs `composer install` to restore dev tools
+
+`.distignore` excludes: `src/`, `node_modules/`, `vendor/` dev dirs, tooling configs, docs.
 
 ## Architecture
 
