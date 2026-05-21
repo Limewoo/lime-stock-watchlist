@@ -88,6 +88,7 @@ function lime_stock_watchlist_init() {
 	require_once LSWL_PATH . 'includes/class-database.php';
 	require_once LSWL_PATH . 'includes/class-email.php';
 	require_once LSWL_PATH . 'includes/class-frontend.php';
+	require_once LSWL_PATH . 'includes/class-compatibility.php';
 	require_once LSWL_PATH . 'includes/class-admin.php';
 	require_once LSWL_PATH . 'includes/class-product-settings.php';
 	require_once LSWL_PATH . 'includes/class-rest-api.php';

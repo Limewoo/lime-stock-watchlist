@@ -14,10 +14,11 @@ export default function SubscriberFormCard( { settings, placeholders, update } )
 			title={ __( 'Subscriber Form', 'lime-stock-watchlist' ) }
 		>
 			<SelectControl
+				className="lswl-field--section-start"
 				label={ __( 'Display mode', 'lime-stock-watchlist' ) }
 				value={ settings.form_display_mode ?? 'inline' }
 				options={ [
-					{ value: 'inline', label: __( 'Inline - Shown directly on the product page', 'lime-stock-watchlist' ) },
+					{ value: 'inline', label: __( 'Inline - Shown directly on the page', 'lime-stock-watchlist' ) },
 					{ value: 'popup',  label: __( 'Popup - Opens in a modal when triggered', 'lime-stock-watchlist' ) },
 				] }
 				onChange={ ( v ) => update( 'form_display_mode', v ) }
