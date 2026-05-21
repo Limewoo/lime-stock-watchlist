@@ -156,6 +156,7 @@ Email body fields support basic HTML — sanitized via `wp_kses_post()` (not `sa
 | `style_heading_color` | `''` | Heading colour → `--lswl-heading-color` CSS var (empty = inherit theme) |
 | `style_custom_css` | `''` | Arbitrary CSS appended after CSS var block (stripped of tags) |
 | `form_display_mode` | `'inline'` | `'inline'` — form rendered directly on page; `'popup'` — trigger button opens modal overlay |
+| `popup_trigger_label` | `''` | Popup trigger button text (empty = falls back to form title / "Notify me when available") |
 | `show_on_archive` | `false` | Show form on shop/category/search pages for OOS simple products (variable skipped) |
 
 Both GET and POST `/settings` return `_placeholders` — computed real defaults for React input placeholders (via shared `settings_with_placeholders()` method). Never saved to DB.
@@ -290,7 +291,7 @@ Each badge has a `data-tooltip` attribute with a concise description shown on ho
 **Single product page:** rendered via `woocommerce_single_product_summary` (priority 31).  
 **Archive pages:** rendered via `woocommerce_after_shop_loop_item` (priority 11) when `show_on_archive` is true; simple OOS products only — variable products skipped.
 
-Template: `templates/frontend-form.php`. Variables: `$show_name` (bool), `$name_required` (bool), `$form_title` (string), `$form_button_label` (string), `$is_hidden` (bool), `$display_mode` (string), `$product_id` (int). Empty string = use translatable default.  
+Template: `templates/frontend-form.php`. Variables: `$show_name` (bool), `$name_required` (bool), `$form_title` (string), `$form_button_label` (string), `$is_hidden` (bool), `$display_mode` (string), `$popup_trigger_label` (string), `$is_archive` (bool), `$product_id` (int). Empty string = use translatable default.  
 Submits via `fetch()` → `POST /wp-json/lime-stock-watchlist/v1/subscribe`.  
 i18n strings (success / duplicate / error) resolved from settings in `Frontend::enqueue()` and passed via `lswlFrontend.i18n`.
 
@@ -298,13 +299,13 @@ i18n strings (success / duplicate / error) resolved from settings in `Frontend::
 
 `inline` (default) — form rendered directly in the page. Wrapper has class `.lswl-notify-form` and `data-product-id` attribute.
 
-`popup` — a trigger button (`.lswl-notify-form--popup`) sits on the page; clicking it opens a modal overlay (`div.lswl-notify-form__overlay#lswl-modal-{product_id}`). On 200 success: form hidden, success message shown, overlay stays open. Overlay persists success state until page reload — re-opening shows the success message. Variable product events show/hide the trigger wrapper (same logic as inline wrapper). Overlay close: X button, backdrop click, or Escape key. CSS vars scoped to both `.lswl-notify-form` and `.lswl-notify-form__overlay` so popup form is also themed.
+`popup` — a trigger button (`.lswl-notify-form--popup`) sits on the page; clicking it opens a modal overlay (`div.lswl-notify-form__overlay#lswl-modal-{product_id}`). Trigger button text = `popup_trigger_label` setting, falling back to form title. On 200 success: form hidden, success message shown, overlay stays open. Overlay persists success state until page reload — re-opening shows the success message. Variable product events show/hide the trigger wrapper (same logic as inline wrapper). Overlay close: X button, backdrop click, or Escape key. CSS vars scoped to both `.lswl-notify-form` and `.lswl-notify-form__overlay` so popup form is also themed.
 
 **Inline — simple products:** only rendered when OOS. On 200 success: heading + form removed from DOM.
 
 **Inline — variable products:** always rendered with `hidden` attribute (`$is_hidden = true`). JS reveals on OOS variation select. On 200 success: heading + form hidden (not removed). `subscribedVariations` Set (session-scoped) tracks subscribed variation IDs.
 
-**Archive forms:** all simple products — same inline/popup behavior as simple single product page, no variable product logic.
+**Archive forms:** all simple products — same inline/popup behavior as single product page, no variable product logic. Archive popup wrapper gets additional class `lswl-notify-form--archive`; trigger button uses `width: auto` (inherits theme width) instead of full-width.
 
 `lswlFrontend` JS object includes:
 - `restUrl`, `nonce`, `productId` (parent ID; `0` on archive pages), `isVariable` (bool; always `false` on archive), `displayMode` (`'inline'`|`'popup'`), `i18n`

@@ -50,6 +50,7 @@ class Plugin {
 		'style_heading_color'         => '',
 		'style_custom_css'            => '',
 		'form_display_mode'           => 'inline',
+		'popup_trigger_label'         => '',
 		'show_on_archive'             => false,
 	);
 

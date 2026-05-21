@@ -259,24 +259,26 @@ class Frontend {
 			return;
 		}
 
-		$this->render_form_template( $product, $settings, false );
+		$this->render_form_template( $product, $settings, false, true );
 	}
 
 	/**
 	 * Include the frontend form template with all required variables in scope.
 	 *
-	 * @param \WC_Product       $product  Current product.
-	 * @param array<string,mixed> $settings Plugin settings.
-	 * @param bool              $is_hidden Whether the form wrapper starts hidden (variable products).
+	 * @param \WC_Product         $product    Current product.
+	 * @param array<string,mixed> $settings   Plugin settings.
+	 * @param bool                $is_hidden  Whether the form wrapper starts hidden (variable products).
+	 * @param bool                $is_archive Whether rendering inside a product archive loop.
 	 * @return void
 	 */
-	private function render_form_template( \WC_Product $product, array $settings, bool $is_hidden ): void {
-		$show_name         = ! empty( $settings['show_name_field'] );
-		$name_required     = ! empty( $settings['name_field_required'] );
-		$form_title        = ! empty( $settings['form_title'] ) ? $settings['form_title'] : '';
-		$form_button_label = ! empty( $settings['form_button_label'] ) ? $settings['form_button_label'] : '';
-		$display_mode      = $settings['form_display_mode'] ?? 'inline';
-		$product_id        = $product->get_id();
+	private function render_form_template( \WC_Product $product, array $settings, bool $is_hidden, bool $is_archive = false ): void {
+		$show_name            = ! empty( $settings['show_name_field'] );
+		$name_required        = ! empty( $settings['name_field_required'] );
+		$form_title           = ! empty( $settings['form_title'] ) ? $settings['form_title'] : '';
+		$form_button_label    = ! empty( $settings['form_button_label'] ) ? $settings['form_button_label'] : '';
+		$display_mode         = $settings['form_display_mode'] ?? 'inline';
+		$popup_trigger_label  = ! empty( $settings['popup_trigger_label'] ) ? $settings['popup_trigger_label'] : '';
+		$product_id           = $product->get_id();
 
 		include LSWL_PATH . 'templates/frontend-form.php';
 	}

@@ -17,12 +17,20 @@ export default function SubscriberFormCard( { settings, placeholders, update } )
 				label={ __( 'Display mode', 'lime-stock-watchlist' ) }
 				value={ settings.form_display_mode ?? 'inline' }
 				options={ [
-					{ value: 'inline', label: __( 'Inline — shown directly on the product page', 'lime-stock-watchlist' ) },
-					{ value: 'popup',  label: __( 'Popup — opens in a modal when triggered', 'lime-stock-watchlist' ) },
+					{ value: 'inline', label: __( 'Inline - Shown directly on the product page', 'lime-stock-watchlist' ) },
+					{ value: 'popup',  label: __( 'Popup - Opens in a modal when triggered', 'lime-stock-watchlist' ) },
 				] }
 				onChange={ ( v ) => update( 'form_display_mode', v ) }
 				__nextHasNoMarginBottom
 			/>
+			{ settings.form_display_mode === 'popup' && (
+				<TextControl
+					label={ __( 'Trigger button text', 'lime-stock-watchlist' ) }
+					placeholder={ placeholders.popup_trigger_label }
+					value={ settings.popup_trigger_label }
+					onChange={ ( v ) => update( 'popup_trigger_label', v ) }
+				/>
+			) }
 			<ToggleControl
 				__nextHasNoMarginBottom
 				label={ __( 'Show on product archive pages', 'lime-stock-watchlist' ) }
