@@ -252,7 +252,7 @@ Settings component tree: `SettingsTab` → `settings/WatchlistEnableCard`, `Subs
 
 Style component tree:
 ```
-FrontendTab                src/admin/js/components/FrontendTab.js
+StyleTab                   src/admin/js/components/StyleTab.js
 ├── ButtonStyleCard        src/admin/js/components/settings/ButtonStyleCard.js
 ├── InputStyleCard         src/admin/js/components/settings/InputStyleCard.js
 ├── TextStyleCard          src/admin/js/components/settings/TextStyleCard.js
@@ -262,6 +262,10 @@ FrontendTab                src/admin/js/components/FrontendTab.js
 `ColorField` (`src/admin/js/components/settings/ColorField.js`) — Gutenberg-native colour picker using `Dropdown` + `ColorPicker` + `ColorIndicator`. Props: `label`, `value`, `onChange`, `defaultValue`, `allowEmpty`. Reset button appears when `value !== resetTarget`. Handles both modern WP (hex string) and legacy (object with `.hex`) `ColorPicker.onChange` API.
 
 React entry: `src/admin/js/index.js` → `build/admin.js` + `build/admin.css`. Uses `createRoot` (React 18 API). Wrapped with `QueryClientProvider` (singleton `QueryClient` at module level, `staleTime: 30_000, retry: 1`).
+
+**Save state architecture** — `App.js` owns `saving`/`saved` state and a `saveHandlerRef`. `SettingsTab` and `StyleTab` receive `registerSave`, `setSaving`, `setSaved` as props. Each tab registers its `handleSave` (stable `useCallback` — reads latest settings via a `settingsRef`) on mount and clears it on unmount. `App.js` renders a `SaveBar` component in the sticky page header (Settings and Style tabs only); clicking it calls `saveHandlerRef.current()`. `SaveBar` (`src/admin/js/components/SaveBar.js`) is a shared component — props: `onSave`, `saving`, `saved`, `className`. The header instance gets class `lswl-settings__save-bar--header` (zero padding/margin; button gets `height: 37px; padding-inline: 16px`).
+
+**Page header** — `position: sticky; top: 32px` (below WP admin toolbar); `max-width: 800px`; contains the page title (left) and `SaveBar` (right, only on Settings/Style tabs).
 
 **`tab` URL param** — `App.js` reads `?tab=` on mount via `getInitialTab()` and passes it as `initialTabName` to `TabPanel`. `onSelect` calls `syncTabToUrl(tabName)` via `history.replaceState` — omits the param when tab is `'subscribers'` (default) to keep URLs clean. Recognised tab names: `subscribers`, `settings`, `style`; unknown values fall back to `'subscribers'`.
 

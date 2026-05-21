@@ -14,9 +14,14 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    max-width: 800px;
     margin-bottom: 20px;
     padding-bottom: 18px;
     border-bottom: 1px solid #dcdcde;
+    position: sticky;
+    top: 32px;
+    z-index: 10;
+    background: #f0f0f1;
 }
 
 .lswl-admin__title {
@@ -1207,12 +1212,22 @@
     }
 }
 
-.lswl-settings__footer {
+.lswl-settings__save-bar {
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 4px 0 8px;
     margin-top: 4px;
+
+    &--header {
+        padding: 0;
+        margin: 0;
+
+        .components-button.is-primary {
+            height: 37px;
+            padding-inline: 16px;
+        }
+    }
 }
 
 .lswl-settings__saved-msg {

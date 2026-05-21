@@ -1,11 +1,13 @@
 /**
  * Root admin app — page header + tab navigation.
  */
+import { useState, useRef, useCallback } from '@wordpress/element';
 import { TabPanel } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import SubscribersTab from './SubscribersTab';
 import SettingsTab from './SettingsTab';
-import FrontendTab from './FrontendTab';
+import StyleTab from './StyleTab';
+import SaveBar from './SaveBar';
 
 const TAB_NAMES = [ 'subscribers', 'settings', 'style' ];
 
@@ -47,25 +49,71 @@ function syncTabToUrl( tabName ) {
  * @return {JSX.Element}
  */
 export default function App() {
+	const [ activeTab, setActiveTab ] = useState( getInitialTab() );
+	const [ saving, setSaving ] = useState( false );
+	const [ saved, setSaved ] = useState( false );
+	const saveHandlerRef = useRef( null );
+
+	const registerSave = useCallback( ( fn ) => {
+		saveHandlerRef.current = fn;
+	}, [] );
+
+	async function handleSave() {
+		if ( saveHandlerRef.current ) {
+			await saveHandlerRef.current();
+		}
+	}
+
+	function onSelect( tabName ) {
+		setActiveTab( tabName );
+		syncTabToUrl( tabName );
+	}
+
+	const showSaveBar = activeTab === 'settings' || activeTab === 'style';
+
 	return (
 		<div className="lswl-admin">
 			<div className="lswl-admin__header">
 				<h1 className="lswl-admin__title">
 					{ __( 'Lime Stock Watchlist', 'lime-stock-watchlist' ) }
 				</h1>
+				{ showSaveBar && (
+					<SaveBar
+						onSave={ handleSave }
+						saving={ saving }
+						saved={ saved }
+						className="lswl-settings__save-bar--header"
+					/>
+				) }
 			</div>
 
 			<div className="lswl-admin__tabs-container">
 				<TabPanel
 					tabs={ TABS }
 					initialTabName={ getInitialTab() }
-					onSelect={ syncTabToUrl }
+					onSelect={ onSelect }
 				>
 					{ ( tab ) => (
 						<div className="lswl-admin__panel">
 							{ tab.name === 'subscribers' && <SubscribersTab /> }
-							{ tab.name === 'settings' && <SettingsTab /> }
-							{ tab.name === 'style' && <FrontendTab /> }
+							{ tab.name === 'settings' && (
+								<SettingsTab
+									registerSave={ registerSave }
+									saving={ saving }
+									saved={ saved }
+									setSaving={ setSaving }
+									setSaved={ setSaved }
+								/>
+							) }
+							{ tab.name === 'style' && (
+								<StyleTab
+									registerSave={ registerSave }
+									saving={ saving }
+									saved={ saved }
+									setSaving={ setSaving }
+									setSaved={ setSaved }
+								/>
+							) }
 						</div>
 					) }
 				</TabPanel>

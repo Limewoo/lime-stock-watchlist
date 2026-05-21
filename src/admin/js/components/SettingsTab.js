@@ -1,8 +1,8 @@
 /**
  * Settings tab — orchestrates settings cards.
  */
-import { useState, useEffect } from '@wordpress/element';
-import { Button, Spinner, Notice } from '@wordpress/components';
+import { useState, useEffect, useRef, useCallback } from '@wordpress/element';
+import { Spinner, Notice } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { getSettings, saveSettings } from '../api';
 import WatchlistEnableCard from './settings/WatchlistEnableCard';
@@ -25,20 +25,28 @@ function plainTextToHtml( text ) {
 }
 
 /**
+ * @param {Object}   props
+ * @param {Function} props.registerSave
+ * @param {boolean}  props.saving
+ * @param {boolean}  props.saved
+ * @param {Function} props.setSaving
+ * @param {Function} props.setSaved
  * @return {JSX.Element}
  */
-export default function SettingsTab() {
+export default function SettingsTab( { registerSave, saving, saved, setSaving, setSaved } ) {
 	const [ settings, setSettings ] = useState( null );
 	const [ loading, setLoading ] = useState( true );
-	const [ saving, setSaving ] = useState( false );
-	const [ saved, setSaved ] = useState( false );
 	const [ error, setError ] = useState( '' );
+
+	// Keep a ref so handleSave (stable via useCallback) always reads latest settings.
+	const settingsRef = useRef( settings );
+	useEffect( () => {
+		settingsRef.current = settings;
+	}, [ settings ] );
 
 	useEffect( () => {
 		getSettings()
 			.then( ( data ) => {
-				// Pre-fill empty text fields with their computed defaults so users
-				// see and can edit the actual fallback values rather than placeholder text.
 				const defaults = data._placeholders || {};
 				const merged = { ...data };
 				const htmlBodyFields = new Set( [ 'confirmation_email_body', 'email_body' ] );
@@ -66,15 +74,12 @@ export default function SettingsTab() {
 		setSettings( ( prev ) => ( { ...prev, [ key ]: value } ) );
 	}
 
-	/**
-	 * Save all settings via REST.
-	 */
-	async function handleSave() {
+	const handleSave = useCallback( async () => {
 		setSaving( true );
 		setError( '' );
 		setSaved( false );
 		try {
-			const updated = await saveSettings( settings );
+			const updated = await saveSettings( settingsRef.current );
 			setSettings( updated );
 			setSaved( true );
 			setTimeout( () => setSaved( false ), 4000 );
@@ -83,7 +88,12 @@ export default function SettingsTab() {
 		} finally {
 			setSaving( false );
 		}
-	}
+	}, [ setSaving, setSaved ] );
+
+	useEffect( () => {
+		registerSave( handleSave );
+		return () => registerSave( null );
+	}, [ handleSave, registerSave ] );
 
 	if ( loading ) {
 		return (
@@ -126,21 +136,6 @@ export default function SettingsTab() {
 				</>
 			) }
 
-			<div className="lswl-settings__footer">
-				<Button
-					variant="primary"
-					onClick={ handleSave }
-					isBusy={ saving }
-					disabled={ saving }
-				>
-					{ __( 'Save settings', 'lime-stock-watchlist' ) }
-				</Button>
-				{ saved && (
-					<span className="lswl-settings__saved-msg">
-						{ __( 'Settings saved', 'lime-stock-watchlist' ) }
-					</span>
-				) }
-			</div>
 		</div>
 	);
 }
