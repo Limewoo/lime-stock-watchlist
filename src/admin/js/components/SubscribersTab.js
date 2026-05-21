@@ -80,7 +80,7 @@ function NotifyingNotice( { count } ) {
 		? __( '1 email is currently being sent via WooCommerce Action Scheduler. Reload the page in a while to see the updated status.', 'lime-stock-watchlist' )
 		: sprintf(
 			/* translators: %d: number of emails being sent */
-			__( '%d emails are currently being sent via WooCommerce Action Scheduler. Reload the page to see updated statuses.', 'lime-stock-watchlist' ),
+			__( '%d emails are currently being sent via WooCommerce Action Scheduler. Reload the page in a while to see updated statuses.', 'lime-stock-watchlist' ),
 			count
 		);
 	return (

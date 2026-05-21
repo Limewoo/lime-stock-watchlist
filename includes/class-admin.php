@@ -77,10 +77,12 @@ class Admin {
 				'version'      => LSWL_VERSION,
 			);
 
+		wp_enqueue_editor();
+
 		$deps = array_unique(
 			array_merge(
 				$asset['dependencies'],
-				array( 'wp-element', 'wp-components', 'wp-api-fetch', 'wp-i18n', 'wp-data', 'wp-date' )
+				array( 'wp-element', 'wp-components', 'wp-api-fetch', 'wp-i18n', 'wp-data', 'wp-date', 'wp-tinymce' )
 			)
 		);
 

@@ -1,7 +1,8 @@
-import { TextControl, TextareaControl, ToggleControl } from '@wordpress/components';
+import { TextControl, ToggleControl } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import SettingsCard from './SettingsCard';
 import { MailIcon } from './icons';
+import RichTextEditor from './RichTextEditor';
 
 /**
  * @param {{settings: Object, placeholders: Object, update: Function}} props
@@ -23,18 +24,18 @@ export default function NotificationEmailCard( { settings, placeholders, update 
 			{ settings.notification_email_enabled && (
 				<>
 					<TextControl
+						className="lswl-field--section-start"
 						label={ __( 'Email subject', 'lime-stock-watchlist' ) }
 						placeholder={ placeholders.email_subject }
 						value={ settings.email_subject }
 						onChange={ ( v ) => update( 'email_subject', v ) }
 					/>
-					<TextareaControl
+					<RichTextEditor
+						id="lswl-rte-notification-body"
 						label={ __( 'Email body', 'lime-stock-watchlist' ) }
 						help={ __( 'Shortcodes: {site_name}, {product_name}, {product_url}, {subscriber_name}, {subscriber_email}', 'lime-stock-watchlist' ) }
-						placeholder={ placeholders.email_body }
 						value={ settings.email_body }
 						onChange={ ( v ) => update( 'email_body', v ) }
-						rows={ 5 }
 					/>
 				</>
 			) }

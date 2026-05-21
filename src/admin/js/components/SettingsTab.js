@@ -12,6 +12,19 @@ import ConfirmationEmailCard from './settings/ConfirmationEmailCard';
 import NotificationEmailCard from './settings/NotificationEmailCard';
 
 /**
+ * Convert plain text (with \n line breaks) to HTML paragraphs for TinyMCE.
+ *
+ * @param {string} text
+ * @return {string}
+ */
+function plainTextToHtml( text ) {
+	return text
+		.split( /\n\n+/ )
+		.map( ( para ) => `<p>${ para.replace( /\n/g, '<br>' ) }</p>` )
+		.join( '' );
+}
+
+/**
  * @return {JSX.Element}
  */
 export default function SettingsTab() {
@@ -23,7 +36,21 @@ export default function SettingsTab() {
 
 	useEffect( () => {
 		getSettings()
-			.then( setSettings )
+			.then( ( data ) => {
+				// Pre-fill empty text fields with their computed defaults so users
+				// see and can edit the actual fallback values rather than placeholder text.
+				const defaults = data._placeholders || {};
+				const merged = { ...data };
+				const htmlBodyFields = new Set( [ 'confirmation_email_body', 'email_body' ] );
+				Object.keys( defaults ).forEach( ( key ) => {
+					if ( merged[ key ] === '' ) {
+						merged[ key ] = htmlBodyFields.has( key )
+							? plainTextToHtml( defaults[ key ] )
+							: defaults[ key ];
+					}
+				} );
+				setSettings( merged );
+			} )
 			.catch( () => setError( __( 'Failed to load settings.', 'lime-stock-watchlist' ) ) )
 			.finally( () => setLoading( false ) );
 	}, [] );
