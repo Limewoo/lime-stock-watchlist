@@ -3,9 +3,10 @@
 // ─────────────────────────────────────────────────────────────
 // Notify-me form
 //
-// Design intent: inherit theme typography. Assert only what
-// the theme cannot give us — brand focus ring, validation
-// states, entrance animation, and lime button/accent colour.
+// All brand colours and spacing are driven by CSS custom
+// properties set inline by PHP (Frontend::enqueue) so they
+// can be customised from the admin Style tab without a rebuild.
+// SCSS variables act as compile-time fallbacks only.
 // ─────────────────────────────────────────────────────────────
 
 @keyframes lswl-fade-up {
@@ -22,11 +23,11 @@
 .lswl-notify-form {
 	display: flex;
 	flex-direction: column;
-	gap: 14px;;
+	gap: 14px;
 	margin: 20px 0 0;
 	padding: 20px;
 	border: 1px solid $lswl-border;
-	border-top: 3px solid $lswl-lime; // brand accent
+	border-top: 3px solid var(--lswl-accent, #{$lswl-lime});
 	border-radius: 0 0 $lswl-radius $lswl-radius;
 	background: transparent;
 	animation: lswl-fade-up 0.35s ease both;
@@ -36,6 +37,7 @@
 	margin: 0;
 	font-size: 1em;
 	font-weight: 600;
+	color: var(--lswl-heading-color, inherit);
 }
 
 .lswl-notify-form__form {
@@ -52,17 +54,19 @@
 	&:nth-child(2) { animation: lswl-fade-up 0.3s 0.12s ease both; }
 }
 
-// Inputs: assert explicit border + padding so appearance is
-// consistent across themes. Typography still fully inherited.
+// Inputs: all sizing/colour driven by CSS vars so they stay
+// consistent across themes without fighting theme stylesheets.
 .lswl-notify-form__input {
 	width: 100%;
-	box-sizing: border-box;
-	padding: 10px 14px;
-	border: 1.5px solid $lswl-border;
-	border-radius: 5px;
-	background-color: rgba(0, 0, 0, 0.025);
-	font-size: inherit;
-	color: inherit;
+	min-height: auto !important;
+	max-height: none !important;
+	box-sizing: border-box !important;
+	padding: var(--lswl-input-padding, 10px 14px) !important;
+	border: 1.5px solid var(--lswl-input-border, #{$lswl-border}) !important;
+	border-radius: var(--lswl-input-radius, 5px) !important;
+	background-color: rgba(0, 0, 0, 0.025) !important;
+	font-size: inherit !important;
+	color: inherit !important;
 	line-height: 1.5;
 	-webkit-appearance: none;
 	appearance: none;
@@ -74,15 +78,15 @@
 	}
 
 	&:focus {
-		border-color: $lswl-lime !important;
-		outline: none;
-		background-color: rgba($lswl-lime, 0.03);
-		box-shadow: 0 0 0 3px rgba($lswl-lime, 0.14);
+		border-color: var(--lswl-accent, #{$lswl-lime}) !important;
+		outline: none !important;
+		background-color: rgba(var(--lswl-accent-rgb, 93, 158, 63), 0.03) !important;
+		box-shadow: 0 0 0 3px rgba(var(--lswl-accent-rgb, 93, 158, 63), 0.14) !important;
 	}
 
 	// Positive validation: has content + valid
 	&:not(:placeholder-shown):valid {
-		border-color: rgba($lswl-lime, 0.55);
+		border-color: rgba(var(--lswl-accent-rgb, 93, 158, 63), 0.55);
 	}
 
 	// Negative validation: has content, not focused, and invalid
@@ -97,27 +101,29 @@
 	animation: lswl-fade-up 0.3s 0.18s ease both;
 }
 
-// Button: piggybacks on theme `.button` base styles.
-// Only asserts colour + a subtle lift interaction.
 .lswl-notify-form__button {
 	width: 100%;
+	min-height: 40px;
+	padding: var(--lswl-btn-padding, 10px 20px) !important;
+	border-width: 1px !important;
+	border-radius: var(--lswl-btn-radius, #{$lswl-radius}) !important;
 	transition: background-color 0.15s ease, border-color 0.15s ease,
 		opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 
 	&,
 	&:visited {
-		background-color: $lswl-lime !important;
-		border-color: $lswl-lime-dark !important;
-		color: #fff !important;
+		background-color: var(--lswl-accent, #{$lswl-lime}) !important;
+		border-color: var(--lswl-accent-dark, #{$lswl-lime-dark}) !important;
+		color: var(--lswl-btn-text, #fff) !important;
 	}
 
 	&:hover,
 	&:focus {
-		background-color: $lswl-lime-dark !important;
-		border-color: $lswl-lime-darker !important;
-		color: #fff !important;
+		background-color: var(--lswl-accent-dark, #{$lswl-lime-dark}) !important;
+		border-color: var(--lswl-accent-darker, #{$lswl-lime-darker}) !important;
+		color: var(--lswl-btn-text, #fff) !important;
 		transform: translateY(-1px);
-		box-shadow: 0 4px 10px rgba($lswl-lime, 0.28);
+		box-shadow: 0 4px 10px rgba(var(--lswl-accent-rgb, 93, 158, 63), 0.28);
 	}
 
 	&:active {
