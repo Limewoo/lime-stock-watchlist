@@ -74,17 +74,19 @@ export default function App() {
 	return (
 		<div className="lswl-admin">
 			<div className="lswl-admin__header">
-				<h1 className="lswl-admin__title">
-					{ __( 'Lime Stock Watchlist', 'lime-stock-watchlist' ) }
-				</h1>
-				{ showSaveBar && (
-					<SaveBar
-						onSave={ handleSave }
-						saving={ saving }
-						saved={ saved }
-						className="lswl-settings__save-bar--header"
-					/>
-				) }
+				<div className="lswl-admin__header-content">
+					<h1 className="lswl-admin__title">
+						{ __( 'Lime Stock Watchlist', 'lime-stock-watchlist' ) }
+					</h1>
+					{ showSaveBar && (
+						<SaveBar
+							onSave={ handleSave }
+							saving={ saving }
+							saved={ saved }
+							className="lswl-settings__save-bar--header"
+						/>
+					) }
+				</div>
 			</div>
 
 			<div className="lswl-admin__tabs-container">
