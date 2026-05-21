@@ -246,7 +246,12 @@ class Email {
 
 		ob_start();
 		include LSWL_PATH . 'templates/email-notification.php';
-		return ob_get_clean();
+		$content = ob_get_clean();
+
+		$mailer   = WC()->mailer();
+		$message  = $mailer->wrap_message( $subject, $content );
+		$wc_email = new \WC_Email();
+		return $wc_email->style_inline( $message );
 	}
 
 	/**
@@ -264,7 +269,12 @@ class Email {
 
 		ob_start();
 		include LSWL_PATH . 'templates/email-confirmation.php';
-		return ob_get_clean();
+		$content = ob_get_clean();
+
+		$mailer   = WC()->mailer();
+		$message  = $mailer->wrap_message( $subject, $content );
+		$wc_email = new \WC_Email();
+		return $wc_email->style_inline( $message );
 	}
 
 	/**

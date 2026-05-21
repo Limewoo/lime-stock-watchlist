@@ -77,10 +77,10 @@ function StatsBar( { stats } ) {
  */
 function NotifyingNotice( { count } ) {
 	const message = count === 1
-		? __( '1 email is currently being sent via WooCommerce Action Scheduler. Reload the page in a while to see the updated status.', 'lime-stock-watchlist' )
+		? __( '1 email is currently being sent via Action Scheduler. Reload the page in a while to see the updated status.', 'lime-stock-watchlist' )
 		: sprintf(
 			/* translators: %d: number of emails being sent */
-			__( '%d emails are currently being sent via WooCommerce Action Scheduler. Reload the page in a while to see updated statuses.', 'lime-stock-watchlist' ),
+			__( '%d emails are currently being sent via Action Scheduler. Reload the page in a while to see updated statuses.', 'lime-stock-watchlist' ),
 			count
 		);
 	return (
