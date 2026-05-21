@@ -413,6 +413,7 @@ class Rest_API {
 			'email_body'                 => __( "Great news! {product_name} is now back in stock.\n\nThank you for shopping with {site_name}.", 'lime-stock-watchlist' ),
 			'form_title'                 => __( 'Notify me when available', 'lime-stock-watchlist' ),
 			'form_button_label'          => __( 'Notify me', 'lime-stock-watchlist' ),
+			'popup_trigger_label'        => __( 'Notify me when available', 'lime-stock-watchlist' ),
 			'msg_success'                => __( "Thank you! We'll notify you when this product is back in stock.", 'lime-stock-watchlist' ),
 			'msg_duplicate'              => __( "You're already on the waitlist for this product.", 'lime-stock-watchlist' ),
 			'msg_error'                  => __( 'Something went wrong. Please try again.', 'lime-stock-watchlist' ),
@@ -461,6 +462,7 @@ class Rest_API {
 			'form_display_mode'           => in_array( $request->get_param( 'form_display_mode' ), array( 'inline', 'popup' ), true )
 				? (string) $request->get_param( 'form_display_mode' )
 				: 'inline',
+			'popup_trigger_label'         => sanitize_text_field( (string) $request->get_param( 'popup_trigger_label' ) ),
 			'show_on_archive'             => (bool) $request->get_param( 'show_on_archive' ),
 		);
 
@@ -512,6 +514,7 @@ class Rest_API {
 			'style_heading_color'        => array( 'type' => 'string',  'default' => '',         'sanitize_callback' => 'sanitize_hex_color' ),
 			'style_custom_css'           => array( 'type' => 'string',  'default' => '',         'sanitize_callback' => 'wp_strip_all_tags' ),
 			'form_display_mode'          => array( 'type' => 'string',  'default' => 'inline',   'sanitize_callback' => 'sanitize_text_field' ),
+			'popup_trigger_label'        => array( 'type' => 'string',  'default' => '',         'sanitize_callback' => 'sanitize_text_field' ),
 			'show_on_archive'            => array( 'type' => 'boolean', 'default' => false ),
 		);
 	}

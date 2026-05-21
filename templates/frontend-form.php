@@ -8,8 +8,10 @@
  *   $form_title        string — custom form heading (empty = default).
  *   $form_button_label string — custom button label (empty = default).
  *   $is_hidden         bool   — whether the wrapper starts hidden (variable products).
- *   $display_mode      string — 'inline' or 'popup'.
- *   $product_id        int    — product ID (used for unique element IDs).
+ *   $display_mode         string — 'inline' or 'popup'.
+ *   $popup_trigger_label  string — trigger button text (popup mode; empty = default form title).
+ *   $is_archive           bool   — true when rendered inside a product archive loop.
+ *   $product_id           int    — product ID (used for unique element IDs).
  *
  * @package Lime_Stock_Watchlist
  */
@@ -18,17 +20,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$lswl_default_title  = __( 'Notify me when available', 'lime-stock-watchlist' );
-$lswl_default_button = __( 'Notify me', 'lime-stock-watchlist' );
-$lswl_title          = ! empty( $form_title ) ? $form_title : $lswl_default_title;
-$lswl_button         = ! empty( $form_button_label ) ? $form_button_label : $lswl_default_button;
+$lswl_default_title   = __( 'Notify me when available', 'lime-stock-watchlist' );
+$lswl_default_button  = __( 'Notify me', 'lime-stock-watchlist' );
+$lswl_title           = ! empty( $form_title ) ? $form_title : $lswl_default_title;
+$lswl_button          = ! empty( $form_button_label ) ? $form_button_label : $lswl_default_button;
+$lswl_trigger         = ! empty( $popup_trigger_label ) ? $popup_trigger_label : $lswl_title;
 $lswl_pid            = (int) $product_id;
 
 if ( 'popup' === $display_mode ) :
 ?>
-<div class="lswl-notify-form lswl-notify-form--popup" data-product-id="<?php echo esc_attr( $lswl_pid ); ?>"<?php echo ! empty( $is_hidden ) ? ' hidden' : ''; ?>>
+<div class="lswl-notify-form lswl-notify-form--popup<?php echo ! empty( $is_archive ) ? ' lswl-notify-form--archive' : ''; ?>" data-product-id="<?php echo esc_attr( $lswl_pid ); ?>"<?php echo ! empty( $is_hidden ) ? ' hidden' : ''; ?>>
 	<button type="button" class="lswl-notify-form__trigger">
-		<?php echo esc_html( $lswl_title ); ?>
+		<?php echo esc_html( $lswl_trigger ); ?>
 	</button>
 </div>
 

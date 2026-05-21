@@ -180,6 +180,11 @@
 	}
 }
 
+// Archive: trigger button inherits width from theme (no full-width).
+.lswl-notify-form--archive .lswl-notify-form__trigger {
+	width: auto;
+}
+
 // ─────────────────────────────────────────────────────────────
 // Popup modal overlay
 // ─────────────────────────────────────────────────────────────
