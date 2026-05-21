@@ -28,7 +28,7 @@
 	padding: 20px;
 	border: 1px solid $lswl-border;
 	border-top: 3px solid var(--lswl-accent, #{$lswl-lime});
-	border-radius: 0 0 $lswl-radius $lswl-radius;
+	border-radius: $lswl-radius;
 	background: transparent;
 	animation: lswl-fade-up 0.35s ease both;
 }
