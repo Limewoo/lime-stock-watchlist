@@ -37,6 +37,12 @@ export default function NotificationEmailCard( { settings, placeholders, update 
 						value={ settings.email_body }
 						onChange={ ( v ) => update( 'email_body', v ) }
 					/>
+					<TextControl
+						label={ __( 'Email footer', 'lime-stock-watchlist' ) }
+						placeholder={ placeholders.email_footer }
+						value={ settings.email_footer }
+						onChange={ ( v ) => update( 'email_footer', v ) }
+					/>
 				</>
 			) }
 		</SettingsCard>

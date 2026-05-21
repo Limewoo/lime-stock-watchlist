@@ -6,7 +6,8 @@
  *   $product    WC_Product — the product the subscriber joined the waitlist for.
  *   $subscriber object     — object with email and name properties.
  *   $subject    string     — email subject line.
- *   $email_body string     — pre-processed body text (shortcodes already resolved).
+ *   $email_body  string     — pre-processed body text (shortcodes already resolved).
+ *   $footer_text string     — footer notice text (pre-processed).
  *
  * @package Lime_Stock_Watchlist
  */
@@ -47,7 +48,7 @@ $wc_header_text = wc_light_or_dark( $wc_base, '#202020', '#ffffff' );
 		<p><?php echo nl2br( wp_kses_post( $email_body ) ); ?></p>
 	</div>
 	<div class="lswl-email__footer">
-		<p><?php esc_html_e( 'You received this email because you signed up for back-in-stock notifications.', 'lime-stock-watchlist' ); ?></p>
+		<p><?php echo wp_kses_post( $footer_text ); ?></p>
 	</div>
 </div>
 </body>

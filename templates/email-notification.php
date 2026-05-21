@@ -7,6 +7,7 @@
  *   $subscriber      object     — row from lime_watchlist table.
  *   $unsubscribe_url string     — stateless unsubscribe URL.
  *   $subject         string     — email subject line.
+ *   $footer_text     string     — footer notice text (pre-processed).
  *
  * @package Lime_Stock_Watchlist
  */
@@ -92,7 +93,7 @@ $wc_header_text   = wc_light_or_dark( $wc_base, '#202020', '#ffffff' );
 	</div>
 	<div class="lswl-email__footer">
 		<p>
-			<?php esc_html_e( 'You received this email because you signed up for back-in-stock notifications.', 'lime-stock-watchlist' ); ?>
+			<?php echo wp_kses_post( $footer_text ); ?>
 			<a href="<?php echo esc_url( $unsubscribe_url ); ?>">
 				<?php esc_html_e( 'Unsubscribe', 'lime-stock-watchlist' ); ?>
 			</a>

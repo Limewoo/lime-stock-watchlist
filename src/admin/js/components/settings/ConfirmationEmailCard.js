@@ -37,6 +37,12 @@ export default function ConfirmationEmailCard( { settings, placeholders, update 
 						value={ settings.confirmation_email_body }
 						onChange={ ( v ) => update( 'confirmation_email_body', v ) }
 					/>
+					<TextControl
+						label={ __( 'Email footer', 'lime-stock-watchlist' ) }
+						placeholder={ placeholders.confirmation_email_footer }
+						value={ settings.confirmation_email_footer }
+						onChange={ ( v ) => update( 'confirmation_email_footer', v ) }
+					/>
 				</>
 			) }
 		</SettingsCard>

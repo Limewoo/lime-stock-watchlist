@@ -115,6 +115,10 @@ class Email {
 			? self::process_shortcodes( $settings['email_body'], $shortcode_map )
 			: '';
 
+		$footer_text = ! empty( $settings['email_footer'] )
+			? self::process_shortcodes( $settings['email_footer'], $shortcode_map )
+			: __( 'You received this email because you signed up for back-in-stock notifications.', 'lime-stock-watchlist' );
+
 		$headers = array(
 			'Content-Type: text/html; charset=UTF-8',
 			sprintf( 'From: %s <%s>', $from_name, $from_email ),
@@ -129,6 +133,7 @@ class Email {
 				'unsubscribe_url' => $unsubscribe_url,
 				'subject'         => $subject,
 				'email_body'      => $email_body,
+				'footer_text'     => $footer_text,
 			)
 		);
 
@@ -183,6 +188,10 @@ class Email {
 			? self::process_shortcodes( $settings['confirmation_email_body'], $shortcode_map )
 			: $default_body;
 
+		$footer_text = ! empty( $settings['confirmation_email_footer'] )
+			? self::process_shortcodes( $settings['confirmation_email_footer'], $shortcode_map )
+			: __( 'You received this email because you signed up for back-in-stock notifications.', 'lime-stock-watchlist' );
+
 		$headers = array(
 			'Content-Type: text/html; charset=UTF-8',
 			sprintf( 'From: %s <%s>', $from_name, $from_email ),
@@ -190,10 +199,11 @@ class Email {
 
 		$message = self::build_confirmation_message(
 			array(
-				'product'    => $product,
-				'subscriber' => $subscriber,
-				'subject'    => $subject,
-				'email_body' => $email_body,
+				'product'     => $product,
+				'subscriber'  => $subscriber,
+				'subject'     => $subject,
+				'email_body'  => $email_body,
+				'footer_text' => $footer_text,
 			)
 		);
 
@@ -232,6 +242,7 @@ class Email {
 		$unsubscribe_url = $args['unsubscribe_url'];
 		$subject         = $args['subject'];
 		$email_body      = $args['email_body'];
+		$footer_text     = $args['footer_text'];
 
 		ob_start();
 		include LSWL_PATH . 'templates/email-notification.php';
@@ -245,10 +256,11 @@ class Email {
 	 * @return string HTML email body.
 	 */
 	private static function build_confirmation_message( array $args ): string {
-		$product    = $args['product'];
-		$subscriber = $args['subscriber'];
-		$subject    = $args['subject'];
-		$email_body = $args['email_body'];
+		$product     = $args['product'];
+		$subscriber  = $args['subscriber'];
+		$subject     = $args['subject'];
+		$email_body  = $args['email_body'];
+		$footer_text = $args['footer_text'];
 
 		ob_start();
 		include LSWL_PATH . 'templates/email-confirmation.php';
