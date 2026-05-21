@@ -43,11 +43,11 @@ add_action(
 /**
  * Activation hook — install DB table.
  */
+require_once LSWL_PATH . 'vendor/autoload.php';
+
 register_activation_hook(
 	LSWL_FILE,
 	function () {
-		require_once LSWL_PATH . 'includes/class-subscriber.php';
-		require_once LSWL_PATH . 'includes/class-database.php';
 		Lime_Stock_Watchlist\Database::install();
 	}
 );
@@ -83,17 +83,6 @@ function lime_stock_watchlist_init() {
 		);
 		return;
 	}
-
-	require_once LSWL_PATH . 'includes/class-subscriber.php';
-	require_once LSWL_PATH . 'includes/class-database.php';
-	require_once LSWL_PATH . 'includes/class-email.php';
-	require_once LSWL_PATH . 'includes/class-frontend.php';
-	require_once LSWL_PATH . 'includes/class-compatibility.php';
-	require_once LSWL_PATH . 'includes/class-admin.php';
-	require_once LSWL_PATH . 'includes/class-product-settings.php';
-	require_once LSWL_PATH . 'includes/class-rest-api.php';
-	require_once LSWL_PATH . 'includes/class-stock-watcher.php';
-	require_once LSWL_PATH . 'includes/class-plugin.php';
 
 	new Lime_Stock_Watchlist\Plugin();
 }

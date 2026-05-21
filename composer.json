@@ -11,6 +11,11 @@
 		"lint": "phpcs",
 		"lint-fix": "phpcbf"
 	},
+	"autoload": {
+		"classmap": [
+			"includes/"
+		]
+	},
 	"config": {
 		"allow-plugins": {
 			"dealerdirect/phpcodesniffer-composer-installer": true
