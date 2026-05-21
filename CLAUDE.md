@@ -113,7 +113,7 @@ Sent immediately from `Rest_API::handle_subscribe()` after successful insert whe
 
 ### Email shortcodes
 
-`Email::process_shortcodes( string $text, array $map )` replaces tokens in subject/body fields:
+`Email::process_shortcodes( string $text, array $map )` replaces tokens in subject/body/footer fields:
 
 | Token | Back-in-stock email | Confirmation email |
 |-------|--------------------|--------------------|
@@ -123,7 +123,7 @@ Sent immediately from `Rest_API::handle_subscribe()` after successful insert whe
 | `{subscriber_name}` | ✓ (first name or "there") | ✓ (first name or "there") |
 | `{subscriber_email}` | ✓ | ✓ |
 
-Email body fields support basic HTML — sanitized via `wp_kses_post()` (not `sanitize_textarea_field`).
+Email body fields support basic HTML — sanitized via `wp_kses_post()` (not `sanitize_textarea_field`). Footer fields are plain text — sanitized via `sanitize_text_field()`.
 
 ### Settings (`wp_options` key: `lswl_settings`)
 
@@ -142,9 +142,11 @@ Email body fields support basic HTML — sanitized via `wp_kses_post()` (not `sa
 | `confirmation_email_enabled` | `true` | Send confirmation email on subscribe |
 | `confirmation_email_subject` | `''` | Confirmation subject (supports shortcodes; fallback: translatable default) |
 | `confirmation_email_body` | `''` | Confirmation body (supports shortcodes + HTML; fallback: translatable default) |
+| `confirmation_email_footer` | `''` | Confirmation footer text (supports shortcodes; fallback: "You received this email because…") |
 | `notification_email_enabled` | `true` | Send back-in-stock emails automatically |
 | `email_subject` | `''` | Back-in-stock subject (supports shortcodes; fallback: "{product} is back in stock!") |
 | `email_body` | `''` | Back-in-stock body (supports shortcodes + HTML; fallback: template default paragraphs) |
+| `email_footer` | `''` | Back-in-stock footer text (supports shortcodes; fallback: "You received this email because…") |
 | `style_accent_color` | `'#5d9e3f'` | Frontend button/accent colour → `--lswl-accent` CSS var |
 | `style_btn_text_color` | `'#ffffff'` | Button text colour → `--lswl-btn-text` CSS var |
 | `style_btn_radius` | `3` | Button border-radius in px → `--lswl-btn-radius` CSS var |
@@ -323,19 +325,11 @@ JS uses `wrapper.dataset.productId` for product ID (reliable on both single and 
 
 ### Email templates
 
-**`templates/email-notification.php`** — back-in-stock. Variables: `$product`, `$subscriber`, `$unsubscribe_url`, `$subject`, `$email_body`. If `$email_body` non-empty: renders via `nl2br( wp_kses_post() )`. Else: default greeting + product name + thank-you paragraphs. Always includes Shop Now CTA + unsubscribe footer.
+Both templates are **inner content only** — no `<!DOCTYPE>`, no `<html>`, no custom CSS. `Email::build_message()` / `build_confirmation_message()` wrap them with `WC()->mailer()->wrap_message( $subject, $content )` then inline styles via `(new \WC_Email())->style_inline( $message )`. All colours/fonts come from WooCommerce → Settings → Emails automatically.
 
-**`templates/email-confirmation.php`** — subscription confirmation. Variables: `$product`, `$subscriber`, `$subject`, `$email_body`. Body always from `$email_body` (shortcodes pre-processed). No CTA, no unsubscribe link.
+**`templates/email-notification.php`** — back-in-stock. Variables: `$product`, `$subscriber`, `$unsubscribe_url`, `$subject`, `$email_body`, `$footer_text`. If `$email_body` non-empty: renders via `nl2br( wp_kses_post() )`. Else: default greeting + product name + thank-you paragraphs. Always includes Shop Now CTA (`.button` class, styled by WC) + footer text + unsubscribe link.
 
-Both templates pull colors from WC email settings — no hardcoded values:
-
-| PHP var | WC option | Used for |
-| ------- | --------- | -------- |
-| `$wc_base` | `woocommerce_email_base_color` | Header bg, CTA button bg |
-| `$wc_bg` | `woocommerce_email_background_color` | Outer email background |
-| `$wc_body_bg` | `woocommerce_email_body_background_color` | Email card background |
-| `$wc_text` | `woocommerce_email_text_color` | Body + footer text |
-| `$wc_header_text` | `wc_light_or_dark( $wc_base, … )` | Header title + CTA text (auto contrast) |
+**`templates/email-confirmation.php`** — subscription confirmation. Variables: `$product`, `$subscriber`, `$subject`, `$email_body`, `$footer_text`. Body always from `$email_body` (shortcodes pre-processed). Footer text rendered below body. No CTA, no unsubscribe link.
 
 ### Unsubscribe flow
 
