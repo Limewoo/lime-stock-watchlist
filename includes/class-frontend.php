@@ -24,7 +24,7 @@ class Frontend {
 	public function register(): void {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue' ) );
 		add_action( 'woocommerce_single_product_summary', array( $this, 'render_form' ), 31 );
-		add_action( 'woocommerce_after_shop_loop_item', array( $this, 'render_archive_form' ), 11 );
+		add_action( 'woocommerce_after_shop_loop_item', array( $this, 'render_archive_form' ), 99 );
 		add_action( 'woocommerce_before_single_product', array( $this, 'maybe_show_unsubscribe_notice' ) );
 	}
 
