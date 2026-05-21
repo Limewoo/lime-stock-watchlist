@@ -59,6 +59,7 @@ class Plugin {
 	 */
 	public function __construct() {
 		( new Frontend() )->register();
+		( new Compatibility() )->register();
 		( new Admin() )->register();
 		( new Product_Settings() )->register();
 		( new Rest_API() )->register();
