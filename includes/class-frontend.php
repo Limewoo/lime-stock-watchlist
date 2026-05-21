@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Renders the "Notify me when available" form on single product pages.
+ * Renders the "Notify me when available" form on single product and archive pages.
  */
 class Frontend {
 
@@ -24,16 +24,21 @@ class Frontend {
 	public function register(): void {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue' ) );
 		add_action( 'woocommerce_single_product_summary', array( $this, 'render_form' ), 31 );
+		add_action( 'woocommerce_after_shop_loop_item', array( $this, 'render_archive_form' ), 11 );
 		add_action( 'woocommerce_before_single_product', array( $this, 'maybe_show_unsubscribe_notice' ) );
 	}
 
 	/**
-	 * Enqueue frontend assets — only on single product pages.
+	 * Enqueue frontend assets — on single product pages and (optionally) archive pages.
 	 *
 	 * @return void
 	 */
 	public function enqueue(): void {
-		if ( ! is_product() ) {
+		$settings   = Plugin::get_settings();
+		$on_single  = is_product();
+		$on_archive = ! empty( $settings['show_on_archive'] ) && ( is_shop() || is_product_category() || is_product_tag() || is_search() );
+
+		if ( ! $on_single && ! $on_archive ) {
 			return;
 		}
 
@@ -59,8 +64,6 @@ class Frontend {
 			$asset['version'],
 			true
 		);
-
-		$settings = Plugin::get_settings();
 
 		// Output CSS custom properties so frontend form is fully themeable.
 		$accent        = sanitize_hex_color( $settings['style_accent_color'] ?? '' ) ?: '#5d9e3f';
@@ -104,7 +107,8 @@ class Frontend {
 			)
 		);
 
-		$css_vars = '.lswl-notify-form{' . $declarations . '}';
+		// Apply CSS vars to both the inline form wrapper and the popup overlay.
+		$css_vars = '.lswl-notify-form,.lswl-notify-form__overlay{' . $declarations . '}';
 
 		if ( ! empty( $settings['style_custom_css'] ) ) {
 			$css_vars .= str_replace( '</style>', '', $settings['style_custom_css'] );
@@ -112,17 +116,18 @@ class Frontend {
 
 		wp_add_inline_style( 'lswl-frontend', $css_vars );
 
-		$current_product = wc_get_product( get_the_ID() );
+		$current_product = $on_single ? wc_get_product( get_the_ID() ) : null;
 
 		wp_localize_script(
 			'lswl-frontend',
 			'lswlFrontend',
 			array(
-				'restUrl'    => esc_url_raw( rest_url( 'lime-stock-watchlist/v1/' ) ),
-				'nonce'      => wp_create_nonce( 'wp_rest' ),
-				'productId'  => get_the_ID(),
-				'isVariable' => $current_product && $current_product->is_type( 'variable' ),
-				'i18n'       => array(
+				'restUrl'     => esc_url_raw( rest_url( 'lime-stock-watchlist/v1/' ) ),
+				'nonce'       => wp_create_nonce( 'wp_rest' ),
+				'productId'   => $on_single ? get_the_ID() : 0,
+				'isVariable'  => $on_single && $current_product && $current_product->is_type( 'variable' ),
+				'displayMode' => $settings['form_display_mode'] ?? 'inline',
+				'i18n'        => array(
 					'success'      => ! empty( $settings['msg_success'] )
 						? $settings['msg_success']
 						: __( 'Thank you! We\'ll notify you when this product is back in stock.', 'lime-stock-watchlist' ),
@@ -190,8 +195,8 @@ class Frontend {
 	}
 
 	/**
-	 * Render the notify form on the product page.
-	 * Only shown when: product is out of stock AND notifications are enabled.
+	 * Render the notify form on the single product page.
+	 * Only shown when: notifications are enabled AND (variable product OR out of stock).
 	 *
 	 * @return void
 	 */
@@ -208,9 +213,7 @@ class Frontend {
 			return;
 		}
 
-		$product_enabled = get_post_meta( $product->get_id(), '_lswl_enabled', true );
-
-		if ( 'no' === $product_enabled ) {
+		if ( 'no' === get_post_meta( $product->get_id(), '_lswl_enabled', true ) ) {
 			return;
 		}
 
@@ -221,13 +224,59 @@ class Frontend {
 			return;
 		}
 
+		// Variable products render hidden; JS reveals the form when an OOS variation is selected.
+		$this->render_form_template( $product, $settings, $is_variable );
+	}
+
+	/**
+	 * Render the notify form on product archive/loop pages (shop, category, search).
+	 * Only shown for simple out-of-stock products when show_on_archive is enabled.
+	 *
+	 * @return void
+	 */
+	public function render_archive_form(): void {
+		$settings = Plugin::get_settings();
+
+		if ( empty( $settings['notifications_enabled'] ) || empty( $settings['show_on_archive'] ) ) {
+			return;
+		}
+
+		global $product;
+
+		if ( ! $product instanceof \WC_Product ) {
+			return;
+		}
+
+		if ( ! $product->is_type( 'simple' ) ) {
+			return;
+		}
+
+		if ( $product->is_in_stock() ) {
+			return;
+		}
+
+		if ( 'no' === get_post_meta( $product->get_id(), '_lswl_enabled', true ) ) {
+			return;
+		}
+
+		$this->render_form_template( $product, $settings, false );
+	}
+
+	/**
+	 * Include the frontend form template with all required variables in scope.
+	 *
+	 * @param \WC_Product       $product  Current product.
+	 * @param array<string,mixed> $settings Plugin settings.
+	 * @param bool              $is_hidden Whether the form wrapper starts hidden (variable products).
+	 * @return void
+	 */
+	private function render_form_template( \WC_Product $product, array $settings, bool $is_hidden ): void {
 		$show_name         = ! empty( $settings['show_name_field'] );
 		$name_required     = ! empty( $settings['name_field_required'] );
 		$form_title        = ! empty( $settings['form_title'] ) ? $settings['form_title'] : '';
 		$form_button_label = ! empty( $settings['form_button_label'] ) ? $settings['form_button_label'] : '';
-
-		// Variable products render hidden; JS reveals the form when an OOS variation is selected.
-		$is_hidden = $is_variable;
+		$display_mode      = $settings['form_display_mode'] ?? 'inline';
+		$product_id        = $product->get_id();
 
 		include LSWL_PATH . 'templates/frontend-form.php';
 	}

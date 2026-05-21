@@ -458,6 +458,10 @@ class Rest_API {
 			'style_input_padding_h'       => absint( $request->get_param( 'style_input_padding_h' ) ),
 			'style_heading_color'         => sanitize_hex_color( (string) $request->get_param( 'style_heading_color' ) ) ?: '',
 			'style_custom_css'            => wp_strip_all_tags( (string) $request->get_param( 'style_custom_css' ) ),
+			'form_display_mode'           => in_array( $request->get_param( 'form_display_mode' ), array( 'inline', 'popup' ), true )
+				? (string) $request->get_param( 'form_display_mode' )
+				: 'inline',
+			'show_on_archive'             => (bool) $request->get_param( 'show_on_archive' ),
 		);
 
 		// Validate email if provided.
@@ -507,6 +511,8 @@ class Rest_API {
 			'style_input_padding_h'      => array( 'type' => 'integer', 'default' => 14,         'sanitize_callback' => 'absint' ),
 			'style_heading_color'        => array( 'type' => 'string',  'default' => '',         'sanitize_callback' => 'sanitize_hex_color' ),
 			'style_custom_css'           => array( 'type' => 'string',  'default' => '',         'sanitize_callback' => 'wp_strip_all_tags' ),
+			'form_display_mode'          => array( 'type' => 'string',  'default' => 'inline',   'sanitize_callback' => 'sanitize_text_field' ),
+			'show_on_archive'            => array( 'type' => 'boolean', 'default' => false ),
 		);
 	}
 }

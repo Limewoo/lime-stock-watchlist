@@ -51,7 +51,7 @@ Also hooks `before_woocommerce_init` (top-level, outside init) to declare HPOS +
 | `Subscriber` | `class-subscriber.php` | Value object for a watchlist row — `from_row()` factory, status helpers (`is_watching/notifying/notified/unsubscribed`), `display_name()` |
 | `Plugin` | `class-plugin.php` | Orchestrator — instantiates all classes, wires hooks, handles unsubscribe token on `init` |
 | `Database` | `class-database.php` | `dbDelta` table install, all CRUD (`$wpdb->prepare()` everywhere); CRUD methods return `Subscriber` instances; paginated read methods (`get_subscribers_paginated`, `get_products_with_counts`, `get_stats`) return raw arrays for REST layer |
-| `Frontend` | `class-frontend.php` | Renders notify form on out-of-stock product pages, enqueues frontend assets (resolves i18n messages from settings); computes CSS custom properties from style settings (`hex_to_rgb()`, `hex_darken()` private helpers) and outputs them via `wp_add_inline_style()` |
+| `Frontend` | `class-frontend.php` | Renders notify form on out-of-stock product pages and optionally on archive pages; enqueues frontend assets (resolves i18n messages from settings); computes CSS custom properties from style settings (`hex_to_rgb()`, `hex_darken()` private helpers) and outputs them via `wp_add_inline_style()`; private `render_form_template()` shared by `render_form()` (single product) and `render_archive_form()` (archive loop) |
 | `Admin` | `class-admin.php` | WC submenu "Lime Watchlist" (`lime-stock-watchlist`), enqueues React bundle on plugin page |
 | `Product_Settings` | `class-product-settings.php` | WC Product Data tab "Watchlist" — per-product enable/disable |
 | `Rest_API` | `class-rest-api.php` | Registers all 7 REST routes; `settings_with_placeholders()` private helper used by both GET and POST settings handlers |
@@ -155,6 +155,8 @@ Email body fields support basic HTML — sanitized via `wp_kses_post()` (not `sa
 | `style_input_padding_h` | `14` | Input horizontal padding in px → `--lswl-input-padding` CSS var |
 | `style_heading_color` | `''` | Heading colour → `--lswl-heading-color` CSS var (empty = inherit theme) |
 | `style_custom_css` | `''` | Arbitrary CSS appended after CSS var block (stripped of tags) |
+| `form_display_mode` | `'inline'` | `'inline'` — form rendered directly on page; `'popup'` — trigger button opens modal overlay |
+| `show_on_archive` | `false` | Show form on shop/category/search pages for OOS simple products (variable skipped) |
 
 Both GET and POST `/settings` return `_placeholders` — computed real defaults for React input placeholders (via shared `settings_with_placeholders()` method). Never saved to DB.
 
@@ -234,7 +236,7 @@ SubscribersTab
 **Settings tab** — five grouped cards; all but the first hidden when `notifications_enabled` is false:
 
 1. **Enable Stock Watchlist** — master toggle
-2. **Subscriber Form** — form title, button label, name field toggles, success/duplicate/error messages
+2. **Subscriber Form** — display mode (`SelectControl`: inline/popup), archive page toggle, form title, button label, name field toggles, success/duplicate/error messages
 3. **Email Configuration** — shared from name + from email (placeholders = computed site name / admin email)
 4. **Subscription Confirmation Email** — toggle (default on), subject + body textarea (fields hidden when toggle off)
 5. **Back-in-Stock Notification Email** — toggle (default on), subject + body textarea (fields hidden when toggle off)
@@ -281,25 +283,37 @@ Each badge has a `data-tooltip` attribute with a concise description shown on ho
 
 ### Frontend form
 
-PHP-rendered via `woocommerce_single_product_summary` (priority 31, after price).  
-Template: `templates/frontend-form.php`. Variables: `$show_name` (bool), `$name_required` (bool), `$form_title` (string), `$form_button_label` (string), `$is_hidden` (bool). Empty string = use translatable default.  
+**Single product page:** rendered via `woocommerce_single_product_summary` (priority 31).  
+**Archive pages:** rendered via `woocommerce_after_shop_loop_item` (priority 11) when `show_on_archive` is true; simple OOS products only — variable products skipped.
+
+Template: `templates/frontend-form.php`. Variables: `$show_name` (bool), `$name_required` (bool), `$form_title` (string), `$form_button_label` (string), `$is_hidden` (bool), `$display_mode` (string), `$product_id` (int). Empty string = use translatable default.  
 Submits via `fetch()` → `POST /wp-json/lime-stock-watchlist/v1/subscribe`.  
 i18n strings (success / duplicate / error) resolved from settings in `Frontend::enqueue()` and passed via `lswlFrontend.i18n`.
 
-**Simple products:** only rendered when product is OOS. On 200 success: heading + form removed from DOM. On 409: inline error, form stays.
+**Display modes:**
 
-**Variable products:** form always rendered with `hidden` attribute (`$is_hidden = true`) regardless of parent stock. JS reveals it only when user selects an OOS variation. On 200 success: heading + form hidden (not removed) so they can be reset if user selects another OOS variation. `subscribedVariations` Set (session-scoped) tracks subscribed variation IDs — re-selecting a subscribed variation shows the success message without resetting the form.
+`inline` (default) — form rendered directly in the page. Wrapper has class `.lswl-notify-form` and `data-product-id` attribute.
+
+`popup` — a trigger button (`.lswl-notify-form--popup`) sits on the page; clicking it opens a modal overlay (`div.lswl-notify-form__overlay#lswl-modal-{product_id}`). On 200 success: form hidden, success message shown, overlay stays open. Overlay persists success state until page reload — re-opening shows the success message. Variable product events show/hide the trigger wrapper (same logic as inline wrapper). Overlay close: X button, backdrop click, or Escape key. CSS vars scoped to both `.lswl-notify-form` and `.lswl-notify-form__overlay` so popup form is also themed.
+
+**Inline — simple products:** only rendered when OOS. On 200 success: heading + form removed from DOM.
+
+**Inline — variable products:** always rendered with `hidden` attribute (`$is_hidden = true`). JS reveals on OOS variation select. On 200 success: heading + form hidden (not removed). `subscribedVariations` Set (session-scoped) tracks subscribed variation IDs.
+
+**Archive forms:** all simple products — same inline/popup behavior as simple single product page, no variable product logic.
 
 `lswlFrontend` JS object includes:
-- `restUrl`, `nonce`, `productId` (parent ID), `isVariable` (bool), `i18n`
+- `restUrl`, `nonce`, `productId` (parent ID; `0` on archive pages), `isVariable` (bool; always `false` on archive), `displayMode` (`'inline'`|`'popup'`), `i18n`
 
-**Variable product JS flow:**
+JS uses `wrapper.dataset.productId` for product ID (reliable on both single and archive). `lswlFrontend.productId` used only to detect the single-product-page form for variable product events (`pid === Number(parentProductId)` guard).
+
+**Variable product JS flow (inline and popup):**
 - Listens to WC jQuery events `found_variation` + `reset_data` on `.variations_form`
-- `found_variation` + `!variation.is_in_stock` → set `currentProductId = variation.variation_id`, show form (or success message if already subscribed this session)
-- `found_variation` + in-stock, or `reset_data` → hide wrapper
+- `found_variation` + `!variation.is_in_stock` → set `currentProductId = variation.variation_id`, show wrapper
+- `found_variation` + in-stock, or `reset_data` → hide wrapper (close popup if open)
 - Submit uses `currentProductId` (variation ID) as `product_id` in REST body
 
-**CSS note:** `.lswl-notify-form`, `.lswl-notify-form__form`, `.lswl-notify-form__heading` all have explicit `display` set — `[hidden]` selectors with `!important` are required to override them.
+**CSS note:** `.lswl-notify-form`, `.lswl-notify-form__form`, `.lswl-notify-form__heading` all have explicit `display` set — `[hidden]` selectors with `!important` are required to override them. `.lswl-notify-form__overlay[hidden]` also uses `display: none !important`.
 
 ### Email templates
 

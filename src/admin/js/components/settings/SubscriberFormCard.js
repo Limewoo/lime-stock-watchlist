@@ -1,4 +1,4 @@
-import { TextControl, ToggleControl } from '@wordpress/components';
+import { SelectControl, TextControl, ToggleControl } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import SettingsCard from './SettingsCard';
 import { FormIcon } from './icons';
@@ -13,7 +13,25 @@ export default function SubscriberFormCard( { settings, placeholders, update } )
 			icon={ <FormIcon /> }
 			title={ __( 'Subscriber Form', 'lime-stock-watchlist' ) }
 		>
+			<SelectControl
+				label={ __( 'Display mode', 'lime-stock-watchlist' ) }
+				value={ settings.form_display_mode ?? 'inline' }
+				options={ [
+					{ value: 'inline', label: __( 'Inline — shown directly on the product page', 'lime-stock-watchlist' ) },
+					{ value: 'popup',  label: __( 'Popup — opens in a modal when triggered', 'lime-stock-watchlist' ) },
+				] }
+				onChange={ ( v ) => update( 'form_display_mode', v ) }
+				__nextHasNoMarginBottom
+			/>
+			<ToggleControl
+				__nextHasNoMarginBottom
+				label={ __( 'Show on product archive pages', 'lime-stock-watchlist' ) }
+				help={ __( 'Display the form on shop, category, and search result pages for out-of-stock simple products.', 'lime-stock-watchlist' ) }
+				checked={ !! settings.show_on_archive }
+				onChange={ ( v ) => update( 'show_on_archive', v ) }
+			/>
 			<TextControl
+				className="lswl-field--section-start"
 				label={ __( 'Form title', 'lime-stock-watchlist' ) }
 				placeholder={ placeholders.form_title }
 				value={ settings.form_title }

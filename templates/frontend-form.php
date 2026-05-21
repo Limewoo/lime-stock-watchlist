@@ -7,6 +7,9 @@
  *   $name_required     bool   — whether the name field is required.
  *   $form_title        string — custom form heading (empty = default).
  *   $form_button_label string — custom button label (empty = default).
+ *   $is_hidden         bool   — whether the wrapper starts hidden (variable products).
+ *   $display_mode      string — 'inline' or 'popup'.
+ *   $product_id        int    — product ID (used for unique element IDs).
  *
  * @package Lime_Stock_Watchlist
  */
@@ -14,21 +17,95 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+
+$lswl_default_title  = __( 'Notify me when available', 'lime-stock-watchlist' );
+$lswl_default_button = __( 'Notify me', 'lime-stock-watchlist' );
+$lswl_title          = ! empty( $form_title ) ? $form_title : $lswl_default_title;
+$lswl_button         = ! empty( $form_button_label ) ? $form_button_label : $lswl_default_button;
+$lswl_pid            = (int) $product_id;
+
+if ( 'popup' === $display_mode ) :
 ?>
-<div class="lswl-notify-form" id="lswl-notify-form" aria-live="polite"<?php echo ! empty( $is_hidden ) ? ' hidden' : ''; ?>>
+<div class="lswl-notify-form lswl-notify-form--popup" data-product-id="<?php echo esc_attr( $lswl_pid ); ?>"<?php echo ! empty( $is_hidden ) ? ' hidden' : ''; ?>>
+	<button type="button" class="lswl-notify-form__trigger">
+		<?php echo esc_html( $lswl_title ); ?>
+	</button>
+</div>
+
+<div class="lswl-notify-form__overlay" id="lswl-modal-<?php echo esc_attr( $lswl_pid ); ?>" hidden
+	role="dialog" aria-modal="true"
+	aria-labelledby="lswl-modal-title-<?php echo esc_attr( $lswl_pid ); ?>">
+	<div class="lswl-notify-form__overlay-backdrop"></div>
+	<div class="lswl-notify-form__overlay-dialog">
+		<button type="button" class="lswl-notify-form__overlay-close"
+			aria-label="<?php esc_attr_e( 'Close', 'lime-stock-watchlist' ); ?>">&#215;</button>
+
+		<div class="lswl-notify-form__heading" id="lswl-modal-title-<?php echo esc_attr( $lswl_pid ); ?>">
+			<?php echo esc_html( $lswl_title ); ?>
+		</div>
+
+		<form class="lswl-notify-form__form" novalidate>
+			<?php if ( $show_name ) : ?>
+				<div class="lswl-notify-form__field">
+					<label for="lswl-name-<?php echo esc_attr( $lswl_pid ); ?>" class="screen-reader-text">
+						<?php esc_html_e( 'Your name', 'lime-stock-watchlist' ); ?>
+					</label>
+					<input
+						type="text"
+						id="lswl-name-<?php echo esc_attr( $lswl_pid ); ?>"
+						name="lswl_name"
+						class="lswl-notify-form__input"
+						autocomplete="name"
+						placeholder="<?php echo $name_required ? esc_attr__( 'Your name', 'lime-stock-watchlist' ) : esc_attr__( 'Your name (optional)', 'lime-stock-watchlist' ); ?>"
+						<?php if ( $name_required ) : ?>
+							required
+							aria-required="true"
+						<?php endif; ?>
+					/>
+				</div>
+			<?php endif; ?>
+
+			<div class="lswl-notify-form__field">
+				<label for="lswl-email-<?php echo esc_attr( $lswl_pid ); ?>" class="screen-reader-text">
+					<?php esc_html_e( 'Your email address', 'lime-stock-watchlist' ); ?>
+				</label>
+				<input
+					type="email"
+					id="lswl-email-<?php echo esc_attr( $lswl_pid ); ?>"
+					name="lswl_email"
+					class="lswl-notify-form__input"
+					autocomplete="email"
+					placeholder="<?php esc_attr_e( 'Your email address', 'lime-stock-watchlist' ); ?>"
+					required
+					aria-required="true"
+				/>
+			</div>
+
+			<div class="lswl-notify-form__submit">
+				<button type="submit" class="lswl-notify-form__button button">
+					<?php echo esc_html( $lswl_button ); ?>
+				</button>
+			</div>
+		</form>
+
+		<div class="lswl-notify-form__message" role="alert" aria-live="assertive" hidden></div>
+	</div>
+</div>
+<?php else : ?>
+<div class="lswl-notify-form" data-product-id="<?php echo esc_attr( $lswl_pid ); ?>" aria-live="polite"<?php echo ! empty( $is_hidden ) ? ' hidden' : ''; ?>>
 	<div class="lswl-notify-form__heading">
-		<?php echo esc_html( ! empty( $form_title ) ? $form_title : __( 'Notify me when available', 'lime-stock-watchlist' ) ); ?>
+		<?php echo esc_html( $lswl_title ); ?>
 	</div>
 
 	<form class="lswl-notify-form__form" novalidate>
 		<?php if ( $show_name ) : ?>
 			<div class="lswl-notify-form__field">
-				<label for="lswl-name" class="screen-reader-text">
+				<label for="lswl-name-<?php echo esc_attr( $lswl_pid ); ?>" class="screen-reader-text">
 					<?php esc_html_e( 'Your name', 'lime-stock-watchlist' ); ?>
 				</label>
 				<input
 					type="text"
-					id="lswl-name"
+					id="lswl-name-<?php echo esc_attr( $lswl_pid ); ?>"
 					name="lswl_name"
 					class="lswl-notify-form__input"
 					autocomplete="name"
@@ -42,12 +119,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<?php endif; ?>
 
 		<div class="lswl-notify-form__field">
-			<label for="lswl-email" class="screen-reader-text">
+			<label for="lswl-email-<?php echo esc_attr( $lswl_pid ); ?>" class="screen-reader-text">
 				<?php esc_html_e( 'Your email address', 'lime-stock-watchlist' ); ?>
 			</label>
 			<input
 				type="email"
-				id="lswl-email"
+				id="lswl-email-<?php echo esc_attr( $lswl_pid ); ?>"
 				name="lswl_email"
 				class="lswl-notify-form__input"
 				autocomplete="email"
@@ -59,10 +136,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 		<div class="lswl-notify-form__submit">
 			<button type="submit" class="lswl-notify-form__button button">
-				<?php echo esc_html( ! empty( $form_button_label ) ? $form_button_label : __( 'Notify me', 'lime-stock-watchlist' ) ); ?>
+				<?php echo esc_html( $lswl_button ); ?>
 			</button>
 		</div>
-
 	</form>
+
 	<div class="lswl-notify-form__message" role="alert" aria-live="assertive" hidden></div>
 </div>
+<?php endif; ?>

@@ -139,7 +139,122 @@
 	}
 }
 
+// ─────────────────────────────────────────────────────────────
+// Popup trigger button
+// ─────────────────────────────────────────────────────────────
+
+.lswl-notify-form--popup {
+	display: block;
+	border: none;
+	background: transparent;
+	padding: 0;
+	margin: 20px 0 0;
+	animation: lswl-fade-up 0.35s ease both;
+
+	.lswl-notify-form__trigger {
+		width: 100%;
+		min-height: 40px;
+		padding: var(--lswl-btn-padding, 10px 20px) !important;
+		background-color: var(--lswl-accent, #{$lswl-lime}) !important;
+		border: 1px solid var(--lswl-accent-dark, #{$lswl-lime-dark}) !important;
+		border-radius: var(--lswl-btn-radius, #{$lswl-radius}) !important;
+		color: var(--lswl-btn-text, #fff) !important;
+		font-size: inherit;
+		cursor: pointer;
+		transition: background-color 0.15s ease, border-color 0.15s ease,
+			transform 0.15s ease, box-shadow 0.15s ease;
+
+		&:hover,
+		&:focus {
+			background-color: var(--lswl-accent-dark, #{$lswl-lime-dark}) !important;
+			border-color: var(--lswl-accent-darker, #{$lswl-lime-darker}) !important;
+			transform: translateY(-1px);
+			box-shadow: 0 4px 10px rgba(var(--lswl-accent-rgb, 93, 158, 63), 0.28);
+			outline: none;
+		}
+
+		&:active {
+			transform: translateY(0);
+			box-shadow: none;
+		}
+	}
+}
+
+// ─────────────────────────────────────────────────────────────
+// Popup modal overlay
+// ─────────────────────────────────────────────────────────────
+
+.lswl-notify-form__overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 99999;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	&[hidden] {
+		display: none !important;
+	}
+
+	&-backdrop {
+		position: absolute;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.5);
+		cursor: pointer;
+	}
+
+	&-dialog {
+		position: relative;
+		z-index: 1;
+		background: #fff;
+		border-radius: 8px;
+		padding: 32px 28px;
+		max-width: 480px;
+		width: 90%;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+		animation: lswl-modal-in 0.22s ease;
+
+		// Inherit CSS vars from the overlay so the form inside is themed.
+		.lswl-notify-form__form { display: flex; flex-direction: column; gap: 10px; }
+		.lswl-notify-form__heading { margin: 0 0 16px; font-size: 1.1em; font-weight: 600; color: var(--lswl-heading-color, inherit); }
+		.lswl-notify-form__message { margin-top: 10px; }
+	}
+
+	&-close {
+		position: absolute;
+		top: 12px;
+		right: 14px;
+		background: none;
+		border: none;
+		cursor: pointer;
+		color: #646970;
+		font-size: 22px;
+		line-height: 1;
+		padding: 2px 6px;
+		border-radius: 3px;
+		transition: color 0.15s, background 0.15s;
+
+		&:hover {
+			color: #1d2327;
+			background: #f0f0f1;
+		}
+
+		&:focus {
+			outline: none;
+			box-shadow: 0 0 0 2px rgba(var(--lswl-accent-rgb, 93, 158, 63), 0.3);
+		}
+	}
+}
+
+@keyframes lswl-modal-in {
+	from { opacity: 0; transform: translateY(-10px) scale(0.97); }
+	to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+// ─────────────────────────────────────────────────────────────
 // Inline feedback message
+// ─────────────────────────────────────────────────────────────
+
 .lswl-notify-form__message {
 	padding: 9px 13px;
 	border-radius: $lswl-radius;

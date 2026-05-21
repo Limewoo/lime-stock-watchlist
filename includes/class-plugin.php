@@ -49,6 +49,8 @@ class Plugin {
 		'style_input_padding_h'       => 14,
 		'style_heading_color'         => '',
 		'style_custom_css'            => '',
+		'form_display_mode'           => 'inline',
+		'show_on_archive'             => false,
 	);
 
 	/**
