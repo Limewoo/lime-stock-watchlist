@@ -62,6 +62,56 @@ class Frontend {
 
 		$settings = Plugin::get_settings();
 
+		// Output CSS custom properties so frontend form is fully themeable.
+		$accent        = sanitize_hex_color( $settings['style_accent_color'] ?? '' ) ?: '#5d9e3f';
+		$btn_text      = sanitize_hex_color( $settings['style_btn_text_color'] ?? '' ) ?: '#ffffff';
+		$btn_radius    = absint( $settings['style_btn_radius'] ?? 3 );
+		$btn_pad_v     = absint( $settings['style_btn_padding_v'] ?? 10 );
+		$btn_pad_h     = absint( $settings['style_btn_padding_h'] ?? 20 );
+		$input_border  = sanitize_hex_color( $settings['style_input_border_color'] ?? '' ) ?: '#e0e0e0';
+		$input_radius  = absint( $settings['style_input_radius'] ?? 5 );
+		$input_pad_v   = absint( $settings['style_input_padding_v'] ?? 10 );
+		$input_pad_h   = absint( $settings['style_input_padding_h'] ?? 14 );
+		$heading_color = sanitize_hex_color( $settings['style_heading_color'] ?? '' );
+
+		$rgb    = self::hex_to_rgb( $accent );
+		$dark   = self::hex_darken( $accent, 0.82 );
+		$darker = self::hex_darken( $accent, 0.64 );
+
+		$vars = array(
+			'--lswl-accent'        => $accent,
+			'--lswl-accent-rgb'    => implode( ',', $rgb ),
+			'--lswl-accent-dark'   => $dark,
+			'--lswl-accent-darker' => $darker,
+			'--lswl-btn-text'      => $btn_text,
+			'--lswl-btn-radius'    => $btn_radius . 'px',
+			'--lswl-btn-padding'   => $btn_pad_v . 'px ' . $btn_pad_h . 'px',
+			'--lswl-input-border'  => $input_border,
+			'--lswl-input-radius'  => $input_radius . 'px',
+			'--lswl-input-padding' => $input_pad_v . 'px ' . $input_pad_h . 'px',
+		);
+
+		if ( $heading_color ) {
+			$vars['--lswl-heading-color'] = $heading_color;
+		}
+
+		$declarations = implode(
+			';',
+			array_map(
+				fn( $k, $v ) => $k . ':' . $v,
+				array_keys( $vars ),
+				array_values( $vars )
+			)
+		);
+
+		$css_vars = '.lswl-notify-form{' . $declarations . '}';
+
+		if ( ! empty( $settings['style_custom_css'] ) ) {
+			$css_vars .= str_replace( '</style>', '', $settings['style_custom_css'] );
+		}
+
+		wp_add_inline_style( 'lswl-frontend', $css_vars );
+
 		$current_product = wc_get_product( get_the_ID() );
 
 		wp_localize_script(
@@ -87,6 +137,41 @@ class Frontend {
 					'submitting'   => __( 'Please wait…', 'lime-stock-watchlist' ),
 				),
 			)
+		);
+	}
+
+	/**
+	 * Convert a hex colour string to [R, G, B] integer array.
+	 *
+	 * @param string $hex e.g. '#5d9e3f' or '5d9e3f'.
+	 * @return int[]
+	 */
+	private static function hex_to_rgb( string $hex ): array {
+		$hex = ltrim( $hex, '#' );
+		if ( strlen( $hex ) === 3 ) {
+			$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+		}
+		return array(
+			hexdec( substr( $hex, 0, 2 ) ),
+			hexdec( substr( $hex, 2, 2 ) ),
+			hexdec( substr( $hex, 4, 2 ) ),
+		);
+	}
+
+	/**
+	 * Darken a hex colour by multiplying each channel by $factor (0–1).
+	 *
+	 * @param string $hex    Source colour e.g. '#5d9e3f'.
+	 * @param float  $factor Value < 1 darkens; 0.82 ≈ "lime-dark".
+	 * @return string Darkened hex colour.
+	 */
+	private static function hex_darken( string $hex, float $factor ): string {
+		$rgb = self::hex_to_rgb( $hex );
+		return sprintf(
+			'#%02x%02x%02x',
+			max( 0, (int) round( $rgb[0] * $factor ) ),
+			max( 0, (int) round( $rgb[1] * $factor ) ),
+			max( 0, (int) round( $rgb[2] * $factor ) )
 		);
 	}
 

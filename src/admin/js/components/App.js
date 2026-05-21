@@ -5,8 +5,9 @@ import { TabPanel } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import SubscribersTab from './SubscribersTab';
 import SettingsTab from './SettingsTab';
+import FrontendTab from './FrontendTab';
 
-const TAB_NAMES = [ 'subscribers', 'settings' ];
+const TAB_NAMES = [ 'subscribers', 'settings', 'style' ];
 
 const TABS = [
 	{
@@ -16,6 +17,10 @@ const TABS = [
 	{
 		name: 'settings',
 		title: __( 'Settings', 'lime-stock-watchlist' ),
+	},
+	{
+		name: 'style',
+		title: __( 'Style', 'lime-stock-watchlist' ),
 	},
 ];
 
@@ -60,6 +65,7 @@ export default function App() {
 						<div className="lswl-admin__panel">
 							{ tab.name === 'subscribers' && <SubscribersTab /> }
 							{ tab.name === 'settings' && <SettingsTab /> }
+							{ tab.name === 'style' && <FrontendTab /> }
 						</div>
 					) }
 				</TabPanel>

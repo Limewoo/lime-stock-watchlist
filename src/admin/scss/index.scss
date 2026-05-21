@@ -72,6 +72,10 @@
             color: #1d2327;
             border-bottom-color: $lswl-lime;
             font-weight: 600;
+
+            &:after {
+                background: $lswl-lime;
+            }
         }
     }
 }
@@ -1001,6 +1005,205 @@
             background: #fff;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
         }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Style Tab — color fields, range controls, custom CSS editor
+// ─────────────────────────────────────────────────────────────
+
+// Color field row: label left, picker trigger right
+.lswl-color-field {
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f1;
+
+    &:last-child { border-bottom: none; padding-bottom: 0; }
+    &:first-child { padding-top: 0; }
+
+    &__row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    &__label {
+        font-size: 13px;
+        font-weight: 500;
+        color: #1d2327;
+        flex: 1;
+        white-space: nowrap;
+    }
+
+    &__controls {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+    }
+
+    &__trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        height: 30px;
+        padding: 0 10px 0 6px;
+        border: 1px solid #dcdcde;
+        border-radius: 3px;
+        background: #f6f7f7;
+        font-size: 12px;
+        font-family: $lswl-font-mono;
+        color: #1d2327;
+        cursor: pointer;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+        transition: border-color 160ms, box-shadow 160ms;
+        outline: none;
+        box-shadow: none !important; // override WP button shadow
+
+        &:hover,
+        &.is-open {
+            border-color: $lswl-lime;
+        }
+
+        &:focus {
+            border-color: $lswl-lime;
+            box-shadow: 0 0 0 2px rgba(93, 158, 63, 0.2) !important;
+        }
+
+        .components-color-indicator {
+            width: 18px;
+            height: 18px;
+            border-radius: 2px;
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            flex-shrink: 0;
+        }
+    }
+
+    &__empty-swatch {
+        width: 18px;
+        height: 18px;
+        border-radius: 2px;
+        border: 1px dashed #aaa;
+        background: repeating-linear-gradient(
+            45deg,
+            #ddd 0,
+            #ddd 2px,
+            #fff 2px,
+            #fff 6px
+        );
+    }
+
+    &__hex {
+        letter-spacing: 0.02em;
+        color: #646970;
+    }
+
+    &__reset.components-button {
+        height: 28px;
+        padding: 0 8px;
+        font-size: 11px;
+        color: #646970;
+    }
+
+    &__help {
+        margin-top: 5px;
+        margin-bottom: 0;
+        font-size: 12px;
+        color: #646970;
+        line-height: 1.5;
+    }
+
+    &__picker-wrap {
+        padding: 8px;
+
+        .components-color-picker {
+            padding: 0;
+        }
+    }
+}
+
+// Range control rows inside style cards
+.lswl-range-wrap {
+    padding: 8px 0 0;
+    border-bottom: 1px solid #f0f0f1;
+    // Override the WP admin theme color var that RangeControl uses for accent.
+    --wp-admin-theme-color: #{$lswl-lime};
+    --wp-admin-theme-color--rgb: 93, 158, 63;
+
+    &--last,
+    &:last-child { border-bottom: none; }
+
+    // Tighten WP RangeControl spacing to fit the card body
+    .components-range-control {
+        margin-bottom: 0;
+        padding-bottom: 12px;
+    }
+
+    .components-range-control__wrapper {
+        margin-top: 4px;
+    }
+
+    // Slider — accent-color covers Firefox + Safari natively
+    .components-range-control__slider {
+        accent-color: $lswl-lime !important;
+    }
+
+    // Thumb — webkit: must reset appearance before background-color works
+    .components-range-control__slider::-webkit-slider-thumb {
+        -webkit-appearance: none !important;
+        appearance: none !important;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background-color: $lswl-lime !important;
+        border: 2px solid $lswl-lime-dark !important;
+        cursor: pointer;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    }
+
+    // Thumb — moz
+    .components-range-control__slider::-moz-range-thumb {
+        background-color: $lswl-lime !important;
+        border-color: $lswl-lime-dark !important;
+    }
+
+    // Number input inside RangeControl — lime focus ring
+    .components-range-control__number {
+        &:focus {
+            border-color: $lswl-lime !important;
+            box-shadow: 0 0 0 2px rgba(93, 158, 63, 0.2) !important;
+            outline: none !important;
+        }
+    }
+}
+
+// Custom CSS textarea — dark code editor feel
+.lswl-custom-css__textarea {
+    display: block;
+    width: 100%;
+    min-height: 200px;
+    padding: 12px 14px;
+    border: 1px solid #dcdcde;
+    border-radius: 3px;
+    font-size: 12.5px;
+    font-family: $lswl-font-mono;
+    line-height: 1.65;
+    background: #1e2126;
+    color: #abb2bf;
+    caret-color: $lswl-lime;
+    resize: vertical;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 160ms, box-shadow 160ms;
+
+    &:focus {
+        border-color: $lswl-lime;
+        box-shadow: 0 0 0 2px rgba(93, 158, 63, 0.2);
+    }
+
+    &::placeholder {
+        color: #5c6370;
+        opacity: 1;
     }
 }
 

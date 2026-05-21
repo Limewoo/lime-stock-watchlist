@@ -447,6 +447,17 @@ class Rest_API {
 			'notification_email_enabled'  => (bool) $request->get_param( 'notification_email_enabled' ),
 			'email_subject'               => sanitize_text_field( (string) $request->get_param( 'email_subject' ) ),
 			'email_body'                  => wp_kses_post( (string) $request->get_param( 'email_body' ) ),
+			'style_accent_color'          => sanitize_hex_color( (string) $request->get_param( 'style_accent_color' ) ) ?: '#5d9e3f',
+			'style_btn_text_color'        => sanitize_hex_color( (string) $request->get_param( 'style_btn_text_color' ) ) ?: '#ffffff',
+			'style_btn_radius'            => absint( $request->get_param( 'style_btn_radius' ) ),
+			'style_btn_padding_v'         => absint( $request->get_param( 'style_btn_padding_v' ) ),
+			'style_btn_padding_h'         => absint( $request->get_param( 'style_btn_padding_h' ) ),
+			'style_input_border_color'    => sanitize_hex_color( (string) $request->get_param( 'style_input_border_color' ) ) ?: '#e0e0e0',
+			'style_input_radius'          => absint( $request->get_param( 'style_input_radius' ) ),
+			'style_input_padding_v'       => absint( $request->get_param( 'style_input_padding_v' ) ),
+			'style_input_padding_h'       => absint( $request->get_param( 'style_input_padding_h' ) ),
+			'style_heading_color'         => sanitize_hex_color( (string) $request->get_param( 'style_heading_color' ) ) ?: '',
+			'style_custom_css'            => wp_strip_all_tags( (string) $request->get_param( 'style_custom_css' ) ),
 		);
 
 		// Validate email if provided.
@@ -483,8 +494,19 @@ class Rest_API {
 			'confirmation_email_subject' => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
 			'confirmation_email_body'    => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'wp_kses_post' ),
 			'notification_email_enabled' => array( 'type' => 'boolean', 'default' => true ),
-			'email_subject'              => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
-			'email_body'                 => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'wp_kses_post' ),
+			'email_subject'              => array( 'type' => 'string',  'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
+			'email_body'                 => array( 'type' => 'string',  'default' => '', 'sanitize_callback' => 'wp_kses_post' ),
+			'style_accent_color'         => array( 'type' => 'string',  'default' => '#5d9e3f', 'sanitize_callback' => 'sanitize_hex_color' ),
+			'style_btn_text_color'       => array( 'type' => 'string',  'default' => '#ffffff', 'sanitize_callback' => 'sanitize_hex_color' ),
+			'style_btn_radius'           => array( 'type' => 'integer', 'default' => 3,          'sanitize_callback' => 'absint' ),
+			'style_btn_padding_v'        => array( 'type' => 'integer', 'default' => 10,         'sanitize_callback' => 'absint' ),
+			'style_btn_padding_h'        => array( 'type' => 'integer', 'default' => 20,         'sanitize_callback' => 'absint' ),
+			'style_input_border_color'   => array( 'type' => 'string',  'default' => '#e0e0e0', 'sanitize_callback' => 'sanitize_hex_color' ),
+			'style_input_radius'         => array( 'type' => 'integer', 'default' => 5,          'sanitize_callback' => 'absint' ),
+			'style_input_padding_v'      => array( 'type' => 'integer', 'default' => 10,         'sanitize_callback' => 'absint' ),
+			'style_input_padding_h'      => array( 'type' => 'integer', 'default' => 14,         'sanitize_callback' => 'absint' ),
+			'style_heading_color'        => array( 'type' => 'string',  'default' => '',         'sanitize_callback' => 'sanitize_hex_color' ),
+			'style_custom_css'           => array( 'type' => 'string',  'default' => '',         'sanitize_callback' => 'wp_strip_all_tags' ),
 		);
 	}
 }

@@ -35,6 +35,53 @@ export function MailCheckIcon() {
 	);
 }
 
+export function ButtonIcon() {
+	return (
+		<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+			<rect x="2" y="7" width="20" height="10" rx="3" ry="3" />
+			<path d="M9 12h6" />
+		</svg>
+	);
+}
+
+export function InputIcon() {
+	return (
+		<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+			<rect x="2" y="5" width="20" height="14" rx="2" />
+			<path d="M7 9v6M7 12h5" strokeLinecap="round" />
+		</svg>
+	);
+}
+
+export function TextIcon() {
+	return (
+		<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+			<path d="M4 7V4h16v3" />
+			<path d="M9 20h6" />
+			<path d="M12 4v16" />
+		</svg>
+	);
+}
+
+export function PaintBrushIcon() {
+	return (
+		<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+			<path d="M18.37 2.63 14 7l-1.59-1.59a2 2 0 0 0-2.82 0L8 7l9 9 1.59-1.59a2 2 0 0 0 0-2.82L17 10l4.37-4.37a2.12 2.12 0 1 0-3-3Z" />
+			<path d="M9 8c-2 3-4 3.5-7 4l8 8c1-.5 3.5-2 4-7" />
+			<path d="M14.5 17.5 4.5 15" />
+		</svg>
+	);
+}
+
+export function CodeIcon() {
+	return (
+		<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+			<polyline points="16 18 22 12 16 6" />
+			<polyline points="8 6 2 12 8 18" />
+		</svg>
+	);
+}
+
 export function ConfigIcon() {
 	return (
 		<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

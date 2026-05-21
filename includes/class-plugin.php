@@ -38,6 +38,17 @@ class Plugin {
 		'notification_email_enabled'  => true,
 		'email_subject'               => '',
 		'email_body'                  => '',
+		'style_accent_color'          => '#5d9e3f',
+		'style_btn_text_color'        => '#ffffff',
+		'style_btn_radius'            => 3,
+		'style_btn_padding_v'         => 10,
+		'style_btn_padding_h'         => 20,
+		'style_input_border_color'    => '#e0e0e0',
+		'style_input_radius'          => 5,
+		'style_input_padding_v'       => 10,
+		'style_input_padding_h'       => 14,
+		'style_heading_color'         => '',
+		'style_custom_css'            => '',
 	);
 
 	/**

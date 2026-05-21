@@ -51,7 +51,7 @@ Also hooks `before_woocommerce_init` (top-level, outside init) to declare HPOS +
 | `Subscriber` | `class-subscriber.php` | Value object for a watchlist row — `from_row()` factory, status helpers (`is_watching/notifying/notified/unsubscribed`), `display_name()` |
 | `Plugin` | `class-plugin.php` | Orchestrator — instantiates all classes, wires hooks, handles unsubscribe token on `init` |
 | `Database` | `class-database.php` | `dbDelta` table install, all CRUD (`$wpdb->prepare()` everywhere); CRUD methods return `Subscriber` instances; paginated read methods (`get_subscribers_paginated`, `get_products_with_counts`, `get_stats`) return raw arrays for REST layer |
-| `Frontend` | `class-frontend.php` | Renders notify form on out-of-stock product pages, enqueues frontend assets (resolves i18n messages from settings) |
+| `Frontend` | `class-frontend.php` | Renders notify form on out-of-stock product pages, enqueues frontend assets (resolves i18n messages from settings); computes CSS custom properties from style settings (`hex_to_rgb()`, `hex_darken()` private helpers) and outputs them via `wp_add_inline_style()` |
 | `Admin` | `class-admin.php` | WC submenu "Lime Watchlist" (`lime-stock-watchlist`), enqueues React bundle on plugin page |
 | `Product_Settings` | `class-product-settings.php` | WC Product Data tab "Watchlist" — per-product enable/disable |
 | `Rest_API` | `class-rest-api.php` | Registers all 7 REST routes; `settings_with_placeholders()` private helper used by both GET and POST settings handlers |
@@ -144,6 +144,17 @@ Email body fields support basic HTML — sanitized via `wp_kses_post()` (not `sa
 | `notification_email_enabled` | `true` | Send back-in-stock emails automatically |
 | `email_subject` | `''` | Back-in-stock subject (supports shortcodes; fallback: "{product} is back in stock!") |
 | `email_body` | `''` | Back-in-stock body (supports shortcodes + HTML; fallback: template default paragraphs) |
+| `style_accent_color` | `'#5d9e3f'` | Frontend button/accent colour → `--lswl-accent` CSS var |
+| `style_btn_text_color` | `'#ffffff'` | Button text colour → `--lswl-btn-text` CSS var |
+| `style_btn_radius` | `3` | Button border-radius in px → `--lswl-btn-radius` CSS var |
+| `style_btn_padding_v` | `10` | Button vertical padding in px → `--lswl-btn-padding` CSS var |
+| `style_btn_padding_h` | `20` | Button horizontal padding in px → `--lswl-btn-padding` CSS var |
+| `style_input_border_color` | `'#e0e0e0'` | Input border colour → `--lswl-input-border` CSS var |
+| `style_input_radius` | `5` | Input border-radius in px → `--lswl-input-radius` CSS var |
+| `style_input_padding_v` | `10` | Input vertical padding in px → `--lswl-input-padding` CSS var |
+| `style_input_padding_h` | `14` | Input horizontal padding in px → `--lswl-input-padding` CSS var |
+| `style_heading_color` | `''` | Heading colour → `--lswl-heading-color` CSS var (empty = inherit theme) |
+| `style_custom_css` | `''` | Arbitrary CSS appended after CSS var block (stripped of tags) |
 
 Both GET and POST `/settings` return `_placeholders` — computed real defaults for React input placeholders (via shared `settings_with_placeholders()` method). Never saved to DB.
 
@@ -190,7 +201,7 @@ WC submenu: **"Stock watchlist"** — `PAGE_SLUG = 'lime-stock-watchlist'`, hook
 
 `render_page()` outputs `<div class="wrap"><div id="lswl-admin-root"></div></div>` — the `.wrap` class is required for standard WP admin margins.
 
-Single React SPA. Two tabs via `@wordpress/components` `TabPanel`:
+Single React SPA. Three tabs via `@wordpress/components` `TabPanel`:
 
 **Subscribers tab** — TanStack Table v8 + TanStack Query v5. Both packages are **bundled** (not WP externals) — `build/admin.asset.php` does NOT list them.
 
@@ -221,6 +232,7 @@ SubscribersTab
 ```
 
 **Settings tab** — five grouped cards; all but the first hidden when `notifications_enabled` is false:
+
 1. **Enable Stock Watchlist** — master toggle
 2. **Subscriber Form** — form title, button label, name field toggles, success/duplicate/error messages
 3. **Email Configuration** — shared from name + from email (placeholders = computed site name / admin email)
@@ -229,9 +241,27 @@ SubscribersTab
 
 Settings component tree: `SettingsTab` → `settings/WatchlistEnableCard`, `SubscriberFormCard`, `EmailConfigCard`, `ConfirmationEmailCard`, `NotificationEmailCard`. Each card in its own file under `src/admin/js/components/settings/`. Icons in `settings/icons.js`, generic card wrapper in `settings/SettingsCard.js`.
 
+**Style tab** — frontend form appearance; four grouped cards. Shares the same settings load/save API as SettingsTab (`getSettings()` / `saveSettings()`):
+
+1. **Button** — accent colour (`ColorField`), text colour (`ColorField`), border-radius + vertical/horizontal padding (`RangeControl`)
+2. **Inputs** — border colour (`ColorField`), border-radius + vertical/horizontal padding (`RangeControl`)
+3. **Text** — heading colour (`ColorField`, `allowEmpty` — reset = inherit theme)
+4. **Custom CSS** — plain `<textarea>` with dark code-editor styling; appended verbatim after the CSS var block
+
+Style component tree:
+```
+FrontendTab                src/admin/js/components/FrontendTab.js
+├── ButtonStyleCard        src/admin/js/components/settings/ButtonStyleCard.js
+├── InputStyleCard         src/admin/js/components/settings/InputStyleCard.js
+├── TextStyleCard          src/admin/js/components/settings/TextStyleCard.js
+└── CustomCssCard          src/admin/js/components/settings/CustomCssCard.js
+```
+
+`ColorField` (`src/admin/js/components/settings/ColorField.js`) — Gutenberg-native colour picker using `Dropdown` + `ColorPicker` + `ColorIndicator`. Props: `label`, `value`, `onChange`, `defaultValue`, `allowEmpty`. Reset button appears when `value !== resetTarget`. Handles both modern WP (hex string) and legacy (object with `.hex`) `ColorPicker.onChange` API.
+
 React entry: `src/admin/js/index.js` → `build/admin.js` + `build/admin.css`. Uses `createRoot` (React 18 API). Wrapped with `QueryClientProvider` (singleton `QueryClient` at module level, `staleTime: 30_000, retry: 1`).
 
-**`tab` URL param** — `App.js` reads `?tab=` on mount via `getInitialTab()` and passes it as `initialTabName` to `TabPanel`. `onSelect` calls `syncTabToUrl(tabName)` via `history.replaceState` — omits the param when tab is `'subscribers'` (default) to keep URLs clean. Only recognised tab names (`subscribers`, `settings`) are accepted; unknown values fall back to `'subscribers'`.
+**`tab` URL param** — `App.js` reads `?tab=` on mount via `getInitialTab()` and passes it as `initialTabName` to `TabPanel`. `onSelect` calls `syncTabToUrl(tabName)` via `history.replaceState` — omits the param when tab is `'subscribers'` (default) to keep URLs clean. Recognised tab names: `subscribers`, `settings`, `style`; unknown values fall back to `'subscribers'`.
 
 Data layer: `@wordpress/api-fetch` + `wp_rest` nonce. Uses `url:` (not `path:`) in all `apiFetch` calls.  
 `CheckboxControl` and `ToggleControl` require `__nextHasNoMarginBottom` prop (deprecation since `@wordpress/components` 6.7).
@@ -307,7 +337,7 @@ Variables in `src/admin/scss/_variables.scss`. BEM under `.lswl-`. Brand accent:
 
 **Admin SCSS** — full design system: light page header with lime bar accent, lime tab underline, stats bar (5 columns), TanStack Table styles (thead caps-label, zebra stripe, lime hover), number-based pagination, filter controls (native inputs), settings cards, status badge pills (including `--notifying` with pulsing dot animation). See "Limewoo Admin UI Design System" section for full token reference.
 
-**Frontend SCSS** — intentionally minimal: inherits theme styles. Only lime `3px` top-border, lime focus ring, lime button colour.
+**Frontend SCSS** — intentionally minimal, but all colours and spacing driven by CSS custom properties so they work consistently across themes. `Frontend::enqueue()` outputs a `<style>` block via `wp_add_inline_style()` with vars: `--lswl-accent`, `--lswl-accent-rgb`, `--lswl-accent-dark`, `--lswl-accent-darker`, `--lswl-btn-text`, `--lswl-btn-radius`, `--lswl-btn-padding`, `--lswl-input-border`, `--lswl-input-radius`, `--lswl-input-padding`, `--lswl-heading-color` (only when non-empty). SCSS uses `var(--lswl-accent, #{$lswl-lime})` pattern for graceful fallback. Input/button sizing and colour properties use `!important` to override theme stylesheets at same/higher specificity.
 
 ### Build
 
@@ -346,6 +376,8 @@ Never edit `build/` manually.
 | Integer IDs | `absint()` |
 | Array of IDs | `array_map( 'absint', $ids )` |
 | Bool settings | `(bool)` cast |
+| Hex colour | `sanitize_hex_color()` — returns `null` for invalid input; use `?: '#default'` fallback |
+| Custom CSS (no tags) | `wp_strip_all_tags()` |
 
 ### Escaping reference
 
@@ -366,6 +398,7 @@ Never edit `build/` manually.
 - `@wordpress/components` `Notice` does not forward `style` prop — use CSS class instead.
 - For filter controls (search, select), use native `<input type="search">` and `<select>` — NOT `SearchControl`/`SelectControl`. WP wrappers add DOM layers that make consistent height/border impossible via CSS alone.
 - TanStack Table v8 (`@tanstack/react-table`) and TanStack Query v5 (`@tanstack/react-query`) are bundled — import from the packages directly, do not add them to WP script dependencies.
+- Style settings use Gutenberg components: `Dropdown` + `ColorPicker` + `ColorIndicator` for colour fields; `RangeControl` for numeric values. Wrap each `RangeControl` in a `.lswl-range-wrap` div to apply the lime accent override (see Design System section).
 
 ---
 
@@ -703,6 +736,127 @@ WP component overrides inside `.plugin-settings-card__body`:
 // Toggle track colour
 .components-form-toggle__track                              { background: #c8cace; }
 .components-form-toggle.is-checked .components-form-toggle__track { background: $lswl-lime; }
+```
+
+### ColorField component (Gutenberg colour picker)
+
+Use `Dropdown` + `ColorPicker` + `ColorIndicator` from `@wordpress/components` — not a plain `<input type="color">`.
+
+```jsx
+<Dropdown
+    popoverProps={ { placement: 'bottom-end' } }
+    renderToggle={ ( { isOpen, onToggle } ) => (
+        <Button onClick={ onToggle } aria-expanded={ isOpen }
+            className={ `lswl-color-field__trigger${ isOpen ? ' is-open' : '' }` }>
+            <ColorIndicator colorValue={ value } />
+            <span className="lswl-color-field__hex">{ value }</span>
+        </Button>
+    ) }
+    renderContent={ () => (
+        <ColorPicker
+            color={ value }
+            onChange={ ( color ) => {
+                const hex = typeof color === 'string' ? color : color?.hex;
+                if ( hex ) onChange( hex );
+            } }
+            enableAlpha={ false }
+            copyFormat="hex"
+        />
+    ) }
+/>
+```
+
+`onChange` must handle both modern WP (hex string) and legacy (object with `.hex`) API.
+
+Reset button: show when `value !== resetTarget` (where `resetTarget = allowEmpty ? '' : defaultValue`). Reset calls `onChange( resetTarget )`.
+
+```scss
+.lswl-color-field {
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f1;
+    &:last-child { border-bottom: none; }
+
+    &__row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    &__label { font-size: 13px; font-weight: 500; color: #1d2327; }
+    &__controls { display: flex; align-items: center; gap: 4px; }
+
+    &__trigger {
+        display: flex; align-items: center; gap: 6px;
+        height: 28px; padding: 0 8px;
+        border: 1px solid #dcdcde; border-radius: 3px;
+        background: #f6f7f7; font-size: 12px; font-family: monospace;
+        cursor: pointer; color: #1d2327;
+        &.is-open { border-color: $lswl-lime; box-shadow: 0 0 0 2px rgba(93,158,63,0.2); }
+    }
+}
+```
+
+### RangeControl lime accent override
+
+WP `RangeControl` reads `--wp-admin-theme-color` internally for the slider fill and thumb. Override at the wrapper scope; also reset `-webkit-appearance` on the thumb for WebKit:
+
+```scss
+.lswl-range-wrap {
+    padding: 8px 0 0;
+    border-bottom: 1px solid #f0f0f1;
+    --wp-admin-theme-color: #{$lswl-lime};
+    --wp-admin-theme-color--rgb: 93, 158, 63;
+
+    &--last,
+    &:last-child { border-bottom: none; }
+
+    .components-range-control { margin-bottom: 0; padding-bottom: 12px; }
+    .components-range-control__wrapper { margin-top: 4px; }
+
+    .components-range-control__slider {
+        accent-color: $lswl-lime !important;
+
+        &::-webkit-slider-thumb {
+            -webkit-appearance: none !important;
+            appearance: none !important;
+            width: 14px; height: 14px; border-radius: 50%;
+            background-color: $lswl-lime !important;
+            border: 2px solid $lswl-lime-dark !important;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+        }
+
+        &::-moz-range-thumb {
+            background-color: $lswl-lime !important;
+            border-color: $lswl-lime-dark !important;
+        }
+    }
+
+    .components-range-control__number:focus {
+        border-color: $lswl-lime !important;
+        box-shadow: 0 0 0 2px rgba(93,158,63,0.2) !important;
+        outline: none !important;
+    }
+}
+```
+
+Always add `__nextHasNoMarginBottom` prop to `RangeControl` (deprecation since `@wordpress/components` 6.7).
+
+### Custom CSS textarea
+
+```scss
+.lswl-custom-css__textarea {
+    width: 100%;
+    min-height: 140px;
+    padding: 12px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    background: #1e2126;
+    color: #abb2bf;
+    border: 1px solid #3e4451;
+    border-radius: 4px;
+    resize: vertical;
+    box-sizing: border-box;
+
+    &:focus { border-color: $lswl-lime; outline: none; box-shadow: 0 0 0 2px rgba(93,158,63,0.2); }
+    &::placeholder { color: #5c6370; }
+}
 ```
 
 ### Primary button (WP `is-primary` override)
