@@ -95,7 +95,7 @@ class Database {
 			}
 		}
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 		$result = $wpdb->query(
 			$wpdb->prepare(
 				"INSERT INTO `{$wpdb->prefix}lime_watchlist`
@@ -194,7 +194,7 @@ class Database {
 		global $wpdb;
 		$table = self::table();
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$row = $wpdb->get_row(
 			"SELECT
 				COUNT(*) AS total,
@@ -204,6 +204,7 @@ class Database {
 				SUM(unsubscribed = 1) AS unsubscribed_count
 			FROM `{$table}`"
 		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		return array(
 			'total'        => (int) ( $row->total ?? 0 ),
@@ -217,15 +218,17 @@ class Database {
 	/**
 	 * Get a paginated, filtered list of subscribers.
 	 *
-	 * @param array{
-	 *   page: int,
-	 *   per_page: int,
-	 *   status: string,
-	 *   search: string,
-	 *   product_id: int,
-	 *   orderby: string,
-	 *   order: string,
-	 * } $args Query arguments.
+	 * @param array $args {
+	 *     Query arguments.
+	 *
+	 *     @type int    $page       Page number (1-based). Default 1.
+	 *     @type int    $per_page   Results per page (1–100). Default 25.
+	 *     @type string $status     all|watching|notifying|notified|unsubscribed. Default 'all'.
+	 *     @type string $search     Email LIKE filter. Default ''.
+	 *     @type int    $product_id Limit to one product (0 = all). Default 0.
+	 *     @type string $orderby    date_subscribed|email. Default 'date_subscribed'.
+	 *     @type string $order      ASC|DESC. Default 'DESC'.
+	 * }
 	 * @return array{ items: array, total: int, pages: int }
 	 */
 	public static function get_subscribers_paginated( array $args ): array {
@@ -270,14 +273,15 @@ class Database {
 		}
 
 		$where_sql = implode( ' AND ', $where );
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 		$count_sql = "SELECT COUNT(*) FROM `{$table}` WHERE {$where_sql}";
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
-		$total = (int) $wpdb->get_var( empty( $values ) ? $count_sql : $wpdb->prepare( $count_sql, ...$values ) );
+		$total     = (int) $wpdb->get_var( empty( $values ) ? $count_sql : $wpdb->prepare( $count_sql, ...$values ) );
 
 		$select_sql  = "SELECT id, product_id, email, name, date_subscribed, notified, unsubscribed FROM `{$table}` WHERE {$where_sql} ORDER BY `{$orderby}` {$order} LIMIT %d OFFSET %d";
 		$select_args = array_merge( $values, array( $per_page, $offset ) );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
-		$rows = $wpdb->get_results( $wpdb->prepare( $select_sql, ...$select_args ) );
+		$rows        = $wpdb->get_results( $wpdb->prepare( $select_sql, ...$select_args ) );
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 
 		return array(
 			'items' => $rows ?? array(),
@@ -289,7 +293,13 @@ class Database {
 	/**
 	 * Get products with subscriber counts, for the product-based admin view.
 	 *
-	 * @param array{ page: int, per_page: int, search: string } $args Query arguments.
+	 * @param array $args {
+	 *     Query arguments.
+	 *
+	 *     @type int    $page     Page number (1-based). Default 1.
+	 *     @type int    $per_page Results per page (1–100). Default 25.
+	 *     @type string $search   Product name filter. Default ''.
+	 * }
 	 * @return array{ items: array, total: int, pages: int }
 	 */
 	public static function get_products_with_counts( array $args ): array {
@@ -300,16 +310,21 @@ class Database {
 		$per_page = max( 1, min( 100, (int) ( $args['per_page'] ?? 25 ) ) );
 		$search   = $args['search'] ?? '';
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$rows = $wpdb->get_results(
 			"SELECT product_id, COUNT(*) AS subscriber_count
 			FROM `{$table}`
 			GROUP BY product_id
 			ORDER BY subscriber_count DESC"
 		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		if ( empty( $rows ) ) {
-			return array( 'items' => array(), 'total' => 0, 'pages' => 0 );
+			return array(
+				'items' => array(),
+				'total' => 0,
+				'pages' => 0,
+			);
 		}
 
 		$items = array();
@@ -370,10 +385,10 @@ class Database {
 		$ids          = array_map( 'absint', $ids );
 		$placeholders = implode( ', ', array_fill( 0, count( $ids ), '%d' ) );
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 		$result = $wpdb->query(
 			$wpdb->prepare(
-				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 				"UPDATE `{$wpdb->prefix}lime_watchlist` SET notified = 2 WHERE id IN ({$placeholders})",
 				...$ids
 			)
@@ -395,13 +410,13 @@ class Database {
 			return false;
 		}
 
-		$ids         = array_map( 'absint', $ids );
+		$ids          = array_map( 'absint', $ids );
 		$placeholders = implode( ', ', array_fill( 0, count( $ids ), '%d' ) );
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 		$result = $wpdb->query(
 			$wpdb->prepare(
-				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 				"UPDATE `{$wpdb->prefix}lime_watchlist` SET notified = 1 WHERE id IN ({$placeholders})",
 				...$ids
 			)
@@ -419,7 +434,7 @@ class Database {
 	public static function mark_unsubscribed( int $id ): bool {
 		global $wpdb;
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 		$result = $wpdb->update(
 			self::table(),
 			array( 'unsubscribed' => 1 ),
@@ -447,10 +462,10 @@ class Database {
 		$ids          = array_map( 'absint', $ids );
 		$placeholders = implode( ', ', array_fill( 0, count( $ids ), '%d' ) );
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 		$result = $wpdb->query(
 			$wpdb->prepare(
-				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 				"DELETE FROM `{$wpdb->prefix}lime_watchlist` WHERE id IN ({$placeholders})",
 				...$ids
 			)

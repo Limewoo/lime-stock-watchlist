@@ -16,18 +16,34 @@
 
 	<rule ref="WordPress">
 		<exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+		<!-- Short ternary (?:) is valid PHP; used intentionally for falsy-fallback patterns. -->
+		<exclude name="Universal.Operators.DisallowShortTernary"/>
 	</rule>
 
 	<rule ref="WordPress.WP.I18n">
 		<properties>
-			<property name="text_domain" type="array" value="lime-stock-watchlist"/>
+			<property name="text_domain" type="array">
+				<element value="lime-stock-watchlist"/>
+			</property>
 		</properties>
 	</rule>
 
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
 		<properties>
-			<property name="prefixes" type="array"
-				value="lime_stock_watchlist,Lime_Stock_Watchlist,LSWL,lswl"/>
+			<property name="prefixes" type="array">
+				<element value="lime_stock_watchlist"/>
+				<element value="Lime_Stock_Watchlist"/>
+				<element value="LSWL"/>
+				<element value="lswl"/>
+			</property>
+		</properties>
+	</rule>
+
+	<rule ref="WordPress.WP.Capabilities">
+		<properties>
+			<property name="custom_capabilities" type="array">
+				<element value="manage_woocommerce"/>
+			</property>
 		</properties>
 	</rule>
 </ruleset>

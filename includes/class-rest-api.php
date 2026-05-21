@@ -381,7 +381,13 @@ class Rest_API {
 			);
 		}
 
-		return new \WP_REST_Response( array( 'deleted' => true, 'count' => count( $ids ) ), 200 );
+		return new \WP_REST_Response(
+			array(
+				'deleted' => true,
+				'count'   => count( $ids ),
+			),
+			200
+		);
 	}
 
 	/**
@@ -434,40 +440,40 @@ class Rest_API {
 		$current = Plugin::get_settings();
 
 		$updated = array(
-			'notifications_enabled'       => (bool) $request->get_param( 'notifications_enabled' ),
-			'form_title'                  => sanitize_text_field( (string) $request->get_param( 'form_title' ) ),
-			'form_button_label'           => sanitize_text_field( (string) $request->get_param( 'form_button_label' ) ),
-			'show_name_field'             => (bool) $request->get_param( 'show_name_field' ),
-			'name_field_required'         => (bool) $request->get_param( 'name_field_required' ),
-			'msg_success'                 => sanitize_text_field( (string) $request->get_param( 'msg_success' ) ),
-			'msg_duplicate'               => sanitize_text_field( (string) $request->get_param( 'msg_duplicate' ) ),
-			'msg_error'                   => sanitize_text_field( (string) $request->get_param( 'msg_error' ) ),
-			'from_name'                   => sanitize_text_field( (string) $request->get_param( 'from_name' ) ),
-			'from_email'                  => sanitize_email( (string) $request->get_param( 'from_email' ) ),
-			'confirmation_email_enabled'  => (bool) $request->get_param( 'confirmation_email_enabled' ),
-			'confirmation_email_subject'  => sanitize_text_field( (string) $request->get_param( 'confirmation_email_subject' ) ),
-			'confirmation_email_body'     => wp_kses_post( (string) $request->get_param( 'confirmation_email_body' ) ),
-			'confirmation_email_footer'   => sanitize_text_field( (string) $request->get_param( 'confirmation_email_footer' ) ),
-			'notification_email_enabled'  => (bool) $request->get_param( 'notification_email_enabled' ),
-			'email_subject'               => sanitize_text_field( (string) $request->get_param( 'email_subject' ) ),
-			'email_body'                  => wp_kses_post( (string) $request->get_param( 'email_body' ) ),
-			'email_footer'                => sanitize_text_field( (string) $request->get_param( 'email_footer' ) ),
-			'style_accent_color'          => sanitize_hex_color( (string) $request->get_param( 'style_accent_color' ) ) ?: '#5d9e3f',
-			'style_btn_text_color'        => sanitize_hex_color( (string) $request->get_param( 'style_btn_text_color' ) ) ?: '#ffffff',
-			'style_btn_radius'            => absint( $request->get_param( 'style_btn_radius' ) ),
-			'style_btn_padding_v'         => absint( $request->get_param( 'style_btn_padding_v' ) ),
-			'style_btn_padding_h'         => absint( $request->get_param( 'style_btn_padding_h' ) ),
-			'style_input_border_color'    => sanitize_hex_color( (string) $request->get_param( 'style_input_border_color' ) ) ?: '#e0e0e0',
-			'style_input_radius'          => absint( $request->get_param( 'style_input_radius' ) ),
-			'style_input_padding_v'       => absint( $request->get_param( 'style_input_padding_v' ) ),
-			'style_input_padding_h'       => absint( $request->get_param( 'style_input_padding_h' ) ),
-			'style_heading_color'         => sanitize_hex_color( (string) $request->get_param( 'style_heading_color' ) ) ?: '',
-			'style_custom_css'            => wp_strip_all_tags( (string) $request->get_param( 'style_custom_css' ) ),
-			'form_display_mode'           => in_array( $request->get_param( 'form_display_mode' ), array( 'inline', 'popup' ), true )
+			'notifications_enabled'      => (bool) $request->get_param( 'notifications_enabled' ),
+			'form_title'                 => sanitize_text_field( (string) $request->get_param( 'form_title' ) ),
+			'form_button_label'          => sanitize_text_field( (string) $request->get_param( 'form_button_label' ) ),
+			'show_name_field'            => (bool) $request->get_param( 'show_name_field' ),
+			'name_field_required'        => (bool) $request->get_param( 'name_field_required' ),
+			'msg_success'                => sanitize_text_field( (string) $request->get_param( 'msg_success' ) ),
+			'msg_duplicate'              => sanitize_text_field( (string) $request->get_param( 'msg_duplicate' ) ),
+			'msg_error'                  => sanitize_text_field( (string) $request->get_param( 'msg_error' ) ),
+			'from_name'                  => sanitize_text_field( (string) $request->get_param( 'from_name' ) ),
+			'from_email'                 => sanitize_email( (string) $request->get_param( 'from_email' ) ),
+			'confirmation_email_enabled' => (bool) $request->get_param( 'confirmation_email_enabled' ),
+			'confirmation_email_subject' => sanitize_text_field( (string) $request->get_param( 'confirmation_email_subject' ) ),
+			'confirmation_email_body'    => wp_kses_post( (string) $request->get_param( 'confirmation_email_body' ) ),
+			'confirmation_email_footer'  => sanitize_text_field( (string) $request->get_param( 'confirmation_email_footer' ) ),
+			'notification_email_enabled' => (bool) $request->get_param( 'notification_email_enabled' ),
+			'email_subject'              => sanitize_text_field( (string) $request->get_param( 'email_subject' ) ),
+			'email_body'                 => wp_kses_post( (string) $request->get_param( 'email_body' ) ),
+			'email_footer'               => sanitize_text_field( (string) $request->get_param( 'email_footer' ) ),
+			'style_accent_color'         => sanitize_hex_color( (string) $request->get_param( 'style_accent_color' ) ) ?: '#5d9e3f',
+			'style_btn_text_color'       => sanitize_hex_color( (string) $request->get_param( 'style_btn_text_color' ) ) ?: '#ffffff',
+			'style_btn_radius'           => absint( $request->get_param( 'style_btn_radius' ) ),
+			'style_btn_padding_v'        => absint( $request->get_param( 'style_btn_padding_v' ) ),
+			'style_btn_padding_h'        => absint( $request->get_param( 'style_btn_padding_h' ) ),
+			'style_input_border_color'   => sanitize_hex_color( (string) $request->get_param( 'style_input_border_color' ) ) ?: '#e0e0e0',
+			'style_input_radius'         => absint( $request->get_param( 'style_input_radius' ) ),
+			'style_input_padding_v'      => absint( $request->get_param( 'style_input_padding_v' ) ),
+			'style_input_padding_h'      => absint( $request->get_param( 'style_input_padding_h' ) ),
+			'style_heading_color'        => sanitize_hex_color( (string) $request->get_param( 'style_heading_color' ) ) ?: '',
+			'style_custom_css'           => wp_strip_all_tags( (string) $request->get_param( 'style_custom_css' ) ),
+			'form_display_mode'          => in_array( $request->get_param( 'form_display_mode' ), array( 'inline', 'popup' ), true )
 				? (string) $request->get_param( 'form_display_mode' )
 				: 'inline',
-			'popup_trigger_label'         => sanitize_text_field( (string) $request->get_param( 'popup_trigger_label' ) ),
-			'show_on_archive'             => (bool) $request->get_param( 'show_on_archive' ),
+			'popup_trigger_label'        => sanitize_text_field( (string) $request->get_param( 'popup_trigger_label' ) ),
+			'show_on_archive'            => (bool) $request->get_param( 'show_on_archive' ),
 		);
 
 		// Validate email if provided.
@@ -490,38 +496,160 @@ class Rest_API {
 	 */
 	private function settings_args(): array {
 		return array(
-			'notifications_enabled'      => array( 'type' => 'boolean', 'default' => true ),
-			'form_title'                 => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
-			'form_button_label'          => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
-			'show_name_field'            => array( 'type' => 'boolean', 'default' => false ),
-			'name_field_required'        => array( 'type' => 'boolean', 'default' => false ),
-			'msg_success'                => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
-			'msg_duplicate'              => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
-			'msg_error'                  => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
-			'from_name'                  => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
-			'from_email'                 => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_email' ),
-			'confirmation_email_enabled' => array( 'type' => 'boolean', 'default' => true ),
-			'confirmation_email_subject' => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
-			'confirmation_email_body'    => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'wp_kses_post' ),
-			'confirmation_email_footer'  => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
-			'notification_email_enabled' => array( 'type' => 'boolean', 'default' => true ),
-			'email_subject'              => array( 'type' => 'string',  'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
-			'email_body'                 => array( 'type' => 'string',  'default' => '', 'sanitize_callback' => 'wp_kses_post' ),
-			'email_footer'               => array( 'type' => 'string',  'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
-			'style_accent_color'         => array( 'type' => 'string',  'default' => '#5d9e3f', 'sanitize_callback' => 'sanitize_hex_color' ),
-			'style_btn_text_color'       => array( 'type' => 'string',  'default' => '#ffffff', 'sanitize_callback' => 'sanitize_hex_color' ),
-			'style_btn_radius'           => array( 'type' => 'integer', 'default' => 3,          'sanitize_callback' => 'absint' ),
-			'style_btn_padding_v'        => array( 'type' => 'integer', 'default' => 10,         'sanitize_callback' => 'absint' ),
-			'style_btn_padding_h'        => array( 'type' => 'integer', 'default' => 20,         'sanitize_callback' => 'absint' ),
-			'style_input_border_color'   => array( 'type' => 'string',  'default' => '#e0e0e0', 'sanitize_callback' => 'sanitize_hex_color' ),
-			'style_input_radius'         => array( 'type' => 'integer', 'default' => 5,          'sanitize_callback' => 'absint' ),
-			'style_input_padding_v'      => array( 'type' => 'integer', 'default' => 10,         'sanitize_callback' => 'absint' ),
-			'style_input_padding_h'      => array( 'type' => 'integer', 'default' => 14,         'sanitize_callback' => 'absint' ),
-			'style_heading_color'        => array( 'type' => 'string',  'default' => '',         'sanitize_callback' => 'sanitize_hex_color' ),
-			'style_custom_css'           => array( 'type' => 'string',  'default' => '',         'sanitize_callback' => 'wp_strip_all_tags' ),
-			'form_display_mode'          => array( 'type' => 'string',  'default' => 'inline',   'sanitize_callback' => 'sanitize_text_field' ),
-			'popup_trigger_label'        => array( 'type' => 'string',  'default' => '',         'sanitize_callback' => 'sanitize_text_field' ),
-			'show_on_archive'            => array( 'type' => 'boolean', 'default' => false ),
+			'notifications_enabled'      => array(
+				'type'    => 'boolean',
+				'default' => true,
+			),
+			'form_title'                 => array(
+				'type'              => 'string',
+				'default'           => '',
+				'sanitize_callback' => 'sanitize_text_field',
+			),
+			'form_button_label'          => array(
+				'type'              => 'string',
+				'default'           => '',
+				'sanitize_callback' => 'sanitize_text_field',
+			),
+			'show_name_field'            => array(
+				'type'    => 'boolean',
+				'default' => false,
+			),
+			'name_field_required'        => array(
+				'type'    => 'boolean',
+				'default' => false,
+			),
+			'msg_success'                => array(
+				'type'              => 'string',
+				'default'           => '',
+				'sanitize_callback' => 'sanitize_text_field',
+			),
+			'msg_duplicate'              => array(
+				'type'              => 'string',
+				'default'           => '',
+				'sanitize_callback' => 'sanitize_text_field',
+			),
+			'msg_error'                  => array(
+				'type'              => 'string',
+				'default'           => '',
+				'sanitize_callback' => 'sanitize_text_field',
+			),
+			'from_name'                  => array(
+				'type'              => 'string',
+				'default'           => '',
+				'sanitize_callback' => 'sanitize_text_field',
+			),
+			'from_email'                 => array(
+				'type'              => 'string',
+				'default'           => '',
+				'sanitize_callback' => 'sanitize_email',
+			),
+			'confirmation_email_enabled' => array(
+				'type'    => 'boolean',
+				'default' => true,
+			),
+			'confirmation_email_subject' => array(
+				'type'              => 'string',
+				'default'           => '',
+				'sanitize_callback' => 'sanitize_text_field',
+			),
+			'confirmation_email_body'    => array(
+				'type'              => 'string',
+				'default'           => '',
+				'sanitize_callback' => 'wp_kses_post',
+			),
+			'confirmation_email_footer'  => array(
+				'type'              => 'string',
+				'default'           => '',
+				'sanitize_callback' => 'sanitize_text_field',
+			),
+			'notification_email_enabled' => array(
+				'type'    => 'boolean',
+				'default' => true,
+			),
+			'email_subject'              => array(
+				'type'              => 'string',
+				'default'           => '',
+				'sanitize_callback' => 'sanitize_text_field',
+			),
+			'email_body'                 => array(
+				'type'              => 'string',
+				'default'           => '',
+				'sanitize_callback' => 'wp_kses_post',
+			),
+			'email_footer'               => array(
+				'type'              => 'string',
+				'default'           => '',
+				'sanitize_callback' => 'sanitize_text_field',
+			),
+			'style_accent_color'         => array(
+				'type'              => 'string',
+				'default'           => '#5d9e3f',
+				'sanitize_callback' => 'sanitize_hex_color',
+			),
+			'style_btn_text_color'       => array(
+				'type'              => 'string',
+				'default'           => '#ffffff',
+				'sanitize_callback' => 'sanitize_hex_color',
+			),
+			'style_btn_radius'           => array(
+				'type'              => 'integer',
+				'default'           => 3,
+				'sanitize_callback' => 'absint',
+			),
+			'style_btn_padding_v'        => array(
+				'type'              => 'integer',
+				'default'           => 10,
+				'sanitize_callback' => 'absint',
+			),
+			'style_btn_padding_h'        => array(
+				'type'              => 'integer',
+				'default'           => 20,
+				'sanitize_callback' => 'absint',
+			),
+			'style_input_border_color'   => array(
+				'type'              => 'string',
+				'default'           => '#e0e0e0',
+				'sanitize_callback' => 'sanitize_hex_color',
+			),
+			'style_input_radius'         => array(
+				'type'              => 'integer',
+				'default'           => 5,
+				'sanitize_callback' => 'absint',
+			),
+			'style_input_padding_v'      => array(
+				'type'              => 'integer',
+				'default'           => 10,
+				'sanitize_callback' => 'absint',
+			),
+			'style_input_padding_h'      => array(
+				'type'              => 'integer',
+				'default'           => 14,
+				'sanitize_callback' => 'absint',
+			),
+			'style_heading_color'        => array(
+				'type'              => 'string',
+				'default'           => '',
+				'sanitize_callback' => 'sanitize_hex_color',
+			),
+			'style_custom_css'           => array(
+				'type'              => 'string',
+				'default'           => '',
+				'sanitize_callback' => 'wp_strip_all_tags',
+			),
+			'form_display_mode'          => array(
+				'type'              => 'string',
+				'default'           => 'inline',
+				'sanitize_callback' => 'sanitize_text_field',
+			),
+			'popup_trigger_label'        => array(
+				'type'              => 'string',
+				'default'           => '',
+				'sanitize_callback' => 'sanitize_text_field',
+			),
+			'show_on_archive'            => array(
+				'type'    => 'boolean',
+				'default' => false,
+			),
 		);
 	}
 }

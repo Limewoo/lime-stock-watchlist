@@ -20,15 +20,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$lswl_default_title   = __( 'Notify me when available', 'lime-stock-watchlist' );
-$lswl_default_button  = __( 'Notify me', 'lime-stock-watchlist' );
-$lswl_title           = ! empty( $form_title ) ? $form_title : $lswl_default_title;
-$lswl_button          = ! empty( $form_button_label ) ? $form_button_label : $lswl_default_button;
-$lswl_trigger         = ! empty( $popup_trigger_label ) ? $popup_trigger_label : $lswl_title;
+$lswl_default_title  = __( 'Notify me when available', 'lime-stock-watchlist' );
+$lswl_default_button = __( 'Notify me', 'lime-stock-watchlist' );
+$lswl_title          = ! empty( $form_title ) ? $form_title : $lswl_default_title;
+$lswl_button         = ! empty( $form_button_label ) ? $form_button_label : $lswl_default_button;
+$lswl_trigger        = ! empty( $popup_trigger_label ) ? $popup_trigger_label : $lswl_title;
 $lswl_pid            = (int) $product_id;
 
 if ( 'popup' === $display_mode ) :
-?>
+	?>
 <div class="lswl-notify-form lswl-notify-form--popup<?php echo ! empty( $is_archive ) ? ' lswl-notify-form--archive' : ''; ?>" data-product-id="<?php echo esc_attr( $lswl_pid ); ?>"<?php echo ! empty( $is_hidden ) ? ' hidden' : ''; ?>>
 	<button type="button" class="lswl-notify-form__trigger">
 		<?php echo esc_html( $lswl_trigger ); ?>

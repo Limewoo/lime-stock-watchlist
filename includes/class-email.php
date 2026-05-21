@@ -87,7 +87,7 @@ class Email {
 	 * @return bool Whether wp_mail() succeeded.
 	 */
 	private static function send_to_one( Subscriber $subscriber, \WC_Product $product, array $settings ): bool {
-		$from_name  = ! empty( $settings['from_name'] )
+		$from_name = ! empty( $settings['from_name'] )
 			? $settings['from_name']
 			: get_bloginfo( 'name' );
 
@@ -149,7 +149,7 @@ class Email {
 	 * @return void
 	 */
 	public static function send_confirmation( \WC_Product $product, Subscriber $subscriber, array $settings ): void {
-		$from_name  = ! empty( $settings['from_name'] )
+		$from_name = ! empty( $settings['from_name'] )
 			? $settings['from_name']
 			: get_bloginfo( 'name' );
 

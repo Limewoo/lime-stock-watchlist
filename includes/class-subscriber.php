@@ -16,19 +16,39 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Subscriber {
 
-	/** @var int */
+	/**
+	 * Subscriber row primary key.
+	 *
+	 * @var int
+	 */
 	public int $id;
 
-	/** @var int */
+	/**
+	 * ID of the watched product.
+	 *
+	 * @var int
+	 */
 	public int $product_id;
 
-	/** @var string */
+	/**
+	 * Subscriber email address.
+	 *
+	 * @var string
+	 */
 	public string $email;
 
-	/** @var string */
+	/**
+	 * Subscriber full name (optional).
+	 *
+	 * @var string
+	 */
 	public string $name;
 
-	/** @var string */
+	/**
+	 * ISO datetime string of subscription.
+	 *
+	 * @var string
+	 */
 	public string $date_subscribed;
 
 	/**
@@ -38,10 +58,16 @@ class Subscriber {
 	 */
 	public int $notified;
 
-	/** @var bool */
+	/**
+	 * Whether the subscriber has opted out.
+	 *
+	 * @var bool
+	 */
 	public bool $unsubscribed;
 
 	/**
+	 * Create a Subscriber instance.
+	 *
 	 * @param int    $id              Subscriber ID (0 for unsaved instances).
 	 * @param int    $product_id      Product ID (0 for unsaved instances).
 	 * @param string $email           Email address.
@@ -51,13 +77,13 @@ class Subscriber {
 	 * @param bool   $unsubscribed    Whether the subscriber has opted out.
 	 */
 	public function __construct(
-		int    $id,
-		int    $product_id,
+		int $id,
+		int $product_id,
 		string $email,
-		string $name            = '',
+		string $name = '',
 		string $date_subscribed = '',
-		int    $notified        = 0,
-		bool   $unsubscribed    = false
+		int $notified = 0,
+		bool $unsubscribed = false
 	) {
 		$this->id              = $id;
 		$this->product_id      = $product_id;
@@ -76,7 +102,7 @@ class Subscriber {
 	 */
 	public static function from_row( object $row ): self {
 		return new self(
-			(int)    $row->id,
+			(int) $row->id,
 			isset( $row->product_id ) ? (int) $row->product_id : 0,
 			(string) $row->email,
 			(string) $row->name,
@@ -114,6 +140,8 @@ class Subscriber {
 	}
 
 	/**
+	 * Whether the subscriber has opted out of notifications.
+	 *
 	 * @return bool
 	 */
 	public function is_unsubscribed(): bool {
