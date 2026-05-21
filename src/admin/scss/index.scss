@@ -873,14 +873,19 @@
 
         // Labels
         .components-base-control__label,
-        .components-toggle-control .components-base-control__label {
+        .components-toggle-control .components-base-control__label,
+        .components-input-control__label {
             font-size: 13px;
             font-weight: 500;
             color: #1d2327;
             margin-bottom: 14px;
             display: block;
-            text-transform: none;
-            letter-spacing: 0;
+            text-transform: none !important;
+            letter-spacing: 0 !important;
+        }
+
+        .components-input-control__label {
+            margin-bottom: 6px;
         }
 
         // Help text
@@ -945,7 +950,7 @@
                 font-size: 13px;
                 font-weight: 500;
                 color: #1d2327;
-                margin-bottom: 6px;
+                margin-bottom: 14px;
                 text-transform: none;
                 letter-spacing: 0;
             }

@@ -14,6 +14,7 @@ export default function SubscriberFormCard( { settings, placeholders, update } )
 			title={ __( 'Subscriber Form', 'lime-stock-watchlist' ) }
 		>
 			<SelectControl
+				className="lswl-field--section-start"
 				label={ __( 'Display mode', 'lime-stock-watchlist' ) }
 				value={ settings.form_display_mode ?? 'inline' }
 				options={ [
