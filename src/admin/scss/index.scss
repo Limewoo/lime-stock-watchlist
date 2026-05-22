@@ -167,11 +167,9 @@
     &--grey .lswl-stat__value { color: #c8c8c8; }
 }
 
-// ── Notifying Notice ───────────────────────────────────────
-
-.lswl-notifying-notice.components-notice {
-    margin-bottom: 20px;
+.components-notice {
     border-radius: $lswl-radius-sm;
+    margin-bottom: 12px;
 }
 
 // ── Controls Row (toggle + filters in one line) ────────────

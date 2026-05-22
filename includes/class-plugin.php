@@ -88,35 +88,31 @@ class Plugin {
 			return;
 		}
 
-		$id    = absint( $_GET['id'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$token = sanitize_text_field( wp_unslash( $_GET['token'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$id = absint( wp_unslash( $_GET['id'] ) );
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$token = sanitize_text_field( wp_unslash( $_GET['token'] ) );
 
 		if ( $id <= 0 ) {
 			return;
 		}
 
-		global $wpdb;
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-		$row = $wpdb->get_row(
-			$wpdb->prepare(
-				"SELECT id, email, product_id, unsubscribed FROM `{$wpdb->prefix}lime_watchlist` WHERE id = %d LIMIT 1",
-				$id
-			)
-		);
+		$subscriber = Database::get_subscriber_by_id( $id );
 
-		if ( ! $row ) {
+		if ( ! $subscriber ) {
 			return;
 		}
 
-		$expected = wp_hash( $row->id . $row->email . NONCE_KEY );
+		$expected = wp_hash( $subscriber->id . $subscriber->email . NONCE_KEY );
 
 		if ( ! hash_equals( $expected, $token ) ) {
 			return;
 		}
 
-		$product_url = get_permalink( (int) $row->product_id ) ?: home_url( '/' );
+		$product_url = get_permalink( $subscriber->product_id ) ?: home_url( '/' );
 
-		if ( (int) $row->unsubscribed ) {
+		if ( $subscriber->is_unsubscribed() ) {
 			wp_safe_redirect( add_query_arg( 'lswl_already_unsubscribed', '1', $product_url ) );
 			exit;
 		}

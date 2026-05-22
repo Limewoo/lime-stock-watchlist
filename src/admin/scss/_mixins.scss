@@ -3,7 +3,7 @@
 // Card surface — white bg, standard border, subtle double-layer shadow.
 @mixin lswl-card {
     background: $lswl-surface;
-    border: 1px solid #dcdcde;
+    // border: 1px solid #dcdcde;
     border-radius: 6px;
     box-shadow: $lswl-shadow-card;
 }
