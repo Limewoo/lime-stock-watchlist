@@ -38,6 +38,7 @@ const STATUS_OPTIONS = [
 	{ label: __( 'Notifying', 'lime-stock-watchlist' ),    value: 'notifying' },
 	{ label: __( 'Notified', 'lime-stock-watchlist' ),     value: 'notified' },
 	{ label: __( 'Unsubscribed', 'lime-stock-watchlist' ), value: 'unsubscribed' },
+	{ label: __( 'Failed', 'lime-stock-watchlist' ),       value: 'failed' },
 ];
 
 /**
@@ -67,15 +68,44 @@ function StatsBar( { stats } ) {
 				<div className="lswl-stat__value">{ stats.unsubscribed }</div>
 				<div className="lswl-stat__label">{ __( 'Unsubscribed', 'lime-stock-watchlist' ) }</div>
 			</div>
+			<div className="lswl-stat lswl-stat--red">
+				<div className="lswl-stat__value">{ stats.failed ?? 0 }</div>
+				<div className="lswl-stat__label">{ __( 'Failed', 'lime-stock-watchlist' ) }</div>
+			</div>
 		</div>
 	);
 }
 
+const { actionSchedulerUrl } = window.lswlAdmin || {};
+
 /**
- * @param {{ count: number }} props
+ * @param {{ count: number, onDismiss: Function }} props
  * @return {JSX.Element}
  */
-function NotifyingNotice( { count } ) {
+function FailedNotice( { count, onDismiss } ) {
+	const intro = count === 1
+		? __( '1 notification failed to send.', 'lime-stock-watchlist' )
+		: sprintf(
+			/* translators: %d: number of failed notifications */
+			__( '%d notifications failed to send.', 'lime-stock-watchlist' ),
+			count
+		);
+	const schedulerLink = actionSchedulerUrl
+		? <a href={ actionSchedulerUrl } target="_blank" rel="noreferrer">{ __( 'Action Scheduler', 'lime-stock-watchlist' ) }</a>
+		: __( 'Action Scheduler', 'lime-stock-watchlist' );
+	return (
+		<Notice status="error" isDismissible onRemove={ onDismiss } className="lswl-notifying-notice">
+			{ intro }{ ' ' }
+			{ __( 'Check', 'lime-stock-watchlist' ) }{ ' ' }{ schedulerLink }{ ' ' }{ __( 'for details, then use the Resend button to retry.', 'lime-stock-watchlist' ) }
+		</Notice>
+	);
+}
+
+/**
+ * @param {{ count: number, onDismiss: Function }} props
+ * @return {JSX.Element}
+ */
+function NotifyingNotice( { count, onDismiss } ) {
 	const message = count === 1
 		? __( '1 email is currently being sent via Action Scheduler. Reload the page in a while to see the updated status.', 'lime-stock-watchlist' )
 		: sprintf(
@@ -84,7 +114,7 @@ function NotifyingNotice( { count } ) {
 			count
 		);
 	return (
-		<Notice status="warning" isDismissible={ false } className="lswl-notifying-notice">
+		<Notice status="warning" isDismissible onRemove={ onDismiss } className="lswl-notifying-notice">
 			{ message }
 		</Notice>
 	);
@@ -99,6 +129,8 @@ export default function SubscribersTab() {
 	const [ inputValue, setInputValue ] = useState( '' );
 	const [ search, setSearch ]         = useState( '' );
 	const [ status, setStatus ]         = useState( 'all' );
+	const [ failedDismissed, setFailedDismissed ]     = useState( false );
+	const [ notifyingDismissed, setNotifyingDismissed ] = useState( false );
 	const debounceRef = useRef( null );
 
 	const { data: stats } = useQuery( {
@@ -158,7 +190,8 @@ export default function SubscribersTab() {
 	return (
 		<div className="lswl-subscribers">
 			{ stats && <StatsBar stats={ stats } /> }
-			{ stats?.notifying > 0 && <NotifyingNotice count={ stats.notifying } /> }
+			{ stats?.failed > 0 && ! failedDismissed && <FailedNotice count={ stats.failed } onDismiss={ () => setFailedDismissed( true ) } /> }
+			{ stats?.notifying > 0 && ! notifyingDismissed && <NotifyingNotice count={ stats.notifying } onDismiss={ () => setNotifyingDismissed( true ) } /> }
 
 			{ /* Combined controls row — hidden when drilled in */ }
 			{ ! drillDown && (

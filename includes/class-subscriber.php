@@ -52,7 +52,7 @@ class Subscriber {
 	public string $date_subscribed;
 
 	/**
-	 * Notification state: 0 = watching, 2 = notifying (AS queued), 1 = notified.
+	 * Notification state: 0 = watching, 2 = notifying (AS queued), 1 = notified, 3 = failed.
 	 *
 	 * @var int
 	 */
@@ -146,6 +146,15 @@ class Subscriber {
 	 */
 	public function is_unsubscribed(): bool {
 		return $this->unsubscribed;
+	}
+
+	/**
+	 * Email delivery failed — Action Scheduler exhausted all attempts.
+	 *
+	 * @return bool
+	 */
+	public function is_failed(): bool {
+		return 3 === $this->notified && ! $this->unsubscribed;
 	}
 
 	/**

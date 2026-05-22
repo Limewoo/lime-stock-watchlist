@@ -111,9 +111,10 @@ class Admin {
 			'lswl-admin',
 			'lswlAdmin',
 			array(
-				'restUrl'    => esc_url_raw( rest_url( 'lime-stock-watchlist/v1/' ) ),
-				'nonce'      => wp_create_nonce( 'wp_rest' ),
-				'dateFormat' => get_option( 'date_format' ),
+				'restUrl'             => esc_url_raw( rest_url( 'lime-stock-watchlist/v1/' ) ),
+				'nonce'               => wp_create_nonce( 'wp_rest' ),
+				'dateFormat'          => get_option( 'date_format' ),
+				'actionSchedulerUrl'  => esc_url( admin_url( 'admin.php?page=wc-status&tab=action-scheduler&s=lswl_send_notification' ) ),
 			)
 		);
 	}

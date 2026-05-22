@@ -19,6 +19,17 @@ export default function StatusBadge( { subscriber } ) {
 			</span>
 		);
 	}
+	if ( subscriber.notified === 3 ) {
+		return (
+			<span
+				className="lswl-badge lswl-badge--failed"
+				data-tooltip={ __( 'Notification email failed to send. Use Resend to retry.', 'lime-stock-watchlist' ) }
+			>
+				<span className="lswl-badge__dot" />
+				{ __( 'Failed', 'lime-stock-watchlist' ) }
+			</span>
+		);
+	}
 	if ( subscriber.notified === 2 ) {
 		return (
 			<span

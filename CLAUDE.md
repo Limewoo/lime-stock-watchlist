@@ -59,16 +59,16 @@ Also hooks `before_woocommerce_init` (top-level, outside init) to declare HPOS +
 
 | Class | File | Responsibility |
 |-------|------|----------------|
-| `Subscriber` | `class-subscriber.php` | Value object for a watchlist row — `from_row()` factory, status helpers (`is_watching/notifying/notified/unsubscribed`), `display_name()` |
+| `Subscriber` | `class-subscriber.php` | Value object for a watchlist row — `from_row()` factory, status helpers (`is_watching/notifying/notified/unsubscribed/is_failed`), `display_name()` |
 | `Plugin` | `class-plugin.php` | Orchestrator — instantiates all classes, wires hooks, handles unsubscribe token on `init`; no `$wpdb` — delegates all DB lookups to `Database` (e.g. `handle_unsubscribe()` calls `Database::get_subscriber_by_id()`) |
-| `Database` | `class-database.php` | `dbDelta` table install, all CRUD (`$wpdb->prepare()` everywhere); all queries use `%i` with `self::table()` for table identifier; CRUD methods return `Subscriber` instances; paginated read methods (`get_subscribers_paginated`, `get_products_with_counts`, `get_stats`) return raw arrays for REST layer; `get_subscribers_paginated()` uses a fixed-form SQL literal with OR conditions (no dynamic WHERE building) to satisfy WP Plugin Checker — status mapped to int (1–4), `%d = 0` branches match "all" |
+| `Database` | `class-database.php` | `dbDelta` table install, all CRUD (`$wpdb->prepare()` everywhere); all queries use `%i` with `self::table()` for table identifier; CRUD methods return `Subscriber` instances; paginated read methods (`get_subscribers_paginated`, `get_products_with_counts`, `get_stats`) return raw arrays for REST layer; `get_subscribers_paginated()` uses a fixed-form SQL literal with OR conditions (no dynamic WHERE building) to satisfy WP Plugin Checker — status mapped to int (1–5), `%d = 0` branches match "all"; `get_subscribers()` includes `notified=3` rows (auto-requeue on next restock); `mark_failed(array $ids)` sets `notified=3`; `mark_watching(array $ids)` resets `notified=0` |
 | `Frontend` | `class-frontend.php` | Renders notify form on out-of-stock product pages and optionally on archive pages; enqueues frontend assets (resolves i18n messages from settings); computes CSS custom properties from style settings (`hex_to_rgb()`, `hex_darken()` private helpers) and outputs them via `wp_add_inline_style()`; private `render_form_template()` shared by `render_form()` (single product) and `render_archive_form()` (archive loop) |
 | `Compatibility` | `class-compatibility.php` | Theme-specific CSS overrides — hooks `wp_enqueue_scripts` at priority 20 (after `Frontend`); checks `wp_style_is('lswl-frontend','enqueued')` before acting; dispatches to private per-theme methods. **Kadence:** archive pages get extra padding/margin on `.lswl-notify-form`. **Twenty Twenty-Five + Woostify:** archive popup trigger gets `text-align:center`. Add new themes via `elseif` in `enqueue_theme_compat()` + new private method. |
 | `Admin` | `class-admin.php` | WC submenu "Lime Watchlist" (`lime-stock-watchlist`), enqueues React bundle on plugin page |
 | `Product_Settings` | `class-product-settings.php` | WC Product Data tab "Watchlist" — per-product enable/disable |
-| `Rest_API` | `class-rest-api.php` | Registers all 7 REST routes; `settings_with_placeholders()` private helper used by both GET and POST settings handlers |
-| `Email` | `class-email.php` | `send_to_one()` — back-in-stock per-subscriber; `send_confirmation()` — subscription confirmation; `handle_queued_notification()` — AS callback; `send_notifications()` — sync fallback; `process_shortcodes()` — token replacement |
-| `Stock_Watcher` | `class-stock-watcher.php` | Hooks all 4 WC stock hooks (see below) → guards on `notifications_enabled` AND `notification_email_enabled` → queues AS actions + calls `Database::mark_notifying()` (sync fallback skips mark_notifying) |
+| `Rest_API` | `class-rest-api.php` | Registers all 8 REST routes; `settings_with_placeholders()` private helper used by both GET and POST settings handlers |
+| `Email` | `class-email.php` | `send_to_one()` — back-in-stock per-subscriber; `send_confirmation()` — subscription confirmation; `handle_queued_notification()` — AS callback; throws `\RuntimeException` on `wp_mail()` failure so AS marks action failed; resets subscriber to `notified=0` via `mark_watching()` if product OOS when AS fires; `send_notifications()` — sync fallback; `process_shortcodes()` — token replacement |
+| `Stock_Watcher` | `class-stock-watcher.php` | Hooks all 4 WC stock hooks (see below) → guards on `notifications_enabled` AND `notification_email_enabled` → queues AS actions + calls `Database::mark_notifying()` (sync fallback skips mark_notifying); hooks `action_scheduler_failed_action` → `on_notification_failed()` which calls `Database::mark_failed()` when `lswl_send_notification` action fails |
 
 ### DB table: `{prefix}lime_watchlist`
 
@@ -79,16 +79,16 @@ Also hooks `before_woocommerce_init` (top-level, outside init) to declare HPOS +
 | `email` | `VARCHAR(200)` | Unique per product |
 | `name` | `VARCHAR(100)` | Optional, default `''` |
 | `date_subscribed` | `DATETIME` | Default `CURRENT_TIMESTAMP` |
-| `notified` | `TINYINT(1)` | 0 = pending, 2 = notifying (queued), 1 = notified |
+| `notified` | `TINYINT(1)` | 0 = pending, 2 = notifying (queued), 1 = notified, 3 = failed |
 | `unsubscribed` | `TINYINT(1)` | 0 = active, 1 = unsubscribed |
 
 UNIQUE KEY on `(product_id, email)`.
 
-**`notified` state machine:** `0` (pending) → `2` (notifying — AS action queued) → `1` (notified — email sent).
+**`notified` state machine:** `0` (pending) → `2` (notifying — AS action queued) → `1` (notified — email sent). On AS failure: `2` → `3` (failed) via `action_scheduler_failed_action` hook. Admin can resend: `3` → `2` (re-queued).
 
 **Re-subscribe rules** (`Database::add_or_resubscribe()`):
 - `notified=0 OR notified=2, unsubscribed=0` → `'already_subscribed'` (REST 409) — active or queued
-- `notified=1` OR `unsubscribed=1` → allow re-subscribe (reset to `notified=0, unsubscribed=0`)
+- `notified=1`, `notified=3`, OR `unsubscribed=1` → allow re-subscribe (reset to `notified=0, unsubscribed=0`)
 
 ### Email delivery (Action Scheduler)
 
@@ -100,7 +100,8 @@ AS action details:
 - Hook: `lswl_send_notification( int $subscriber_id, int $product_id )`
 - Group: `lime-stock-watchlist`
 - Unique: `false` — double-send prevented by `notified === 1` guard in callback
-- Callback: `Email::handle_queued_notification()` — guard: `1 === (int)$subscriber->notified` skips (already done); `notified=2` proceeds → sends → `mark_notified()` sets `notified=1`
+- Callback: `Email::handle_queued_notification()` — guard: `1 === (int)$subscriber->notified` skips (already done); `notified=2` proceeds → if product OOS, calls `mark_watching()` and returns; else sends → `mark_notified()` sets `notified=1`; throws `\RuntimeException` on `wp_mail()` failure so AS marks the action failed
+- Failure hook: `action_scheduler_failed_action` → `Stock_Watcher::on_notification_failed()` → `Database::mark_failed()` sets `notified=3`
 - Fallback: if `as_enqueue_async_action()` unavailable, falls back to synchronous `Email::send_notifications()` (no intermediate notifying state)
 
 Viewable/retryable in WooCommerce → Status → Action Scheduler.
@@ -177,6 +178,7 @@ Email body fields support basic HTML — sanitized via `wp_kses_post()` (not `sa
 | `form_display_mode` | `'inline'` | `'inline'` — form rendered directly on page; `'popup'` — trigger button opens modal overlay |
 | `popup_trigger_label` | `''` | Popup trigger button text (empty = falls back to form title / "Notify me when available") |
 | `show_on_archive` | `false` | Show form on shop/category/search pages for OOS simple products (variable skipped) |
+| `allow_backorder_subscribe` | `false` | Show form and accept subscriptions on backorder products (`get_stock_status() === 'onbackorder'`); default off — backorder products are blocked by the same `is_in_stock()` guard otherwise |
 
 Both GET and POST `/settings` return `_placeholders` — computed real defaults for React input placeholders (via shared `settings_with_placeholders()` method). Never saved to DB.
 
@@ -191,6 +193,7 @@ Namespace: `lime-stock-watchlist/v1`
 | `GET` | `/subscribers/stats` | `manage_woocommerce` |
 | `DELETE` | `/subscribers/{id}` | `manage_woocommerce` |
 | `DELETE` | `/subscribers` | `manage_woocommerce` (bulk, `ids[]` in body) |
+| `POST` | `/subscribers/{id}/resend` | `manage_woocommerce` — re-queues failed notification; 400 if not failed, 409 if OOS (unless `?force=1`), 503 if AS unavailable |
 | `GET` | `/settings` | `manage_woocommerce` |
 | `POST` | `/settings` | `manage_woocommerce` |
 
@@ -203,7 +206,7 @@ Namespace: `lime-stock-watchlist/v1`
 | `view` | string | `users` | `users` or `products` |
 | `page` | int | `1` | 1-based |
 | `per_page` | int | `20` | |
-| `status` | string | `all` | `all`, `watching`, `notifying`, `notified`, `unsubscribed` |
+| `status` | string | `all` | `all`, `watching`, `notifying`, `notified`, `unsubscribed`, `failed` |
 | `search` | string | `''` | email LIKE (users view); product name filter (products view) |
 | `product_id` | int | `0` | `0` = all products; `>0` = drill-down for one product |
 
@@ -213,9 +216,9 @@ Namespace: `lime-stock-watchlist/v1`
 
 `view=products` → `{ items: [{ product_id, product_name, product_thumbnail, product_url, subscriber_count }], total: int, pages: int }`.
 
-`/subscribers/stats` → `{ total, watching, notifying, notified, unsubscribed }`.
+`/subscribers/stats` → `{ total, watching, notifying, notified, unsubscribed, failed }`.
 
-Subscriber rows return `notified` as **integer** (0/2/1), not bool. React uses strict `=== 0/2/1` comparisons.
+Subscriber rows return `notified` as **integer** (0/2/1/3), not bool. React uses strict `=== 0/2/1/3` comparisons.
 
 ### Admin UI
 
@@ -228,12 +231,14 @@ Single React SPA. Three tabs via `@wordpress/components` `TabPanel`:
 **Subscribers tab** — TanStack Table v8 + TanStack Query v5. Both packages are **bundled** (not WP externals) — `build/admin.asset.php` does NOT list them.
 
 Layout:
-- Stats bar: Total / Watching / Notifying / Notified / Unsubscribed (from `GET /subscribers/stats`)
-- `NotifyingNotice` when `stats.notifying > 0`
+- Stats bar: Total / Watching / Notifying / Notified / Unsubscribed / Failed (from `GET /subscribers/stats`)
+- `FailedNotice` (red, dismissible) when `stats.failed > 0` — message includes linked "Action Scheduler" text pointing to `wc-status&tab=action-scheduler&s=lswl_send_notification`
+- `NotifyingNotice` (yellow, dismissible) when `stats.notifying > 0`
+- Both notices use local dismissed state (`failedDismissed`, `notifyingDismissed`) — reappear on page reload
 - Controls row: **By Subscriber** / **By Product** toggle (left) + reset button (shown only when filters are active, clears search + status) + search input + status select (right, native HTML elements — not WP SearchControl/SelectControl)
 - View area: `UserView` or `ProductView` (or `ProductDrillDown` when drilling into a product)
 
-`UserView` columns: checkbox | email | product | status badge | date subscribed | delete icon. Product column hidden when `productId > 0` (drill-down). Single + bulk delete with `window.confirm()`. `pageSize: 20`.
+`UserView` columns: checkbox | email | product | status badge | date subscribed | actions. Actions column shows a lime-styled resend icon button for `notified=3` rows (calls `POST /subscribers/{id}/resend`; if product OOS, shows `window.confirm()` then retries with `?force=1`) + delete icon for all rows. Product column hidden when `productId > 0` (drill-down). Single + bulk delete with `window.confirm()`. `pageSize: 20`.
 
 `ProductView` columns: product (thumbnail + linked name) | subscriber count | "View Subscribers" button. No delete, no bulk select.
 
@@ -290,7 +295,7 @@ React entry: `src/admin/js/index.js` → `build/admin.js` + `build/admin.css`. U
 Data layer: `@wordpress/api-fetch` + `wp_rest` nonce. Uses `url:` (not `path:`) in all `apiFetch` calls.  
 `CheckboxControl` and `ToggleControl` require `__nextHasNoMarginBottom` prop (deprecation since `@wordpress/components` 6.7).
 
-`lswlAdmin` JS object includes `restUrl`, `nonce`, and `dateFormat` (`get_option('date_format')`). `UserView` uses `@wordpress/date` `dateI18n( dateFormat, dateStr )` to format the Date Subscribed column — respects the site's date format from Settings → General. `wp-date` is listed in script dependencies (auto-detected by webpack from the import and present in `build/admin.asset.php`).
+`lswlAdmin` JS object includes `restUrl`, `nonce`, `dateFormat` (`get_option('date_format')`), and `actionSchedulerUrl` (`admin_url('admin.php?page=wc-status&tab=action-scheduler&s=lswl_send_notification')`). `UserView` uses `@wordpress/date` `dateI18n( dateFormat, dateStr )` to format the Date Subscribed column — respects the site's date format from Settings → General. `wp-date` is listed in script dependencies (auto-detected by webpack from the import and present in `build/admin.asset.php`).
 
 ### Status badges
 
@@ -299,6 +304,7 @@ Data layer: `@wordpress/api-fetch` + `wp_rest` nonce. Uses `url:` (not `path:`) 
 | `notified=0, unsub=0` | Watching | grey (`#e5e5e5`) | `$lswl-waiting-dot` |
 | `notified=2, unsub=0` | Notifying | green (`#c6e1c6`, pulsing dot) | `$lswl-notifying-dot` |
 | `notified=1, unsub=0` | Notified | blue | `$lswl-notified-dot` |
+| `notified=3, unsub=0` | Failed | red (`$lswl-failed-*` tokens) | `$lswl-failed-dot` |
 | `unsubscribed=1` | Unsubscribed | grey | `$lswl-unsub-dot` |
 
 Each badge has a `data-tooltip` attribute with a concise description shown on hover via CSS `::after` pseudo-element (no JS). Tooltip text lives in `StatusBadge.js` and is i18n-wrapped.
@@ -363,7 +369,7 @@ Notice via `Frontend::maybe_show_unsubscribe_notice()` on `woocommerce_before_si
 Entry: `src/admin/scss/index.scss` and `src/frontend/scss/index.scss`.  
 Variables in `src/admin/scss/_variables.scss`. Shared patterns in `src/admin/scss/_mixins.scss` (`lswl-card`, `lswl-input-base`, `lswl-lime-focus`, `lswl-lime-pill`). BEM under `.lswl-`. Brand accent: `$lswl-lime: #5d9e3f`.
 
-**Admin SCSS** — full design system: light page header with lime bar accent, lime tab underline, stats bar (5 columns), TanStack Table styles (thead caps-label, zebra stripe, lime hover), number-based pagination, filter controls (native inputs), settings cards, status badge pills (including `--notifying` with pulsing dot animation). See "Limewoo Admin UI Design System" section for full token reference.
+**Admin SCSS** — full design system: light page header with lime bar accent, lime tab underline, stats bar (6 columns — Total/Watching/Notifying/Notified/Unsubscribed/Failed), TanStack Table styles (thead caps-label, zebra stripe, lime hover), number-based pagination, filter controls (native inputs), settings cards, status badge pills (including `--notifying` with pulsing dot animation, `--failed` with red tokens). `.lswl-icon-btn--resend` uses lime accent colors at rest (not just on hover). See "Limewoo Admin UI Design System" section for full token reference.
 
 **Frontend SCSS** — intentionally minimal, but all colours and spacing driven by CSS custom properties so they work consistently across themes. `Frontend::enqueue()` outputs a `<style>` block via `wp_add_inline_style()` with vars: `--lswl-accent`, `--lswl-accent-rgb`, `--lswl-accent-dark`, `--lswl-accent-darker`, `--lswl-btn-text`, `--lswl-btn-radius`, `--lswl-btn-padding`, `--lswl-input-border`, `--lswl-input-radius`, `--lswl-input-padding`, `--lswl-heading-color` (only when non-empty), `--lswl-success-color`, `--lswl-success-bg`, `--lswl-success-border`, `--lswl-error-color`, `--lswl-error-bg`, `--lswl-error-border`. SCSS uses `var(--lswl-accent, #{$lswl-lime})` pattern for graceful fallback. Input/button sizing and colour properties use `!important` to override theme stylesheets at same/higher specificity.
 

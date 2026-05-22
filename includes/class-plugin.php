@@ -59,6 +59,7 @@ class Plugin {
 		'form_display_mode'          => 'inline',
 		'popup_trigger_label'        => '',
 		'show_on_archive'            => false,
+		'allow_backorder_subscribe'  => false,
 	);
 
 	/**

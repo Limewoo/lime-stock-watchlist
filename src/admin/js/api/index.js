@@ -63,6 +63,20 @@ export function deleteSubscriber( id ) {
 }
 
 /**
+ * Re-queue a failed notification for a single subscriber.
+ *
+ * @param {number}  id    Subscriber ID.
+ * @param {boolean} force Skip the in-stock check (user confirmed OOS send).
+ * @return {Promise<Object>}
+ */
+export function resendSubscriber( id, force = false ) {
+	return apiFetch( {
+		url: url( `subscribers/${ id }/resend` ) + ( force ? '?force=1' : '' ),
+		method: 'POST',
+	} );
+}
+
+/**
  * Bulk delete subscribers.
  *
  * @param {number[]} ids Subscriber IDs.

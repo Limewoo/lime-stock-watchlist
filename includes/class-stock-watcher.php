@@ -37,6 +37,9 @@ class Stock_Watcher {
 		// Simple product and variable-parent hooks.
 		add_action( 'woocommerce_product_set_stock_status', array( $this, 'on_stock_status_change' ), 10, 3 );
 		add_action( 'woocommerce_product_set_stock', array( $this, 'on_stock_quantity_change' ), 10, 1 );
+
+		// Mark subscriber as failed when Action Scheduler permanently gives up on the action.
+		add_action( 'action_scheduler_failed_action', array( $this, 'on_notification_failed' ), 10, 1 );
 	}
 
 	/**
@@ -116,6 +119,32 @@ class Stock_Watcher {
 		}
 
 		$this->notify_for_product( $product->get_id() );
+	}
+
+	/**
+	 * Fires when Action Scheduler permanently fails an action (after all attempts exhausted).
+	 * Marks the subscriber as failed so the admin can see it and manually resend.
+	 *
+	 * @param int $action_id Action Scheduler action ID.
+	 * @return void
+	 */
+	public function on_notification_failed( int $action_id ): void {
+		if ( ! class_exists( '\ActionScheduler' ) ) {
+			return;
+		}
+
+		$action = \ActionScheduler::store()->fetch_action( $action_id );
+
+		if ( ! $action || 'lswl_send_notification' !== $action->get_hook() ) {
+			return;
+		}
+
+		$args          = $action->get_args();
+		$subscriber_id = isset( $args[0] ) ? absint( $args[0] ) : 0;
+
+		if ( $subscriber_id > 0 ) {
+			Database::mark_failed( array( $subscriber_id ) );
+		}
 	}
 
 	/**

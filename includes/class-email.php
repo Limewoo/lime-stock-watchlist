@@ -57,6 +57,7 @@ class Email {
 	 * @param int $subscriber_id Subscriber ID.
 	 * @param int $product_id    Product ID.
 	 * @return void
+	 * @throws \RuntimeException When wp_mail() returns false so Action Scheduler marks the action failed.
 	 */
 	public static function handle_queued_notification( int $subscriber_id, int $product_id ): void {
 		$subscriber = Database::get_subscriber_by_id( $subscriber_id );
@@ -71,11 +72,19 @@ class Email {
 			return;
 		}
 
+		if ( ! $product->is_in_stock() ) {
+			Database::mark_watching( array( $subscriber_id ) );
+			return;
+		}
+
 		$settings = Plugin::get_settings();
 
-		if ( self::send_to_one( $subscriber, $product, $settings ) ) {
-			Database::mark_notified( array( $subscriber_id ) );
+		if ( ! self::send_to_one( $subscriber, $product, $settings ) ) {
+			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- exception message is logged, not rendered
+			throw new \RuntimeException( 'lswl: wp_mail() failed for subscriber ' . $subscriber_id );
 		}
+
+		Database::mark_notified( array( $subscriber_id ) );
 	}
 
 	/**

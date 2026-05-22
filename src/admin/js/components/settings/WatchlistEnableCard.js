@@ -20,6 +20,13 @@ export default function WatchlistEnableCard( { settings, update } ) {
 				checked={ !! settings.notifications_enabled }
 				onChange={ ( v ) => update( 'notifications_enabled', v ) }
 			/>
+			<ToggleControl
+				__nextHasNoMarginBottom
+				label={ __( 'Enable on backorder products', 'lime-stock-watchlist' ) }
+				help={ __( 'Allow customers to join the watchlist when a product is available on backorder.', 'lime-stock-watchlist' ) }
+				checked={ !! settings.allow_backorder_subscribe }
+				onChange={ ( v ) => update( 'allow_backorder_subscribe', v ) }
+			/>
 		</SettingsCard>
 	);
 }

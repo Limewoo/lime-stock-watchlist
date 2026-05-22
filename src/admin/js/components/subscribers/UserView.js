@@ -17,7 +17,7 @@ import {
 	useQueryClient,
 	keepPreviousData,
 } from '@tanstack/react-query';
-import { getSubscribers, deleteSubscriber, bulkDeleteSubscribers } from '../../api';
+import { getSubscribers, deleteSubscriber, bulkDeleteSubscribers, resendSubscriber } from '../../api';
 import StatusBadge from './StatusBadge';
 import TablePagination from './TablePagination';
 
@@ -59,6 +59,16 @@ function TrashIcon() {
 			<path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
 			<path d="M10 11v6M14 11v6" />
 			<path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+		</svg>
+	);
+}
+
+function RefreshIcon() {
+	return (
+		<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+			<polyline points="23 4 23 10 17 10" />
+			<polyline points="1 20 1 14 7 14" />
+			<path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
 		</svg>
 	);
 }
@@ -152,11 +162,32 @@ export default function UserView( { productId, search, status } ) {
 		onError: () => setError( __( 'Could not delete subscribers.', 'lime-stock-watchlist' ) ),
 	} );
 
-	const busy = deleteMutation.isPending || bulkDeleteMutation.isPending;
+	const resendMutation = useMutation( {
+		mutationFn: ( { id, force } ) => resendSubscriber( id, force ),
+		onSuccess: () => {
+			setNotice( __( 'Notification queued for resend.', 'lime-stock-watchlist' ) );
+			invalidateBoth();
+		},
+		onError: ( err, variables ) => {
+			if ( err?.code === 'product_out_of_stock' ) {
+				if ( window.confirm( __( 'Product is not currently in stock. Send the notification anyway?', 'lime-stock-watchlist' ) ) ) {
+					resendMutation.mutate( { id: variables.id, force: true } );
+				}
+				return;
+			}
+			setError( err?.message || __( 'Could not resend notification.', 'lime-stock-watchlist' ) );
+		},
+	} );
+
+	const busy = deleteMutation.isPending || bulkDeleteMutation.isPending || resendMutation.isPending;
 
 	function handleDelete( id ) {
 		if ( ! window.confirm( __( 'Delete this subscriber?', 'lime-stock-watchlist' ) ) ) return;
 		deleteMutation.mutate( id );
+	}
+
+	function handleResend( id ) {
+		resendMutation.mutate( { id, force: false } );
 	}
 
 	function handleBulkDelete() {
@@ -228,15 +259,28 @@ export default function UserView( { productId, search, status } ) {
 			id: 'actions',
 			header: '',
 			cell: ( { row } ) => (
-				<button
-					className="lswl-icon-btn lswl-icon-btn--danger"
-					disabled={ busy }
-					onClick={ () => handleDelete( row.original.id ) }
-					aria-label={ __( 'Delete subscriber', 'lime-stock-watchlist' ) }
-					title={ __( 'Delete', 'lime-stock-watchlist' ) }
-				>
-					<TrashIcon />
-				</button>
+				<div className="lswl-table__actions-wrap">
+					{ row.original.notified === 3 && ! row.original.unsubscribed && (
+						<button
+							className="lswl-icon-btn lswl-icon-btn--resend"
+							disabled={ busy }
+							onClick={ () => handleResend( row.original.id ) }
+							aria-label={ __( 'Resend notification', 'lime-stock-watchlist' ) }
+							title={ __( 'Resend', 'lime-stock-watchlist' ) }
+						>
+							<RefreshIcon />
+						</button>
+					) }
+					<button
+						className="lswl-icon-btn lswl-icon-btn--danger"
+						disabled={ busy }
+						onClick={ () => handleDelete( row.original.id ) }
+						aria-label={ __( 'Delete subscriber', 'lime-stock-watchlist' ) }
+						title={ __( 'Delete', 'lime-stock-watchlist' ) }
+					>
+						<TrashIcon />
+					</button>
+				</div>
 			),
 		} ),
 	];
