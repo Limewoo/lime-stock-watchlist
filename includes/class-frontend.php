@@ -26,6 +26,7 @@ class Frontend {
 		add_action( 'woocommerce_single_product_summary', array( $this, 'render_form' ), 31 );
 		add_action( 'woocommerce_after_shop_loop_item', array( $this, 'render_archive_form' ), 99 );
 		add_action( 'woocommerce_before_single_product', array( $this, 'maybe_show_unsubscribe_notice' ) );
+		add_filter( 'woocommerce_available_variation', array( $this, 'add_variation_stock_status' ), 10, 3 );
 	}
 
 	/**
@@ -130,12 +131,13 @@ class Frontend {
 			'lswl-frontend',
 			'lswlFrontend',
 			array(
-				'restUrl'     => esc_url_raw( rest_url( 'lime-stock-watchlist/v1/' ) ),
-				'nonce'       => wp_create_nonce( 'wp_rest' ),
-				'productId'   => $on_single ? get_the_ID() : 0,
-				'isVariable'  => $on_single && $current_product && $current_product->is_type( 'variable' ),
-				'displayMode' => $settings['form_display_mode'] ?? 'inline',
-				'i18n'        => array(
+				'restUrl'                 => esc_url_raw( rest_url( 'lime-stock-watchlist/v1/' ) ),
+				'nonce'                   => wp_create_nonce( 'wp_rest' ),
+				'productId'               => $on_single ? get_the_ID() : 0,
+				'isVariable'              => $on_single && $current_product && $current_product->is_type( 'variable' ),
+				'displayMode'             => $settings['form_display_mode'] ?? 'inline',
+				'allowBackorderSubscribe' => ! empty( $settings['allow_backorder_subscribe'] ),
+				'i18n'                    => array(
 					'success'      => ! empty( $settings['msg_success'] )
 						? $settings['msg_success']
 						: __( 'Thank you! We\'ll notify you when this product is back in stock.', 'lime-stock-watchlist' ),
@@ -151,6 +153,19 @@ class Frontend {
 				),
 			)
 		);
+	}
+
+	/**
+	 * Add lswl_stock_status to WC variation JS data so frontend JS can distinguish backorder from in-stock.
+	 *
+	 * @param array<string,mixed>   $data      Variation data array.
+	 * @param \WC_Product_Variable  $product   Parent variable product.
+	 * @param \WC_Product_Variation $variation Variation product.
+	 * @return array<string,mixed>
+	 */
+	public function add_variation_stock_status( array $data, \WC_Product_Variable $product, \WC_Product_Variation $variation ): array { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed -- $product param required by WC filter signature
+		$data['lswl_stock_status'] = $variation->get_stock_status();
+		return $data;
 	}
 
 	/**
@@ -227,9 +242,15 @@ class Frontend {
 
 		$is_variable = $product->is_type( 'variable' );
 
-		// Simple (and other non-variable) products: only render when out of stock.
-		if ( ! $is_variable && $product->is_in_stock() ) {
-			return;
+		// Simple (and other non-variable) products: only render when out of stock or on backorder (if enabled).
+		if ( ! $is_variable ) {
+			$stock_status = $product->get_stock_status();
+			if ( 'instock' === $stock_status ) {
+				return;
+			}
+			if ( 'onbackorder' === $stock_status && empty( $settings['allow_backorder_subscribe'] ) ) {
+				return;
+			}
 		}
 
 		// Variable products render hidden; JS reveals the form when an OOS variation is selected.
@@ -259,7 +280,11 @@ class Frontend {
 			return;
 		}
 
-		if ( $product->is_in_stock() ) {
+		$stock_status = $product->get_stock_status();
+		if ( 'instock' === $stock_status ) {
+			return;
+		}
+		if ( 'onbackorder' === $stock_status && empty( $settings['allow_backorder_subscribe'] ) ) {
 			return;
 		}
 

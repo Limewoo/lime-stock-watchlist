@@ -223,7 +223,14 @@ class Rest_API {
 			);
 		}
 
-		if ( $product->is_in_stock() ) {
+		$stock_status = $product->get_stock_status();
+		if ( 'instock' === $stock_status ) {
+			return new \WP_REST_Response(
+				array( 'message' => __( 'This product is already in stock.', 'lime-stock-watchlist' ) ),
+				409
+			);
+		}
+		if ( 'onbackorder' === $stock_status && empty( $settings['allow_backorder_subscribe'] ) ) {
 			return new \WP_REST_Response(
 				array( 'message' => __( 'This product is already in stock.', 'lime-stock-watchlist' ) ),
 				409
@@ -479,6 +486,7 @@ class Rest_API {
 				: 'inline',
 			'popup_trigger_label'        => sanitize_text_field( (string) $request->get_param( 'popup_trigger_label' ) ),
 			'show_on_archive'            => (bool) $request->get_param( 'show_on_archive' ),
+			'allow_backorder_subscribe'  => (bool) $request->get_param( 'allow_backorder_subscribe' ),
 		);
 
 		// Validate email if provided.
@@ -677,6 +685,10 @@ class Rest_API {
 				'sanitize_callback' => 'sanitize_text_field',
 			),
 			'show_on_archive'            => array(
+				'type'    => 'boolean',
+				'default' => false,
+			),
+			'allow_backorder_subscribe'  => array(
 				'type'    => 'boolean',
 				'default' => false,
 			),

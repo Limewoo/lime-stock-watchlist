@@ -8,7 +8,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 	const cfg = window.lswlFrontend;
 	if ( ! cfg ) return;
 
-	const { restUrl, nonce, productId: parentProductId, isVariable, displayMode, i18n } = cfg;
+	const { restUrl, nonce, productId: parentProductId, isVariable, displayMode, i18n, allowBackorderSubscribe } = cfg;
 
 	if ( displayMode === 'popup' ) {
 		initAllPopups();
@@ -36,7 +36,9 @@ document.addEventListener( 'DOMContentLoaded', () => {
 				const $ = window.jQuery;
 
 				$( document ).on( 'found_variation', '.variations_form', ( _evt, variation ) => {
-					if ( ! variation.is_in_stock ) {
+					const isOos      = ! variation.is_in_stock;
+					const isBackorder = variation.lswl_stock_status === 'onbackorder';
+					if ( isOos || ( isBackorder && allowBackorderSubscribe ) ) {
 						currentPid = variation.variation_id;
 						if ( subscribedVariations.has( variation.variation_id ) ) {
 							wrapper.removeAttribute( 'hidden' );
@@ -129,7 +131,9 @@ document.addEventListener( 'DOMContentLoaded', () => {
 				const $ = window.jQuery;
 
 				$( document ).on( 'found_variation', '.variations_form', ( _evt, variation ) => {
-					if ( ! variation.is_in_stock ) {
+					const isOos       = ! variation.is_in_stock;
+					const isBackorder = variation.lswl_stock_status === 'onbackorder';
+					if ( isOos || ( isBackorder && allowBackorderSubscribe ) ) {
 						currentPid = variation.variation_id;
 						if ( ! overlay.hidden ) resetPopupForm( form, message, button );
 						triggerWrapper.removeAttribute( 'hidden' );
