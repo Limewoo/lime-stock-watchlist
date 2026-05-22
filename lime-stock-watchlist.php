@@ -1,18 +1,19 @@
 <?php
 /**
- * Plugin Name:       Lime Stock Watchlist for WooCommerce
- * Plugin URI:        https://github.com/Limewoo/lime-stock-watchlist
- * Description:       Let customers subscribe to back-in-stock notifications for out-of-stock WooCommerce products.
- * Version:           1.0.0
- * Requires at least: 6.5
- * Requires PHP:      7.4
- * Author:            Limewoo
- * Author URI:        https://github.com/Limewoo
- * License:           GPL-2.0-or-later
- * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       lime-stock-watchlist
- * Domain Path:       /languages
- * Requires Plugins:  woocommerce
+ * Plugin Name:          Lime Stock Watchlist for WooCommerce
+ * Plugin URI:           https://github.com/Limewoo/lime-stock-watchlist
+ * Description:          Let customers subscribe to back-in-stock notifications for out-of-stock WooCommerce products.
+ * Version:              1.0.0
+ * Author:               Limewoo
+ * Author URI:           https://limewoo.com
+ * License:              GPL-2.0-or-later
+ * License URI:          https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain:          lime-stock-watchlist
+ * Domain Path:          /languages
+ * Requires at least:    6.5
+ * Requires PHP:         8.0
+ * WC requires at least: 8.0
+ * WC tested up to:      10.7.0
  *
  * @package Lime_Stock_Watchlist
  */

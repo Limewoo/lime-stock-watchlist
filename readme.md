@@ -20,7 +20,7 @@ Let customers subscribe to back-in-stock email notifications for out-of-stock Wo
 
 - WordPress 6.5+
 - WooCommerce 8.0+
-- PHP 7.4+
+- PHP 8.0+
 
 ## Development
 

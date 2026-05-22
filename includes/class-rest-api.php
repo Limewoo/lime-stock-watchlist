@@ -223,12 +223,44 @@ class Rest_API {
 	}
 
 	/**
+	 * Returns true when the current IP has exceeded 10 subscribe attempts per hour.
+	 *
+	 * Uses a fixed hourly window keyed on IP + current UTC hour so the window
+	 * resets cleanly without resetting the transient TTL on each hit.
+	 *
+	 * @return bool
+	 */
+	private function is_rate_limited(): bool {
+		$ip  = isset( $_SERVER['REMOTE_ADDR'] ) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated
+			? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated
+			: '';
+
+		$key  = 'lswl_rl_' . md5( $ip . gmdate( 'YmdH' ) );
+		$hits = (int) get_transient( $key );
+
+		if ( $hits >= 10 ) {
+			return true;
+		}
+
+		set_transient( $key, $hits + 1, HOUR_IN_SECONDS );
+
+		return false;
+	}
+
+	/**
 	 * POST /subscribe
 	 *
 	 * @param \WP_REST_Request $request Request object.
 	 * @return \WP_REST_Response
 	 */
 	public function handle_subscribe( \WP_REST_Request $request ): \WP_REST_Response {
+		if ( $this->is_rate_limited() ) {
+			return new \WP_REST_Response(
+				array( 'message' => __( 'Too many requests. Please try again later.', 'lime-stock-watchlist' ) ),
+				429
+			);
+		}
+
 		$settings = Plugin::get_settings();
 
 		if ( empty( $settings['notifications_enabled'] ) ) {
