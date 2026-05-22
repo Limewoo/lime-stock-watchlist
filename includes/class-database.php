@@ -132,8 +132,8 @@ class Database {
 			$wpdb->prepare(
 				'SELECT id, product_id, email, name, date_subscribed, notified, unsubscribed
 				FROM %i
-				WHERE product_id = %d
-				  AND notified    = 0
+				WHERE product_id  = %d
+				  AND ( notified = 0 OR notified = 3 )
 				  AND unsubscribed = 0',
 				self::table(),
 				$product_id
@@ -208,7 +208,8 @@ class Database {
 					SUM(notified = 0 AND unsubscribed = 0) AS watching,
 					SUM(notified = 2 AND unsubscribed = 0) AS notifying,
 					SUM(notified = 1 AND unsubscribed = 0) AS notified_count,
-					SUM(unsubscribed = 1) AS unsubscribed_count
+					SUM(unsubscribed = 1) AS unsubscribed_count,
+					SUM(notified = 3 AND unsubscribed = 0) AS failed_count
 				FROM %i',
 				self::table()
 			)
@@ -220,6 +221,7 @@ class Database {
 			'notifying'    => (int) ( $row->notifying ?? 0 ),
 			'notified'     => (int) ( $row->notified_count ?? 0 ),
 			'unsubscribed' => (int) ( $row->unsubscribed_count ?? 0 ),
+			'failed'       => (int) ( $row->failed_count ?? 0 ),
 		);
 	}
 
@@ -256,6 +258,7 @@ class Database {
 			'notifying'    => 2,
 			'notified'     => 3,
 			'unsubscribed' => 4,
+			'failed'       => 5,
 		);
 		$status_int  = $status_map[ $status ] ?? 0;
 		$search_like = '' !== $search ? '%' . $wpdb->esc_like( $search ) . '%' : '';
@@ -264,10 +267,11 @@ class Database {
 		$total = (int) $wpdb->get_var(
 			$wpdb->prepare(
 				'SELECT COUNT(*) FROM %i
-				WHERE ( %d = 0 OR ( notified = 0 AND unsubscribed = 0 AND %d = 1 ) OR ( notified = 2 AND unsubscribed = 0 AND %d = 2 ) OR ( notified = 1 AND unsubscribed = 0 AND %d = 3 ) OR ( unsubscribed = 1 AND %d = 4 ) )
+				WHERE ( %d = 0 OR ( notified = 0 AND unsubscribed = 0 AND %d = 1 ) OR ( notified = 2 AND unsubscribed = 0 AND %d = 2 ) OR ( notified = 1 AND unsubscribed = 0 AND %d = 3 ) OR ( unsubscribed = 1 AND %d = 4 ) OR ( notified = 3 AND unsubscribed = 0 AND %d = 5 ) )
 				AND ( %s = \'\' OR email LIKE %s )
 				AND ( %d = 0 OR product_id = %d )',
 				self::table(),
+				$status_int,
 				$status_int,
 				$status_int,
 				$status_int,
@@ -287,6 +291,7 @@ class Database {
 			$status_int,
 			$status_int,
 			$status_int,
+			$status_int,
 			$search_like,
 			$search_like,
 			$product_id,
@@ -299,9 +304,9 @@ class Database {
 		if ( 'ASC' === $order ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 			$rows = $wpdb->get_results(
-				$wpdb->prepare( // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- spread passes 13 args matching placeholders
+				$wpdb->prepare( // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- spread passes 14 args matching placeholders
 					'SELECT id, product_id, email, name, date_subscribed, notified, unsubscribed FROM %i
-					WHERE ( %d = 0 OR ( notified = 0 AND unsubscribed = 0 AND %d = 1 ) OR ( notified = 2 AND unsubscribed = 0 AND %d = 2 ) OR ( notified = 1 AND unsubscribed = 0 AND %d = 3 ) OR ( unsubscribed = 1 AND %d = 4 ) )
+					WHERE ( %d = 0 OR ( notified = 0 AND unsubscribed = 0 AND %d = 1 ) OR ( notified = 2 AND unsubscribed = 0 AND %d = 2 ) OR ( notified = 1 AND unsubscribed = 0 AND %d = 3 ) OR ( unsubscribed = 1 AND %d = 4 ) OR ( notified = 3 AND unsubscribed = 0 AND %d = 5 ) )
 					AND ( %s = \'\' OR email LIKE %s )
 					AND ( %d = 0 OR product_id = %d )
 					ORDER BY %i ASC LIMIT %d OFFSET %d',
@@ -311,9 +316,9 @@ class Database {
 		} else {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 			$rows = $wpdb->get_results(
-				$wpdb->prepare( // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- spread passes 13 args matching placeholders
+				$wpdb->prepare( // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- spread passes 14 args matching placeholders
 					'SELECT id, product_id, email, name, date_subscribed, notified, unsubscribed FROM %i
-					WHERE ( %d = 0 OR ( notified = 0 AND unsubscribed = 0 AND %d = 1 ) OR ( notified = 2 AND unsubscribed = 0 AND %d = 2 ) OR ( notified = 1 AND unsubscribed = 0 AND %d = 3 ) OR ( unsubscribed = 1 AND %d = 4 ) )
+					WHERE ( %d = 0 OR ( notified = 0 AND unsubscribed = 0 AND %d = 1 ) OR ( notified = 2 AND unsubscribed = 0 AND %d = 2 ) OR ( notified = 1 AND unsubscribed = 0 AND %d = 3 ) OR ( unsubscribed = 1 AND %d = 4 ) OR ( notified = 3 AND unsubscribed = 0 AND %d = 5 ) )
 					AND ( %s = \'\' OR email LIKE %s )
 					AND ( %d = 0 OR product_id = %d )
 					ORDER BY %i DESC LIMIT %d OFFSET %d',
@@ -452,6 +457,63 @@ class Database {
 			$wpdb->prepare(
 				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- $placeholders expands to "%d, %d, ..." from absint-sanitized IDs
 				"UPDATE `{$wpdb->prefix}lime_watchlist` SET notified = 1 WHERE id IN ({$placeholders})",
+				...$ids
+			)
+		);
+
+		return false !== $result;
+	}
+
+	/**
+	 * Mark subscribers as failed (email delivery failed, Action Scheduler gave up).
+	 *
+	 * @param int[] $ids Subscriber IDs.
+	 * @return bool
+	 */
+	public static function mark_failed( array $ids ): bool {
+		global $wpdb;
+
+		if ( empty( $ids ) ) {
+			return false;
+		}
+
+		$ids          = array_map( 'absint', $ids );
+		$placeholders = implode( ', ', array_fill( 0, count( $ids ), '%d' ) );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+		$result = $wpdb->query(
+			$wpdb->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- $placeholders expands to "%d, %d, ..." from absint-sanitized IDs
+				"UPDATE `{$wpdb->prefix}lime_watchlist` SET notified = 3 WHERE id IN ({$placeholders})",
+				...$ids
+			)
+		);
+
+		return false !== $result;
+	}
+
+	/**
+	 * Reset subscribers back to watching state (notified = 0).
+	 * Used when a product goes OOS before Action Scheduler fires.
+	 *
+	 * @param int[] $ids Subscriber IDs.
+	 * @return bool
+	 */
+	public static function mark_watching( array $ids ): bool {
+		global $wpdb;
+
+		if ( empty( $ids ) ) {
+			return false;
+		}
+
+		$ids          = array_map( 'absint', $ids );
+		$placeholders = implode( ', ', array_fill( 0, count( $ids ), '%d' ) );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+		$result = $wpdb->query(
+			$wpdb->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- $placeholders expands to "%d, %d, ..." from absint-sanitized IDs
+				"UPDATE `{$wpdb->prefix}lime_watchlist` SET notified = 0 WHERE id IN ({$placeholders})",
 				...$ids
 			)
 		);

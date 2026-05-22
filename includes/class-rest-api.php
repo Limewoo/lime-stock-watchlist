@@ -97,7 +97,7 @@ class Rest_API {
 						'status'     => array(
 							'type'    => 'string',
 							'default' => 'all',
-							'enum'    => array( 'all', 'watching', 'notifying', 'notified', 'unsubscribed' ),
+							'enum'    => array( 'all', 'watching', 'notifying', 'notified', 'unsubscribed', 'failed' ),
 						),
 						'search'     => array(
 							'type'              => 'string',
@@ -154,6 +154,31 @@ class Rest_API {
 						'type'              => 'integer',
 						'sanitize_callback' => 'absint',
 						'validate_callback' => fn( $v ) => $v > 0,
+					),
+				),
+			)
+		);
+
+		// POST /subscribers/{id}/resend — admin. Must be registered before the /{id} route.
+		register_rest_route(
+			self::NAMESPACE,
+			'/subscribers/(?P<id>\d+)/resend',
+			array(
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'handle_resend_notification' ),
+				'permission_callback' => array( $this, 'admin_permission' ),
+				'args'                => array(
+					'id'    => array(
+						'required'          => true,
+						'type'              => 'integer',
+						'sanitize_callback' => 'absint',
+						'validate_callback' => fn( $v ) => $v > 0,
+					),
+					'force' => array(
+						'required'          => false,
+						'type'              => 'boolean',
+						'default'           => false,
+						'sanitize_callback' => fn( $v ) => (bool) $v,
 					),
 				),
 			)
@@ -395,6 +420,69 @@ class Rest_API {
 			),
 			200
 		);
+	}
+
+	/**
+	 * POST /subscribers/{id}/resend
+	 * Re-queues a failed notification for immediate retry via Action Scheduler.
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response
+	 */
+	public function handle_resend_notification( \WP_REST_Request $request ): \WP_REST_Response {
+		$id         = $request->get_param( 'id' );
+		$force      = (bool) $request->get_param( 'force' );
+		$subscriber = Database::get_subscriber_by_id( $id );
+
+		if ( ! $subscriber ) {
+			return new \WP_REST_Response(
+				array( 'message' => __( 'Subscriber not found.', 'lime-stock-watchlist' ) ),
+				404
+			);
+		}
+
+		if ( ! $subscriber->is_failed() ) {
+			return new \WP_REST_Response(
+				array( 'message' => __( 'Only failed notifications can be resent.', 'lime-stock-watchlist' ) ),
+				400
+			);
+		}
+
+		$product = wc_get_product( $subscriber->product_id );
+
+		if ( ! $product ) {
+			return new \WP_REST_Response(
+				array( 'message' => __( 'Product not found.', 'lime-stock-watchlist' ) ),
+				404
+			);
+		}
+
+		if ( ! $force && ! $product->is_in_stock() ) {
+			return new \WP_REST_Response(
+				array(
+					'code'    => 'product_out_of_stock',
+					'message' => __( 'Product is not currently in stock.', 'lime-stock-watchlist' ),
+				),
+				409
+			);
+		}
+
+		if ( ! function_exists( 'as_enqueue_async_action' ) ) {
+			return new \WP_REST_Response(
+				array( 'message' => __( 'Action Scheduler is not available.', 'lime-stock-watchlist' ) ),
+				503
+			);
+		}
+
+		as_enqueue_async_action(
+			'lswl_send_notification',
+			array( absint( $subscriber->id ), absint( $subscriber->product_id ) ),
+			'lime-stock-watchlist'
+		);
+
+		Database::mark_notifying( array( $id ) );
+
+		return new \WP_REST_Response( array( 'queued' => true ), 200 );
 	}
 
 	/**
