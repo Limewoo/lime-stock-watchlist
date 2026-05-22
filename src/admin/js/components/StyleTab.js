@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef, useCallback } from '@wordpress/element';
 import { Spinner, Notice } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getSettings, saveSettings } from '../api';
 import ButtonStyleCard from './settings/ButtonStyleCard';
 import InputStyleCard from './settings/InputStyleCard';
@@ -19,22 +20,33 @@ import TextStyleCard from './settings/TextStyleCard';
  * @return {JSX.Element}
  */
 export default function StyleTab( { registerSave, saving, saved, setSaving, setSaved } ) {
-	const [ settings, setSettings ] = useState( null );
-	const [ loading, setLoading ] = useState( true );
+	const queryClient = useQueryClient();
+
+	// Seed local state from cache synchronously so no spinner on tab switch.
+	const [ settings, setSettings ] = useState( () => {
+		return queryClient.getQueryData( [ 'settings' ] ) ?? null;
+	} );
 	const [ error, setError ] = useState( '' );
+
+	const { data: queryData, isLoading } = useQuery( {
+		queryKey: [ 'settings' ],
+		queryFn: getSettings,
+	} );
+
+	// Init local state from query data on first fetch (when no cache on mount).
+	const initialized = useRef( settings !== null );
+	useEffect( () => {
+		if ( queryData && ! initialized.current ) {
+			initialized.current = true;
+			setSettings( queryData );
+		}
+	}, [ queryData ] );
 
 	// Keep a ref so handleSave (stable via useCallback) always reads latest settings.
 	const settingsRef = useRef( settings );
 	useEffect( () => {
 		settingsRef.current = settings;
 	}, [ settings ] );
-
-	useEffect( () => {
-		getSettings()
-			.then( setSettings )
-			.catch( () => setError( __( 'Failed to load settings.', 'lime-stock-watchlist' ) ) )
-			.finally( () => setLoading( false ) );
-	}, [] );
 
 	/**
 	 * @param {string} key
@@ -51,6 +63,7 @@ export default function StyleTab( { registerSave, saving, saved, setSaving, setS
 		setSaved( false );
 		try {
 			const updated = await saveSettings( settingsRef.current );
+			queryClient.setQueryData( [ 'settings' ], updated );
 			setSettings( updated );
 			setSaved( true );
 			setTimeout( () => setSaved( false ), 4000 );
@@ -59,14 +72,14 @@ export default function StyleTab( { registerSave, saving, saved, setSaving, setS
 		} finally {
 			setSaving( false );
 		}
-	}, [ setSaving, setSaved ] );
+	}, [ setSaving, setSaved, queryClient ] );
 
 	useEffect( () => {
 		registerSave( handleSave );
 		return () => registerSave( null );
 	}, [ handleSave, registerSave ] );
 
-	if ( loading ) {
+	if ( isLoading && ! settings ) {
 		return (
 			<div style={ { padding: '48px', textAlign: 'center' } }>
 				<Spinner style={ { width: '32px', height: '32px' } } />
@@ -74,7 +87,7 @@ export default function StyleTab( { registerSave, saving, saved, setSaving, setS
 		);
 	}
 
-	if ( error && ! settings ) {
+	if ( ! isLoading && error && ! settings ) {
 		return (
 			<Notice status="error" isDismissible={ false }>
 				{ error }
