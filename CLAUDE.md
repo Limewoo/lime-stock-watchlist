@@ -177,6 +177,7 @@ Email body fields support basic HTML — sanitized via `wp_kses_post()` (not `sa
 | `form_display_mode` | `'inline'` | `'inline'` — form rendered directly on page; `'popup'` — trigger button opens modal overlay |
 | `popup_trigger_label` | `''` | Popup trigger button text (empty = falls back to form title / "Notify me when available") |
 | `show_on_archive` | `false` | Show form on shop/category/search pages for OOS simple products (variable skipped) |
+| `allow_backorder_subscribe` | `false` | Show form and accept subscriptions on backorder products (`get_stock_status() === 'onbackorder'`); default off — backorder products are blocked by the same `is_in_stock()` guard otherwise |
 
 Both GET and POST `/settings` return `_placeholders` — computed real defaults for React input placeholders (via shared `settings_with_placeholders()` method). Never saved to DB.
 
