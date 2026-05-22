@@ -106,16 +106,19 @@ function FailedNotice( { count, onDismiss } ) {
  * @return {JSX.Element}
  */
 function NotifyingNotice( { count, onDismiss } ) {
-	const message = count === 1
-		? __( '1 email is currently being sent via Action Scheduler. Reload the page in a while to see the updated status.', 'lime-stock-watchlist' )
+	const intro = count === 1
+		? __( '1 email is currently being sent via', 'lime-stock-watchlist' )
 		: sprintf(
 			/* translators: %d: number of emails being sent */
-			__( '%d emails are currently being sent via Action Scheduler. Reload the page in a while to see updated statuses.', 'lime-stock-watchlist' ),
+			__( '%d emails are currently being sent via', 'lime-stock-watchlist' ),
 			count
 		);
+	const schedulerLink = actionSchedulerUrl
+		? <a href={ actionSchedulerUrl } target="_blank" rel="noreferrer">{ __( 'Action Scheduler', 'lime-stock-watchlist' ) }</a>
+		: __( 'Action Scheduler', 'lime-stock-watchlist' );
 	return (
 		<Notice status="warning" isDismissible onRemove={ onDismiss } className="lswl-notifying-notice">
-			{ message }
+			{ intro }{ ' ' }{ schedulerLink }{ '. ' }{ __( 'Reload the page in a while to see the updated status.', 'lime-stock-watchlist' ) }
 		</Notice>
 	);
 }

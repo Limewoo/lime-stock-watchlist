@@ -80,6 +80,7 @@ class Email {
 		$settings = Plugin::get_settings();
 
 		if ( ! self::send_to_one( $subscriber, $product, $settings ) ) {
+			Database::mark_failed( array( $subscriber_id ) );
 			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- exception message is logged, not rendered
 			throw new \RuntimeException( 'lswl: wp_mail() failed for subscriber ' . $subscriber_id );
 		}
