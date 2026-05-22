@@ -12,40 +12,82 @@ Let customers subscribe to back-in-stock email notifications for out-of-stock Wo
 
 == Description ==
 
-Lime Stock Watchlist replaces the "Add to Cart" button on out-of-stock product pages with a simple "Notify me when available" form. When you restock a product, all subscribed customers receive an automatic email notification.
+**Lime Stock Watchlist** lets customers subscribe to back-in-stock email notifications directly on your WooCommerce product pages. When you restock a product, subscribers are notified automatically via Action Scheduler — no third-party service required.
 
-**Features**
+> More free WooCommerce plugins at [limewoo.com](https://limewoo.com).
 
-* Email capture form on out-of-stock single product pages
-* Optional name field (admin configurable)
-* Subscribers stored in a dedicated database table
-* Admin page under WooCommerce showing all subscribers grouped by product
-* Single and bulk subscriber delete
-* Automatic email notification when stock status changes to "in stock"
+**Core features**
+
+* Subscribe form on out-of-stock single product pages — inline or popup display mode
+* Optional: show subscribe forms on shop / category / search archive pages
+* Full variable product support — per-variation subscriptions and notifications
+* Optional name field (configurable; can be required)
+* Subscription confirmation email sent immediately on sign-up
+* Automatic back-in-stock email notification via WooCommerce Action Scheduler
 * Unsubscribe link in every notification email
-* Per-product enable/disable override
-* React-powered admin interface with Gutenberg components
-* No third-party libraries
+* Backorder subscribe option — accept subscriptions on backorder products
+
+**Admin**
+
+* Subscribers tab: view by subscriber or by product, with drill-down into individual products
+* Stats bar: Total / Watching / Notifying / Notified / Unsubscribed / Failed
+* Failed notification state with one-click resend from the admin
+* Single and bulk subscriber delete
+* Per-product enable/disable override (WooCommerce Product Data tab)
+
+**Settings & customisation**
+
+* Master on/off toggle
+* Customise form title, button label, success/duplicate/error messages
+* Configure sender name and address for all outgoing emails
+* Customise confirmation and back-in-stock email subject, body, and footer
+* Email shortcodes: `{product_name}`, `{product_url}`, `{subscriber_name}`, `{subscriber_email}`, `{site_name}`
+* Full style control: button colour, text colour, border-radius, padding; input border colour, radius, padding; heading colour; success and error message colours
+* Style preview updates live in the React admin UI
+
+**Technical**
+
+* HPOS (High-Performance Order Storage) compatible
+* Block cart and block checkout compatible
+* Subscriber data stored in a dedicated `{prefix}lime_watchlist` database table — no external service
+* React-powered admin interface (Gutenberg components + TanStack Table)
+* Requires WooCommerce 8.0+
 
 == Installation ==
 
 1. Upload the `lime-stock-watchlist` folder to `/wp-content/plugins/`.
 2. Activate the plugin through the **Plugins** menu in WordPress.
-3. Go to **WooCommerce > Watchlist** to view subscribers and configure settings.
+3. Go to **WooCommerce > Stock watchlist** to view subscribers and configure settings.
 
 == Frequently Asked Questions ==
 
 = Does this work with variable products? =
 
-Currently, notifications are triggered at the parent product level. Variable product support is planned for a future release.
+Yes. Subscribers are tracked per variation. When a variation comes back in stock only the subscribers for that specific variation are notified.
 
 = Where are subscriber emails stored? =
 
-Subscriber data is stored in a dedicated `{prefix}lime_watchlist` table in your WordPress database. Emails are never sent to third parties.
+In a dedicated `{prefix}lime_watchlist` table in your WordPress database. Emails are never sent to third parties.
 
 = How does the unsubscribe link work? =
 
-Each notification email contains a unique unsubscribe link. Clicking it marks the subscriber as unsubscribed — no login required.
+Each notification email contains a unique signed unsubscribe link. Clicking it marks the subscriber as unsubscribed — no login required.
+
+= What is the popup display mode? =
+
+Instead of rendering the form inline on the page, a trigger button is shown. Clicking it opens a modal overlay containing the form. Both modes are fully themed via the Style settings.
+
+= What happens if a notification email fails to send? =
+
+Action Scheduler marks the action as failed and the subscriber status changes to "Failed" in the admin. You can resend failed notifications individually from the Subscribers tab.
+
+= Can customers re-subscribe after being notified? =
+
+Yes. Once notified (or after unsubscribing), the form reappears and a customer can subscribe again.
+
+= Does it work with backorder products? =
+
+Optionally. Enable **Allow subscriptions on backorder** in Settings → Subscriber Form to show the form and accept subscriptions on products with a backorder stock status.
 
 == Changelog ==
 

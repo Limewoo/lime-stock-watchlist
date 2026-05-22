@@ -43,7 +43,7 @@ class Frontend {
 			return;
 		}
 
-		$asset_file = LSWL_PATH . 'build/frontend.asset.php';
+		$asset_file  = LSWL_PATH . 'build/frontend.asset.php';
 		$asset      = file_exists( $asset_file )
 			? require $asset_file
 			: array(
@@ -165,6 +165,7 @@ class Frontend {
 	 */
 	public function add_variation_stock_status( array $data, \WC_Product_Variable $product, \WC_Product_Variation $variation ): array { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed -- $product param required by WC filter signature
 		$data['lswl_stock_status'] = $variation->get_stock_status();
+
 		return $data;
 	}
 
@@ -179,6 +180,7 @@ class Frontend {
 		if ( strlen( $hex ) === 3 ) {
 			$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
 		}
+
 		return array(
 			hexdec( substr( $hex, 0, 2 ) ),
 			hexdec( substr( $hex, 2, 2 ) ),
@@ -195,6 +197,7 @@ class Frontend {
 	 */
 	private static function hex_darken( string $hex, float $factor ): string {
 		$rgb = self::hex_to_rgb( $hex );
+
 		return sprintf(
 			'#%02x%02x%02x',
 			max( 0, (int) round( $rgb[0] * $factor ) ),
@@ -248,6 +251,7 @@ class Frontend {
 			if ( 'instock' === $stock_status ) {
 				return;
 			}
+
 			if ( 'onbackorder' === $stock_status && empty( $settings['allow_backorder_subscribe'] ) ) {
 				return;
 			}
@@ -284,6 +288,7 @@ class Frontend {
 		if ( 'instock' === $stock_status ) {
 			return;
 		}
+
 		if ( 'onbackorder' === $stock_status && empty( $settings['allow_backorder_subscribe'] ) ) {
 			return;
 		}

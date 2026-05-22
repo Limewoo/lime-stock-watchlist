@@ -86,9 +86,7 @@ class Admin {
 			)
 		);
 
-		wp_enqueue_style(
-			'wp-components'
-		);
+		wp_enqueue_style( 'wp-components' );
 
 		wp_enqueue_style(
 			'lswl-admin',

@@ -30,9 +30,11 @@ class Database {
 	 */
 	public static function table(): string {
 		global $wpdb;
+
 		if ( empty( self::$table ) ) {
 			self::$table = $wpdb->prefix . 'lime_watchlist';
 		}
+
 		return self::$table;
 	}
 
@@ -53,7 +55,7 @@ class Database {
 			email           VARCHAR(200)     NOT NULL,
 			name            VARCHAR(100)     NOT NULL DEFAULT '',
 			date_subscribed DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			notified        TINYINT(1)       NOT NULL DEFAULT 0,
+			notified         TINYINT(1)       NOT NULL DEFAULT 0,
 			unsubscribed    TINYINT(1)       NOT NULL DEFAULT 0,
 			PRIMARY KEY  (id),
 			KEY product_id (product_id),
@@ -256,7 +258,7 @@ class Database {
 		$status_map  = array(
 			'watching'     => 1,
 			'notifying'    => 2,
-			'notified'     => 3,
+			'notified'      => 3,
 			'unsubscribed' => 4,
 			'failed'       => 5,
 		);

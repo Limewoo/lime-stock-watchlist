@@ -111,6 +111,7 @@ class Rest_API {
 						),
 					),
 				),
+
 				// DELETE /subscribers — bulk.
 				array(
 					'methods'             => \WP_REST_Server::DELETABLE,
@@ -217,6 +218,7 @@ class Rest_API {
 				array( 'status' => 403 )
 			);
 		}
+
 		return true;
 	}
 
@@ -255,6 +257,7 @@ class Rest_API {
 				409
 			);
 		}
+
 		if ( 'onbackorder' === $stock_status && empty( $settings['allow_backorder_subscribe'] ) ) {
 			return new \WP_REST_Response(
 				array( 'message' => __( 'This product is already in stock.', 'lime-stock-watchlist' ) ),
@@ -276,6 +279,7 @@ class Rest_API {
 			$msg = ! empty( $settings['msg_duplicate'] )
 				? $settings['msg_duplicate']
 				: __( 'You\'re already on the waitlist for this product.', 'lime-stock-watchlist' );
+
 			return new \WP_REST_Response( array( 'message' => $msg ), 409 );
 		}
 
@@ -283,6 +287,7 @@ class Rest_API {
 			$msg = ! empty( $settings['msg_error'] )
 				? $settings['msg_error']
 				: __( 'Could not save your subscription. Please try again.', 'lime-stock-watchlist' );
+
 			return new \WP_REST_Response( array( 'message' => $msg ), 500 );
 		}
 
@@ -293,6 +298,7 @@ class Rest_API {
 		$msg = ! empty( $settings['msg_success'] )
 			? $settings['msg_success']
 			: __( 'You\'ve been added to the watchlist.', 'lime-stock-watchlist' );
+
 		return new \WP_REST_Response( array( 'message' => $msg ), 200 );
 	}
 
@@ -316,7 +322,7 @@ class Rest_API {
 			return new \WP_REST_Response( $result, 200 );
 		}
 
-		$result        = Database::get_subscribers_paginated(
+		$result = Database::get_subscribers_paginated(
 			array(
 				'page'       => $request->get_param( 'page' ),
 				'per_page'   => $request->get_param( 'per_page' ),
@@ -327,6 +333,7 @@ class Rest_API {
 				'order'      => 'DESC',
 			)
 		);
+
 		$product_cache = array();
 
 		$result['items'] = array_map(
@@ -361,6 +368,7 @@ class Rest_API {
 					$product_cache[ $pid ]
 				);
 			},
+
 			$result['items']
 		);
 
@@ -503,23 +511,23 @@ class Rest_API {
 		$settings = Plugin::get_settings();
 
 		$settings['_placeholders'] = array(
-			'from_name'                  => get_bloginfo( 'name' ),
-			'from_email'                 => get_option( 'admin_email' ),
+			'from_name'                 => get_bloginfo( 'name' ),
+			'from_email'                => get_option( 'admin_email' ),
 			'confirmation_email_subject' => __( "You're on the waitlist for {product_name}!", 'lime-stock-watchlist' ),
 			/* translators: placeholders are literal shortcode tokens, not translated */
 			'confirmation_email_body'    => __( "Hi {subscriber_name},\n\nYou're on the waitlist for {product_name}. We'll let you know as soon as it's back.\n\nThank you for shopping with {site_name}.", 'lime-stock-watchlist' ),
 			/* translators: placeholder is a literal shortcode token, not translated */
-			'email_subject'              => __( '{product_name} is back in stock!', 'lime-stock-watchlist' ),
+			'email_subject'             => __( '{product_name} is back in stock!', 'lime-stock-watchlist' ),
 			/* translators: placeholders are literal shortcode tokens, not translated */
-			'email_body'                 => __( "Great news! {product_name} is now back in stock.\n\nThank you for shopping with {site_name}.", 'lime-stock-watchlist' ),
-			'email_footer'               => __( 'You received this email because you signed up for back-in-stock notifications.', 'lime-stock-watchlist' ),
+			'email_body'                => __( "Great news! {product_name} is now back in stock.\n\nThank you for shopping with {site_name}.", 'lime-stock-watchlist' ),
+			'email_footer'              => __( 'You received this email because you signed up for back-in-stock notifications.', 'lime-stock-watchlist' ),
 			'confirmation_email_footer'  => __( 'You received this email because you signed up for back-in-stock notifications.', 'lime-stock-watchlist' ),
-			'form_title'                 => __( 'Notify me when available', 'lime-stock-watchlist' ),
-			'form_button_label'          => __( 'Notify me', 'lime-stock-watchlist' ),
-			'popup_trigger_label'        => __( 'Notify me when available', 'lime-stock-watchlist' ),
-			'msg_success'                => __( "Thank you! We'll notify you when this product is back in stock.", 'lime-stock-watchlist' ),
-			'msg_duplicate'              => __( "You're already on the waitlist for this product.", 'lime-stock-watchlist' ),
-			'msg_error'                  => __( 'Something went wrong. Please try again.', 'lime-stock-watchlist' ),
+			'form_title'                => __( 'Notify me when available', 'lime-stock-watchlist' ),
+			'form_button_label'         => __( 'Notify me', 'lime-stock-watchlist' ),
+			'popup_trigger_label'       => __( 'Notify me when available', 'lime-stock-watchlist' ),
+			'msg_success'               => __( "Thank you! We'll notify you when this product is back in stock.", 'lime-stock-watchlist' ),
+			'msg_duplicate'             => __( "You're already on the waitlist for this product.", 'lime-stock-watchlist' ),
+			'msg_error'                 => __( 'Something went wrong. Please try again.', 'lime-stock-watchlist' ),
 		);
 
 		return $settings;
@@ -536,45 +544,45 @@ class Rest_API {
 
 		$updated = array(
 			'notifications_enabled'      => (bool) $request->get_param( 'notifications_enabled' ),
-			'form_title'                 => sanitize_text_field( (string) $request->get_param( 'form_title' ) ),
-			'form_button_label'          => sanitize_text_field( (string) $request->get_param( 'form_button_label' ) ),
+			'form_title'                => sanitize_text_field( (string) $request->get_param( 'form_title' ) ),
+			'form_button_label'         => sanitize_text_field( (string) $request->get_param( 'form_button_label' ) ),
 			'show_name_field'            => (bool) $request->get_param( 'show_name_field' ),
 			'name_field_required'        => (bool) $request->get_param( 'name_field_required' ),
-			'msg_success'                => sanitize_text_field( (string) $request->get_param( 'msg_success' ) ),
-			'msg_duplicate'              => sanitize_text_field( (string) $request->get_param( 'msg_duplicate' ) ),
-			'msg_error'                  => sanitize_text_field( (string) $request->get_param( 'msg_error' ) ),
-			'from_name'                  => sanitize_text_field( (string) $request->get_param( 'from_name' ) ),
-			'from_email'                 => sanitize_email( (string) $request->get_param( 'from_email' ) ),
+			'msg_success'               => sanitize_text_field( (string) $request->get_param( 'msg_success' ) ),
+			'msg_duplicate'             => sanitize_text_field( (string) $request->get_param( 'msg_duplicate' ) ),
+			'msg_error'                 => sanitize_text_field( (string) $request->get_param( 'msg_error' ) ),
+			'from_name'                 => sanitize_text_field( (string) $request->get_param( 'from_name' ) ),
+			'from_email'                => sanitize_email( (string) $request->get_param( 'from_email' ) ),
 			'confirmation_email_enabled' => (bool) $request->get_param( 'confirmation_email_enabled' ),
 			'confirmation_email_subject' => sanitize_text_field( (string) $request->get_param( 'confirmation_email_subject' ) ),
 			'confirmation_email_body'    => wp_kses_post( (string) $request->get_param( 'confirmation_email_body' ) ),
 			'confirmation_email_footer'  => sanitize_text_field( (string) $request->get_param( 'confirmation_email_footer' ) ),
 			'notification_email_enabled' => (bool) $request->get_param( 'notification_email_enabled' ),
-			'email_subject'              => sanitize_text_field( (string) $request->get_param( 'email_subject' ) ),
-			'email_body'                 => wp_kses_post( (string) $request->get_param( 'email_body' ) ),
-			'email_footer'               => sanitize_text_field( (string) $request->get_param( 'email_footer' ) ),
-			'style_accent_color'         => sanitize_hex_color( (string) $request->get_param( 'style_accent_color' ) ) ?: '#5d9e3f',
-			'style_btn_text_color'       => sanitize_hex_color( (string) $request->get_param( 'style_btn_text_color' ) ) ?: '#ffffff',
-			'style_btn_radius'           => absint( $request->get_param( 'style_btn_radius' ) ),
-			'style_btn_padding_v'        => absint( $request->get_param( 'style_btn_padding_v' ) ),
-			'style_btn_padding_h'        => absint( $request->get_param( 'style_btn_padding_h' ) ),
-			'style_input_border_color'   => sanitize_hex_color( (string) $request->get_param( 'style_input_border_color' ) ) ?: '#e0e0e0',
-			'style_input_radius'         => absint( $request->get_param( 'style_input_radius' ) ),
-			'style_input_padding_v'      => absint( $request->get_param( 'style_input_padding_v' ) ),
-			'style_input_padding_h'      => absint( $request->get_param( 'style_input_padding_h' ) ),
-			'style_heading_color'        => sanitize_hex_color( (string) $request->get_param( 'style_heading_color' ) ) ?: '',
-			'style_success_color'        => sanitize_hex_color( (string) $request->get_param( 'style_success_color' ) ) ?: '#2a6028',
-			'style_success_bg'           => sanitize_hex_color( (string) $request->get_param( 'style_success_bg' ) ) ?: '#edf7ec',
-			'style_success_border'       => sanitize_hex_color( (string) $request->get_param( 'style_success_border' ) ) ?: '#b3ddb0',
-			'style_error_color'          => sanitize_hex_color( (string) $request->get_param( 'style_error_color' ) ) ?: '#8a2020',
-			'style_error_bg'             => sanitize_hex_color( (string) $request->get_param( 'style_error_bg' ) ) ?: '#fdf1f1',
-			'style_error_border'         => sanitize_hex_color( (string) $request->get_param( 'style_error_border' ) ) ?: '#e6b8b8',
-			'form_display_mode'          => in_array( $request->get_param( 'form_display_mode' ), array( 'inline', 'popup' ), true )
+			'email_subject'             => sanitize_text_field( (string) $request->get_param( 'email_subject' ) ),
+			'email_body'                => wp_kses_post( (string) $request->get_param( 'email_body' ) ),
+			'email_footer'              => sanitize_text_field( (string) $request->get_param( 'email_footer' ) ),
+			'style_accent_color'        => sanitize_hex_color( (string) $request->get_param( 'style_accent_color' ) ) ?: '#5d9e3f',
+			'style_btn_text_color'      => sanitize_hex_color( (string) $request->get_param( 'style_btn_text_color' ) ) ?: '#ffffff',
+			'style_btn_radius'          => absint( $request->get_param( 'style_btn_radius' ) ),
+			'style_btn_padding_v'       => absint( $request->get_param( 'style_btn_padding_v' ) ),
+			'style_btn_padding_h'       => absint( $request->get_param( 'style_btn_padding_h' ) ),
+			'style_input_border_color'  => sanitize_hex_color( (string) $request->get_param( 'style_input_border_color' ) ) ?: '#e0e0e0',
+			'style_input_radius'        => absint( $request->get_param( 'style_input_radius' ) ),
+			'style_input_padding_v'     => absint( $request->get_param( 'style_input_padding_v' ) ),
+			'style_input_padding_h'     => absint( $request->get_param( 'style_input_padding_h' ) ),
+			'style_heading_color'       => sanitize_hex_color( (string) $request->get_param( 'style_heading_color' ) ) ?: '',
+			'style_success_color'       => sanitize_hex_color( (string) $request->get_param( 'style_success_color' ) ) ?: '#2a6028',
+			'style_success_bg'          => sanitize_hex_color( (string) $request->get_param( 'style_success_bg' ) ) ?: '#edf7ec',
+			'style_success_border'      => sanitize_hex_color( (string) $request->get_param( 'style_success_border' ) ) ?: '#b3ddb0',
+			'style_error_color'         => sanitize_hex_color( (string) $request->get_param( 'style_error_color' ) ) ?: '#8a2020',
+			'style_error_bg'            => sanitize_hex_color( (string) $request->get_param( 'style_error_bg' ) ) ?: '#fdf1f1',
+			'style_error_border'        => sanitize_hex_color( (string) $request->get_param( 'style_error_border' ) ) ?: '#e6b8b8',
+			'form_display_mode'         => in_array( $request->get_param( 'form_display_mode' ), array( 'inline', 'popup' ), true )
 				? (string) $request->get_param( 'form_display_mode' )
 				: 'inline',
-			'popup_trigger_label'        => sanitize_text_field( (string) $request->get_param( 'popup_trigger_label' ) ),
-			'show_on_archive'            => (bool) $request->get_param( 'show_on_archive' ),
-			'allow_backorder_subscribe'  => (bool) $request->get_param( 'allow_backorder_subscribe' ),
+			'popup_trigger_label'       => sanitize_text_field( (string) $request->get_param( 'popup_trigger_label' ) ),
+			'show_on_archive'           => (bool) $request->get_param( 'show_on_archive' ),
+			'allow_backorder_subscribe' => (bool) $request->get_param( 'allow_backorder_subscribe' ),
 		);
 
 		// Validate email if provided.
@@ -619,27 +627,27 @@ class Rest_API {
 				'type'    => 'boolean',
 				'default' => false,
 			),
-			'msg_success'                => array(
+			'msg_success'               => array(
 				'type'              => 'string',
 				'default'           => '',
 				'sanitize_callback' => 'sanitize_text_field',
 			),
-			'msg_duplicate'              => array(
+			'msg_duplicate'             => array(
 				'type'              => 'string',
 				'default'           => '',
 				'sanitize_callback' => 'sanitize_text_field',
 			),
-			'msg_error'                  => array(
+			'msg_error'                 => array(
 				'type'              => 'string',
 				'default'           => '',
 				'sanitize_callback' => 'sanitize_text_field',
 			),
-			'from_name'                  => array(
+			'from_name'                 => array(
 				'type'              => 'string',
 				'default'           => '',
 				'sanitize_callback' => 'sanitize_text_field',
 			),
-			'from_email'                 => array(
+			'from_email'                => array(
 				'type'              => 'string',
 				'default'           => '',
 				'sanitize_callback' => 'sanitize_email',
@@ -667,116 +675,116 @@ class Rest_API {
 				'type'    => 'boolean',
 				'default' => true,
 			),
-			'email_subject'              => array(
+			'email_subject'             => array(
 				'type'              => 'string',
 				'default'           => '',
 				'sanitize_callback' => 'sanitize_text_field',
 			),
-			'email_body'                 => array(
+			'email_body'                => array(
 				'type'              => 'string',
 				'default'           => '',
 				'sanitize_callback' => 'wp_kses_post',
 			),
-			'email_footer'               => array(
+			'email_footer'              => array(
 				'type'              => 'string',
 				'default'           => '',
 				'sanitize_callback' => 'sanitize_text_field',
 			),
-			'style_accent_color'         => array(
+			'style_accent_color'        => array(
 				'type'              => 'string',
 				'default'           => '#5d9e3f',
 				'sanitize_callback' => 'sanitize_hex_color',
 			),
-			'style_btn_text_color'       => array(
+			'style_btn_text_color'      => array(
 				'type'              => 'string',
 				'default'           => '#ffffff',
 				'sanitize_callback' => 'sanitize_hex_color',
 			),
-			'style_btn_radius'           => array(
+			'style_btn_radius'          => array(
 				'type'              => 'integer',
 				'default'           => 3,
 				'sanitize_callback' => 'absint',
 			),
-			'style_btn_padding_v'        => array(
+			'style_btn_padding_v'       => array(
 				'type'              => 'integer',
 				'default'           => 10,
 				'sanitize_callback' => 'absint',
 			),
-			'style_btn_padding_h'        => array(
+			'style_btn_padding_h'       => array(
 				'type'              => 'integer',
 				'default'           => 20,
 				'sanitize_callback' => 'absint',
 			),
-			'style_input_border_color'   => array(
+			'style_input_border_color'  => array(
 				'type'              => 'string',
 				'default'           => '#e0e0e0',
 				'sanitize_callback' => 'sanitize_hex_color',
 			),
-			'style_input_radius'         => array(
+			'style_input_radius'        => array(
 				'type'              => 'integer',
 				'default'           => 5,
 				'sanitize_callback' => 'absint',
 			),
-			'style_input_padding_v'      => array(
+			'style_input_padding_v'     => array(
 				'type'              => 'integer',
 				'default'           => 10,
 				'sanitize_callback' => 'absint',
 			),
-			'style_input_padding_h'      => array(
+			'style_input_padding_h'     => array(
 				'type'              => 'integer',
 				'default'           => 14,
 				'sanitize_callback' => 'absint',
 			),
-			'style_heading_color'        => array(
+			'style_heading_color'       => array(
 				'type'              => 'string',
 				'default'           => '',
 				'sanitize_callback' => 'sanitize_hex_color',
 			),
-			'style_success_color'        => array(
+			'style_success_color'       => array(
 				'type'              => 'string',
 				'default'           => '#2a6028',
 				'sanitize_callback' => 'sanitize_hex_color',
 			),
-			'style_success_bg'           => array(
+			'style_success_bg'          => array(
 				'type'              => 'string',
 				'default'           => '#edf7ec',
 				'sanitize_callback' => 'sanitize_hex_color',
 			),
-			'style_success_border'       => array(
+			'style_success_border'      => array(
 				'type'              => 'string',
 				'default'           => '#b3ddb0',
 				'sanitize_callback' => 'sanitize_hex_color',
 			),
-			'style_error_color'          => array(
+			'style_error_color'         => array(
 				'type'              => 'string',
 				'default'           => '#8a2020',
 				'sanitize_callback' => 'sanitize_hex_color',
 			),
-			'style_error_bg'             => array(
+			'style_error_bg'            => array(
 				'type'              => 'string',
 				'default'           => '#fdf1f1',
 				'sanitize_callback' => 'sanitize_hex_color',
 			),
-			'style_error_border'         => array(
+			'style_error_border'        => array(
 				'type'              => 'string',
 				'default'           => '#e6b8b8',
 				'sanitize_callback' => 'sanitize_hex_color',
 			),
-			'form_display_mode'          => array(
+			'form_display_mode'         => array(
 				'type'              => 'string',
 				'default'           => 'inline',
 				'sanitize_callback' => 'sanitize_text_field',
 			),
-			'popup_trigger_label'        => array(
+			'popup_trigger_label'       => array(
 				'type'              => 'string',
 				'default'           => '',
 				'sanitize_callback' => 'sanitize_text_field',
 			),
-			'show_on_archive'            => array(
+			'show_on_archive'           => array(
 				'type'    => 'boolean',
 				'default' => false,
 			),
-			'allow_backorder_subscribe'  => array(
+			'allow_backorder_subscribe' => array(
 				'type'    => 'boolean',
 				'default' => false,
 			),

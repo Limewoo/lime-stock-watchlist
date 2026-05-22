@@ -172,6 +172,7 @@ class Stock_Watcher {
 				array( absint( $subscriber->id ), $product_id ),
 				'lime-stock-watchlist'
 			);
+
 			$queued_ids[] = absint( $subscriber->id );
 		}
 

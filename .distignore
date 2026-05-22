@@ -24,3 +24,4 @@ vendor/composer/InstalledVersions.php
 vendor/composer/installed.json
 vendor/composer/installed.php
 seed-subscribers.php
+readme.md

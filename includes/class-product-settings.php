@@ -47,6 +47,7 @@ class Product_Settings {
 			'class'    => array(),
 			'priority' => 90,
 		);
+
 		return $tabs;
 	}
 

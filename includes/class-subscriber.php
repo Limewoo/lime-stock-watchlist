@@ -166,6 +166,7 @@ class Subscriber {
 		if ( empty( $this->name ) ) {
 			return '';
 		}
+
 		return explode( ' ', trim( $this->name ) )[0];
 	}
 }

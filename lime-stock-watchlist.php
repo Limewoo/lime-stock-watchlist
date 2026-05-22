@@ -86,4 +86,5 @@ function lime_stock_watchlist_init() {
 
 	new Lime_Stock_Watchlist\Plugin();
 }
+
 add_action( 'plugins_loaded', 'lime_stock_watchlist_init' );
