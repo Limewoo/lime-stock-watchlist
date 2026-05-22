@@ -133,6 +133,12 @@ export default function SubscribersTab() {
 		setStatus( value );
 	}
 
+	function handleReset() {
+		setInputValue( '' );
+		setSearch( '' );
+		setStatus( 'all' );
+	}
+
 	function handleDrillDown( productId, productName, productUrl ) {
 		setDrillDown( { productId, productName, productUrl } );
 		clearPagedParam();
@@ -146,6 +152,8 @@ export default function SubscribersTab() {
 	const searchPlaceholder = view === 'products'
 		? __( 'Search products…', 'lime-stock-watchlist' )
 		: __( 'Search by email…', 'lime-stock-watchlist' );
+
+	const isFiltered = inputValue !== '' || status !== 'all';
 
 	return (
 		<div className="lswl-subscribers">
@@ -171,6 +179,15 @@ export default function SubscribersTab() {
 					</div>
 
 					<div className="lswl-controls-row__filters">
+						{ isFiltered && (
+							<button
+								className="lswl-filter-reset"
+								onClick={ handleReset }
+								aria-label={ __( 'Clear filters', 'lime-stock-watchlist' ) }
+							>
+								{ __( 'Reset', 'lime-stock-watchlist' ) }
+							</button>
+						) }
 						<input
 							type="search"
 							className="lswl-filter-search"

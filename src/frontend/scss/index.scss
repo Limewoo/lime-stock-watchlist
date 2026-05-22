@@ -269,14 +269,14 @@
 	text-align: center;
 
 	&--success {
-		background: #edf7ec;
-		border-color: #b3ddb0;
-		color: #2a6028;
+		background: var(--lswl-success-bg, #edf7ec);
+		border-color: var(--lswl-success-border, #b3ddb0);
+		color: var(--lswl-success-color, #2a6028);
 	}
 
 	&--error {
-		background: #fdf1f1;
-		border-color: #e6b8b8;
-		color: #8a2020;
+		background: var(--lswl-error-bg, #fdf1f1);
+		border-color: var(--lswl-error-border, #e6b8b8);
+		color: var(--lswl-error-color, #8a2020);
 	}
 }

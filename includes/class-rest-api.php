@@ -241,27 +241,27 @@ class Rest_API {
 		$status = Database::add_or_resubscribe( $product_id, $email, $name );
 
 		if ( 'already_subscribed' === $status ) {
-			return new \WP_REST_Response(
-				array( 'message' => __( 'You\'re already on the waitlist for this product.', 'lime-stock-watchlist' ) ),
-				409
-			);
+			$msg = ! empty( $settings['msg_duplicate'] )
+				? $settings['msg_duplicate']
+				: __( 'You\'re already on the waitlist for this product.', 'lime-stock-watchlist' );
+			return new \WP_REST_Response( array( 'message' => $msg ), 409 );
 		}
 
 		if ( 'error' === $status ) {
-			return new \WP_REST_Response(
-				array( 'message' => __( 'Could not save your subscription. Please try again.', 'lime-stock-watchlist' ) ),
-				500
-			);
+			$msg = ! empty( $settings['msg_error'] )
+				? $settings['msg_error']
+				: __( 'Could not save your subscription. Please try again.', 'lime-stock-watchlist' );
+			return new \WP_REST_Response( array( 'message' => $msg ), 500 );
 		}
 
 		if ( ! empty( $settings['confirmation_email_enabled'] ) ) {
 			Email::send_confirmation( $product, new Subscriber( 0, 0, $email, $name ), $settings );
 		}
 
-		return new \WP_REST_Response(
-			array( 'message' => __( 'You\'ve been added to the watchlist.', 'lime-stock-watchlist' ) ),
-			200
-		);
+		$msg = ! empty( $settings['msg_success'] )
+			? $settings['msg_success']
+			: __( 'You\'ve been added to the watchlist.', 'lime-stock-watchlist' );
+		return new \WP_REST_Response( array( 'message' => $msg ), 200 );
 	}
 
 	/**
@@ -468,7 +468,12 @@ class Rest_API {
 			'style_input_padding_v'      => absint( $request->get_param( 'style_input_padding_v' ) ),
 			'style_input_padding_h'      => absint( $request->get_param( 'style_input_padding_h' ) ),
 			'style_heading_color'        => sanitize_hex_color( (string) $request->get_param( 'style_heading_color' ) ) ?: '',
-			'style_custom_css'           => wp_strip_all_tags( (string) $request->get_param( 'style_custom_css' ) ),
+			'style_success_color'        => sanitize_hex_color( (string) $request->get_param( 'style_success_color' ) ) ?: '#2a6028',
+			'style_success_bg'           => sanitize_hex_color( (string) $request->get_param( 'style_success_bg' ) ) ?: '#edf7ec',
+			'style_success_border'       => sanitize_hex_color( (string) $request->get_param( 'style_success_border' ) ) ?: '#b3ddb0',
+			'style_error_color'          => sanitize_hex_color( (string) $request->get_param( 'style_error_color' ) ) ?: '#8a2020',
+			'style_error_bg'             => sanitize_hex_color( (string) $request->get_param( 'style_error_bg' ) ) ?: '#fdf1f1',
+			'style_error_border'         => sanitize_hex_color( (string) $request->get_param( 'style_error_border' ) ) ?: '#e6b8b8',
 			'form_display_mode'          => in_array( $request->get_param( 'form_display_mode' ), array( 'inline', 'popup' ), true )
 				? (string) $request->get_param( 'form_display_mode' )
 				: 'inline',
@@ -631,10 +636,35 @@ class Rest_API {
 				'default'           => '',
 				'sanitize_callback' => 'sanitize_hex_color',
 			),
-			'style_custom_css'           => array(
+			'style_success_color'        => array(
 				'type'              => 'string',
-				'default'           => '',
-				'sanitize_callback' => 'wp_strip_all_tags',
+				'default'           => '#2a6028',
+				'sanitize_callback' => 'sanitize_hex_color',
+			),
+			'style_success_bg'           => array(
+				'type'              => 'string',
+				'default'           => '#edf7ec',
+				'sanitize_callback' => 'sanitize_hex_color',
+			),
+			'style_success_border'       => array(
+				'type'              => 'string',
+				'default'           => '#b3ddb0',
+				'sanitize_callback' => 'sanitize_hex_color',
+			),
+			'style_error_color'          => array(
+				'type'              => 'string',
+				'default'           => '#8a2020',
+				'sanitize_callback' => 'sanitize_hex_color',
+			),
+			'style_error_bg'             => array(
+				'type'              => 'string',
+				'default'           => '#fdf1f1',
+				'sanitize_callback' => 'sanitize_hex_color',
+			),
+			'style_error_border'         => array(
+				'type'              => 'string',
+				'default'           => '#e6b8b8',
+				'sanitize_callback' => 'sanitize_hex_color',
 			),
 			'form_display_mode'          => array(
 				'type'              => 'string',

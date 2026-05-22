@@ -50,7 +50,12 @@ class Plugin {
 		'style_input_padding_v'      => 10,
 		'style_input_padding_h'      => 14,
 		'style_heading_color'        => '',
-		'style_custom_css'           => '',
+		'style_success_color'        => '#2a6028',
+		'style_success_bg'           => '#edf7ec',
+		'style_success_border'       => '#b3ddb0',
+		'style_error_color'          => '#8a2020',
+		'style_error_bg'             => '#fdf1f1',
+		'style_error_border'         => '#e6b8b8',
 		'form_display_mode'          => 'inline',
 		'popup_trigger_label'        => '',
 		'show_on_archive'            => false,
@@ -69,20 +74,6 @@ class Plugin {
 
 		add_action( 'lswl_send_notification', array( Email::class, 'handle_queued_notification' ), 10, 2 );
 		add_action( 'init', array( $this, 'handle_unsubscribe' ) );
-		add_action( 'plugins_loaded', array( $this, 'load_textdomain' ) );
-	}
-
-	/**
-	 * Load plugin text domain.
-	 *
-	 * @return void
-	 */
-	public function load_textdomain(): void {
-		load_plugin_textdomain(
-			'lime-stock-watchlist',
-			false,
-			dirname( plugin_basename( LSWL_FILE ) ) . '/languages'
-		);
 	}
 
 	/**

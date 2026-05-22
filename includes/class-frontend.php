@@ -75,23 +75,35 @@ class Frontend {
 		$input_radius  = absint( $settings['style_input_radius'] ?? 5 );
 		$input_pad_v   = absint( $settings['style_input_padding_v'] ?? 10 );
 		$input_pad_h   = absint( $settings['style_input_padding_h'] ?? 14 );
-		$heading_color = sanitize_hex_color( $settings['style_heading_color'] ?? '' );
+		$heading_color  = sanitize_hex_color( $settings['style_heading_color'] ?? '' );
+		$success_color  = sanitize_hex_color( $settings['style_success_color'] ?? '' ) ?: '#2a6028';
+		$success_bg     = sanitize_hex_color( $settings['style_success_bg'] ?? '' ) ?: '#edf7ec';
+		$success_border = sanitize_hex_color( $settings['style_success_border'] ?? '' ) ?: '#b3ddb0';
+		$error_color    = sanitize_hex_color( $settings['style_error_color'] ?? '' ) ?: '#8a2020';
+		$error_bg       = sanitize_hex_color( $settings['style_error_bg'] ?? '' ) ?: '#fdf1f1';
+		$error_border   = sanitize_hex_color( $settings['style_error_border'] ?? '' ) ?: '#e6b8b8';
 
 		$rgb    = self::hex_to_rgb( $accent );
 		$dark   = self::hex_darken( $accent, 0.82 );
 		$darker = self::hex_darken( $accent, 0.64 );
 
 		$vars = array(
-			'--lswl-accent'        => $accent,
-			'--lswl-accent-rgb'    => implode( ',', $rgb ),
-			'--lswl-accent-dark'   => $dark,
-			'--lswl-accent-darker' => $darker,
-			'--lswl-btn-text'      => $btn_text,
-			'--lswl-btn-radius'    => $btn_radius . 'px',
-			'--lswl-btn-padding'   => $btn_pad_v . 'px ' . $btn_pad_h . 'px',
-			'--lswl-input-border'  => $input_border,
-			'--lswl-input-radius'  => $input_radius . 'px',
-			'--lswl-input-padding' => $input_pad_v . 'px ' . $input_pad_h . 'px',
+			'--lswl-accent'          => $accent,
+			'--lswl-accent-rgb'      => implode( ',', $rgb ),
+			'--lswl-accent-dark'     => $dark,
+			'--lswl-accent-darker'   => $darker,
+			'--lswl-btn-text'        => $btn_text,
+			'--lswl-btn-radius'      => $btn_radius . 'px',
+			'--lswl-btn-padding'     => $btn_pad_v . 'px ' . $btn_pad_h . 'px',
+			'--lswl-input-border'    => $input_border,
+			'--lswl-input-radius'    => $input_radius . 'px',
+			'--lswl-input-padding'   => $input_pad_v . 'px ' . $input_pad_h . 'px',
+			'--lswl-success-color'   => $success_color,
+			'--lswl-success-bg'      => $success_bg,
+			'--lswl-success-border'  => $success_border,
+			'--lswl-error-color'     => $error_color,
+			'--lswl-error-bg'        => $error_bg,
+			'--lswl-error-border'    => $error_border,
 		);
 
 		if ( $heading_color ) {
@@ -109,10 +121,6 @@ class Frontend {
 
 		// Apply CSS vars to both the inline form wrapper and the popup overlay.
 		$css_vars = '.lswl-notify-form,.lswl-notify-form__overlay{' . $declarations . '}';
-
-		if ( ! empty( $settings['style_custom_css'] ) ) {
-			$css_vars .= str_replace( '</style>', '', $settings['style_custom_css'] );
-		}
 
 		wp_add_inline_style( 'lswl-frontend', $css_vars );
 

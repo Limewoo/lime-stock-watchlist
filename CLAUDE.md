@@ -168,7 +168,12 @@ Email body fields support basic HTML — sanitized via `wp_kses_post()` (not `sa
 | `style_input_padding_v` | `10` | Input vertical padding in px → `--lswl-input-padding` CSS var |
 | `style_input_padding_h` | `14` | Input horizontal padding in px → `--lswl-input-padding` CSS var |
 | `style_heading_color` | `''` | Heading colour → `--lswl-heading-color` CSS var (empty = inherit theme) |
-| `style_custom_css` | `''` | Arbitrary CSS appended after CSS var block (stripped of tags) |
+| `style_success_color` | `'#2a6028'` | Success message text colour → `--lswl-success-color` CSS var |
+| `style_success_bg` | `'#edf7ec'` | Success message background → `--lswl-success-bg` CSS var |
+| `style_success_border` | `'#b3ddb0'` | Success message border colour → `--lswl-success-border` CSS var |
+| `style_error_color` | `'#8a2020'` | Error/duplicate message text colour → `--lswl-error-color` CSS var |
+| `style_error_bg` | `'#fdf1f1'` | Error/duplicate message background → `--lswl-error-bg` CSS var |
+| `style_error_border` | `'#e6b8b8'` | Error/duplicate message border colour → `--lswl-error-border` CSS var |
 | `form_display_mode` | `'inline'` | `'inline'` — form rendered directly on page; `'popup'` — trigger button opens modal overlay |
 | `popup_trigger_label` | `''` | Popup trigger button text (empty = falls back to form title / "Notify me when available") |
 | `show_on_archive` | `false` | Show form on shop/category/search pages for OOS simple products (variable skipped) |
@@ -225,7 +230,7 @@ Single React SPA. Three tabs via `@wordpress/components` `TabPanel`:
 Layout:
 - Stats bar: Total / Watching / Notifying / Notified / Unsubscribed (from `GET /subscribers/stats`)
 - `NotifyingNotice` when `stats.notifying > 0`
-- Controls row: **By Subscriber** / **By Product** toggle (left) + search input + status select (right, native HTML elements — not WP SearchControl/SelectControl)
+- Controls row: **By Subscriber** / **By Product** toggle (left) + reset button (shown only when filters are active, clears search + status) + search input + status select (right, native HTML elements — not WP SearchControl/SelectControl)
 - View area: `UserView` or `ProductView` (or `ProductDrillDown` when drilling into a product)
 
 `UserView` columns: checkbox | email | product | status badge | date subscribed | delete icon. Product column hidden when `productId > 0` (drill-down). Single + bulk delete with `window.confirm()`. `pageSize: 20`.
@@ -258,20 +263,18 @@ SubscribersTab
 
 Settings component tree: `SettingsTab` → `settings/WatchlistEnableCard`, `SubscriberFormCard`, `EmailConfigCard`, `ConfirmationEmailCard`, `NotificationEmailCard`. Each card in its own file under `src/admin/js/components/settings/`. Icons in `settings/icons.js`, generic card wrapper in `settings/SettingsCard.js`.
 
-**Style tab** — frontend form appearance; four grouped cards. Shares the same settings load/save API as SettingsTab (`getSettings()` / `saveSettings()`):
+**Style tab** — frontend form appearance; three grouped cards. Shares the same settings load/save API as SettingsTab (`getSettings()` / `saveSettings()`):
 
 1. **Button** — accent colour (`ColorField`), text colour (`ColorField`), border-radius + vertical/horizontal padding (`RangeControl`)
 2. **Inputs** — border colour (`ColorField`), border-radius + vertical/horizontal padding (`RangeControl`)
-3. **Text** — heading colour (`ColorField`, `allowEmpty` — reset = inherit theme)
-4. **Custom CSS** — plain `<textarea>` with dark code-editor styling; appended verbatim after the CSS var block
+3. **Text** — heading colour (`ColorField`, `allowEmpty` — reset = inherit theme); success message text/bg/border (`ColorField` × 3); error/duplicate message text/bg/border (`ColorField` × 3)
 
 Style component tree:
 ```
 StyleTab                   src/admin/js/components/StyleTab.js
 ├── ButtonStyleCard        src/admin/js/components/settings/ButtonStyleCard.js
 ├── InputStyleCard         src/admin/js/components/settings/InputStyleCard.js
-├── TextStyleCard          src/admin/js/components/settings/TextStyleCard.js
-└── CustomCssCard          src/admin/js/components/settings/CustomCssCard.js
+└── TextStyleCard          src/admin/js/components/settings/TextStyleCard.js
 ```
 
 `ColorField` (`src/admin/js/components/settings/ColorField.js`) — Gutenberg-native colour picker using `Dropdown` + `ColorPicker` + `ColorIndicator`. Props: `label`, `value`, `onChange`, `defaultValue`, `allowEmpty`. Reset button appears when `value !== resetTarget`. Handles both modern WP (hex string) and legacy (object with `.hex`) `ColorPicker.onChange` API.
@@ -358,11 +361,11 @@ Notice via `Frontend::maybe_show_unsubscribe_notice()` on `woocommerce_before_si
 ### Styles
 
 Entry: `src/admin/scss/index.scss` and `src/frontend/scss/index.scss`.  
-Variables in `src/admin/scss/_variables.scss`. BEM under `.lswl-`. Brand accent: `$lswl-lime: #5d9e3f`.
+Variables in `src/admin/scss/_variables.scss`. Shared patterns in `src/admin/scss/_mixins.scss` (`lswl-card`, `lswl-input-base`, `lswl-lime-focus`, `lswl-lime-pill`). BEM under `.lswl-`. Brand accent: `$lswl-lime: #5d9e3f`.
 
 **Admin SCSS** — full design system: light page header with lime bar accent, lime tab underline, stats bar (5 columns), TanStack Table styles (thead caps-label, zebra stripe, lime hover), number-based pagination, filter controls (native inputs), settings cards, status badge pills (including `--notifying` with pulsing dot animation). See "Limewoo Admin UI Design System" section for full token reference.
 
-**Frontend SCSS** — intentionally minimal, but all colours and spacing driven by CSS custom properties so they work consistently across themes. `Frontend::enqueue()` outputs a `<style>` block via `wp_add_inline_style()` with vars: `--lswl-accent`, `--lswl-accent-rgb`, `--lswl-accent-dark`, `--lswl-accent-darker`, `--lswl-btn-text`, `--lswl-btn-radius`, `--lswl-btn-padding`, `--lswl-input-border`, `--lswl-input-radius`, `--lswl-input-padding`, `--lswl-heading-color` (only when non-empty). SCSS uses `var(--lswl-accent, #{$lswl-lime})` pattern for graceful fallback. Input/button sizing and colour properties use `!important` to override theme stylesheets at same/higher specificity.
+**Frontend SCSS** — intentionally minimal, but all colours and spacing driven by CSS custom properties so they work consistently across themes. `Frontend::enqueue()` outputs a `<style>` block via `wp_add_inline_style()` with vars: `--lswl-accent`, `--lswl-accent-rgb`, `--lswl-accent-dark`, `--lswl-accent-darker`, `--lswl-btn-text`, `--lswl-btn-radius`, `--lswl-btn-padding`, `--lswl-input-border`, `--lswl-input-radius`, `--lswl-input-padding`, `--lswl-heading-color` (only when non-empty), `--lswl-success-color`, `--lswl-success-bg`, `--lswl-success-border`, `--lswl-error-color`, `--lswl-error-bg`, `--lswl-error-border`. SCSS uses `var(--lswl-accent, #{$lswl-lime})` pattern for graceful fallback. Input/button sizing and colour properties use `!important` to override theme stylesheets at same/higher specificity.
 
 ### Build
 
@@ -402,7 +405,6 @@ Never edit `build/` manually.
 | Array of IDs | `array_map( 'absint', $ids )` |
 | Bool settings | `(bool)` cast |
 | Hex colour | `sanitize_hex_color()` — returns `null` for invalid input; use `?: '#default'` fallback |
-| Custom CSS (no tags) | `wp_strip_all_tags()` |
 
 ### Escaping reference
 

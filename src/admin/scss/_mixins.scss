@@ -1,0 +1,35 @@
+@use 'variables' as *;
+
+// Card surface — white bg, standard border, subtle double-layer shadow.
+@mixin lswl-card {
+    background: $lswl-surface;
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    box-shadow: $lswl-shadow-card;
+}
+
+// Form input base — border, bg, inset shadow, transition.
+@mixin lswl-input-base {
+    border: 1px solid #dcdcde !important;
+    border-radius: 3px !important;
+    background: #f6f7f7;
+    color: #1d2327 !important;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+    transition: border-color 160ms, box-shadow 160ms;
+    outline: none;
+    box-sizing: border-box;
+}
+
+// Lime focus ring — applied on :focus of all form inputs.
+@mixin lswl-lime-focus {
+    border-color: $lswl-lime;
+    box-shadow: 0 0 0 2px $lswl-lime-ring;
+}
+
+// Lime pill chip — selection counts, product badge counts.
+@mixin lswl-lime-pill {
+    color: $lswl-lime-darker;
+    background: $lswl-lime-light;
+    border-radius: 20px;
+    font-weight: 600;
+}

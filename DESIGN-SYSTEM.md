@@ -2,7 +2,7 @@
 
 > **Portable section.** Copy this entire file into any future Limewoo plugin's repo. It defines the shared visual language so all admin pages look like one product family.
 
-### Guiding principles
+## Guiding principles
 
 - Match WordPress admin norms (`.wrap` container, WP typography scale) — don't fight them.
 - Use native HTML `<input>`/`<select>` instead of WP `SearchControl`/`SelectControl` for filter controls — WP wrappers make consistent height impossible.
@@ -37,15 +37,16 @@
 | Card / table border-radius | `6px` |
 | Input / button border-radius | `3px` |
 | Icon container border-radius | `6px` |
-| Card box-shadow | `0 1px 3px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04)` |
+| Card box-shadow | `0 1px 3px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04)` — `$lswl-shadow-card` |
 | Input inset shadow | `inset 0 1px 2px rgba(0,0,0,0.04)` |
+| Focus ring colour | `rgba(93, 158, 63, 0.2)` — `$lswl-lime-ring` |
 | Transition | `160ms cubic-bezier(0.25,0.46,0.45,0.94)` on border-color, box-shadow, background |
 
 ### Focus ring (all interactive elements)
 
 ```scss
 border-color: $lswl-lime;
-box-shadow: 0 0 0 2px rgba(93, 158, 63, 0.2);
+box-shadow: 0 0 0 2px $lswl-lime-ring;
 outline: none;
 ```
 
@@ -126,10 +127,11 @@ PHP `render_page()` must output `<div class="wrap"><div id="plugin-root"></div><
 Use native `<input type="search">` and `<select>` — never WP `SearchControl`/`SelectControl`.
 
 ```scss
-// Shared base — apply to both
+// Shared base — apply to search, select, and reset button
 .plugin-filter-search,
-.plugin-filter-select {
-    height: 32px;
+.plugin-filter-select,
+.plugin-filter-reset {
+    height: 40px;
     border: 1px solid #dcdcde;
     border-radius: 3px;
     padding: 0 8px;
@@ -143,12 +145,16 @@ Use native `<input type="search">` and `<select>` — never WP `SearchControl`/`
 
     &:focus {
         border-color: $lswl-lime;
-        box-shadow: 0 0 0 2px rgba(93, 158, 63, 0.2);
+        box-shadow: 0 0 0 2px $lswl-lime-ring;
     }
 }
 
 .plugin-filter-search { width: 200px; flex-shrink: 0; }
 .plugin-filter-select { min-width: 150px; flex-shrink: 0; cursor: pointer; }
+.plugin-filter-reset  { cursor: pointer; white-space: nowrap; }
+
+// Reset button — shown only when filters are active (inputValue !== '' || status !== 'all')
+// Rendered as plain <button> to the left of the search input, inside the __filters group.
 
 // Layout: toggle buttons left, filters right
 .plugin-controls-row {
@@ -433,28 +439,6 @@ WP `RangeControl` reads `--wp-admin-theme-color` internally for the slider fill 
 
 Always add `__nextHasNoMarginBottom` prop to `RangeControl` (deprecation since `@wordpress/components` 6.7).
 
-### Custom CSS textarea
-
-```scss
-.lswl-custom-css__textarea {
-    width: 100%;
-    min-height: 140px;
-    padding: 12px;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 12px;
-    line-height: 1.6;
-    background: #1e2126;
-    color: #abb2bf;
-    border: 1px solid #3e4451;
-    border-radius: 4px;
-    resize: vertical;
-    box-sizing: border-box;
-
-    &:focus { border-color: $lswl-lime; outline: none; box-shadow: 0 0 0 2px rgba(93,158,63,0.2); }
-    &::placeholder { color: #5c6370; }
-}
-```
-
 ### Primary button (WP `is-primary` override)
 
 ```scss
@@ -483,7 +467,23 @@ Always add `__nextHasNoMarginBottom` prop to `RangeControl` (deprecation since `
 ```
 src/admin/scss/
 ├── _variables.scss   ← brand + neutral tokens, shadows, radii
-└── index.scss        ← all component styles, no sub-partials needed
+├── _mixins.scss      ← shared patterns: lswl-card, lswl-input-base, lswl-lime-focus, lswl-lime-pill
+└── index.scss        ← all component styles
 ```
 
-`_variables.scss` must be imported via `@use 'variables' as *;` at the top of `index.scss`.
+Import order at top of `index.scss`:
+```scss
+@use 'variables' as *;
+@use 'mixins' as *;
+```
+
+### Shared SCSS mixins
+
+Four mixins in `_mixins.scss` eliminate repetition across `index.scss`:
+
+| Mixin | Use |
+|-------|-----|
+| `@include lswl-card` | White bg, `#dcdcde` border, 6px radius, `$lswl-shadow-card` — used on table wrap and settings cards |
+| `@include lswl-input-base` | Border, bg, inset shadow, transition, outline reset — base for all filter inputs and color picker trigger |
+| `@include lswl-lime-focus` | `border-color: $lswl-lime; box-shadow: 0 0 0 2px $lswl-lime-ring` — applied on `:focus` |
+| `@include lswl-lime-pill` | `$lswl-lime-darker` text on `$lswl-lime-light` bg, 20px radius, fw 600 — selection counts, product badges |

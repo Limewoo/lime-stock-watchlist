@@ -8,7 +8,6 @@ import { getSettings, saveSettings } from '../api';
 import ButtonStyleCard from './settings/ButtonStyleCard';
 import InputStyleCard from './settings/InputStyleCard';
 import TextStyleCard from './settings/TextStyleCard';
-import CustomCssCard from './settings/CustomCssCard';
 
 /**
  * @param {Object}   props
@@ -98,7 +97,6 @@ export default function StyleTab( { registerSave, saving, saved, setSaving, setS
 			<ButtonStyleCard settings={ settings } update={ update } />
 			<InputStyleCard settings={ settings } update={ update } />
 			<TextStyleCard settings={ settings } update={ update } />
-			<CustomCssCard settings={ settings } update={ update } />
 
 		</div>
 	);
