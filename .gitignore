@@ -10,5 +10,5 @@ bun.lock
 yarn.lock
 package-lock.json
 skills-lock.json
-composer.lock
+compose
 todo.txt

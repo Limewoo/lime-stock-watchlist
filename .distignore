@@ -25,3 +25,5 @@ vendor/composer/installed.json
 vendor/composer/installed.php
 seed-subscribers.php
 readme.md
+todo.txt
+skills-lock.json

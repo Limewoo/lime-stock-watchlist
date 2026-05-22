@@ -39,10 +39,6 @@ composer lint        # check WP coding standards
 composer lint-fix    # auto-fix where possible
 ```
 
-## Architecture
-
-See [CLAUDE.md](CLAUDE.md) for full class map, DB schema, REST API, settings reference, and build details.
-
 ## License
 
 GPL-2.0-or-later — see [LICENSE](https://www.gnu.org/licenses/gpl-2.0.html).
