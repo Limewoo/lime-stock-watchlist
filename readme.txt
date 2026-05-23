@@ -104,6 +104,16 @@ To build from source:
 
 Source files live in `src/`. Compiled output goes to `build/`. Do not edit `build/` directly.
 
+== Screenshots ==
+
+1. Subscriber list — view and manage all watchlist sign-ups with status, product, and date
+2. Product view — see subscriber counts grouped by product with drill-down to individual sign-ups
+3. Settings — configure the notify form, email sender, confirmation and back-in-stock email content
+4. Style — customise button colours, input appearance, and success/error message styles
+5. Inline form on a single product page — displayed when the product is out of stock
+6. Popup form on a single product page — a trigger button opens an overlay with the notify form
+7. Popup form on an archive/shop page — displayed inline in the product grid for out-of-stock items
+
 == Changelog ==
 
 = 1.0.0 =
