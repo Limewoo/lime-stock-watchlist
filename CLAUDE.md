@@ -67,8 +67,8 @@ Also hooks `before_woocommerce_init` (top-level, outside init) to declare HPOS +
 | `Admin` | `class-admin.php` | WC submenu "Lime Watchlist" (`lime-stock-watchlist`), enqueues React bundle on plugin page |
 | `Product_Settings` | `class-product-settings.php` | WC Product Data tab "Watchlist" — per-product enable/disable |
 | `Rest_API` | `class-rest-api.php` | Registers all 8 REST routes; `settings_with_placeholders()` private helper used by both GET and POST settings handlers |
-| `Email` | `class-email.php` | `send_to_one()` — back-in-stock per-subscriber; `send_confirmation()` — subscription confirmation; `handle_queued_notification()` — AS callback; throws `\RuntimeException` on `wp_mail()` failure so AS marks action failed; resets subscriber to `notified=0` via `mark_watching()` if product OOS when AS fires; `send_notifications()` — sync fallback; `process_shortcodes()` — token replacement |
-| `Stock_Watcher` | `class-stock-watcher.php` | Hooks all 4 WC stock hooks (see below) → guards on `notifications_enabled` AND `notification_email_enabled` → queues AS actions + calls `Database::mark_notifying()` (sync fallback skips mark_notifying); hooks `action_scheduler_failed_action` → `on_notification_failed()` which calls `Database::mark_failed()` when `lswl_send_notification` action fails |
+| `Email` | `class-email.php` | `send_to_one()` — back-in-stock per-subscriber; `send_confirmation()` — subscription confirmation; `handle_queued_notification()` — AS callback; calls `Database::mark_failed()` then throws `\RuntimeException` on `wp_mail()` failure (mark_failed is called directly before throw — do not rely solely on `action_scheduler_failed_action` hook); resets subscriber to `notified=0` via `mark_watching()` if product OOS when AS fires; `send_notifications()` — sync fallback; `process_shortcodes()` — token replacement |
+| `Stock_Watcher` | `class-stock-watcher.php` | Hooks all 4 WC stock hooks (see below) → guards on `notifications_enabled` AND `notification_email_enabled` → queues AS actions + calls `Database::mark_notifying()` (sync fallback skips mark_notifying); hooks `action_scheduler_failed_action` → `on_notification_failed()` → `Database::mark_failed()` as a safety net (primary mark_failed now happens inside the callback before throw) |
 
 ### DB table: `{prefix}lime_watchlist`
 
@@ -84,7 +84,7 @@ Also hooks `before_woocommerce_init` (top-level, outside init) to declare HPOS +
 
 UNIQUE KEY on `(product_id, email)`.
 
-**`notified` state machine:** `0` (pending) → `2` (notifying — AS action queued) → `1` (notified — email sent). On AS failure: `2` → `3` (failed) via `action_scheduler_failed_action` hook. Admin can resend: `3` → `2` (re-queued).
+**`notified` state machine:** `0` (pending) → `2` (notifying — AS action queued) → `1` (notified — email sent). On AS failure: `2` → `3` (failed) — set directly in `handle_queued_notification()` before throwing (hook `action_scheduler_failed_action` fires too but is unreliable in some environments). Admin can resend: `3` → `2` (re-queued).
 
 **Re-subscribe rules** (`Database::add_or_resubscribe()`):
 - `notified=0 OR notified=2, unsubscribed=0` → `'already_subscribed'` (REST 409) — active or queued
@@ -100,8 +100,8 @@ AS action details:
 - Hook: `lswl_send_notification( int $subscriber_id, int $product_id )`
 - Group: `lime-stock-watchlist`
 - Unique: `false` — double-send prevented by `notified === 1` guard in callback
-- Callback: `Email::handle_queued_notification()` — guard: `1 === (int)$subscriber->notified` skips (already done); `notified=2` proceeds → if product OOS, calls `mark_watching()` and returns; else sends → `mark_notified()` sets `notified=1`; throws `\RuntimeException` on `wp_mail()` failure so AS marks the action failed
-- Failure hook: `action_scheduler_failed_action` → `Stock_Watcher::on_notification_failed()` → `Database::mark_failed()` sets `notified=3`
+- Callback: `Email::handle_queued_notification()` — guard: `1 === (int)$subscriber->notified` skips (already done); `notified=2` proceeds → if product OOS, calls `mark_watching()` and returns; else sends → `mark_notified()` sets `notified=1`; on `wp_mail()` failure: calls `Database::mark_failed([$subscriber_id])` then throws `\RuntimeException` so AS also marks the action failed
+- Failure hook: `action_scheduler_failed_action` → `Stock_Watcher::on_notification_failed()` → `Database::mark_failed()` — safety net only; primary `mark_failed` now happens inside the callback directly
 - Fallback: if `as_enqueue_async_action()` unavailable, falls back to synchronous `Email::send_notifications()` (no intermediate notifying state)
 
 Viewable/retryable in WooCommerce → Status → Action Scheduler.
@@ -233,7 +233,7 @@ Single React SPA. Three tabs via `@wordpress/components` `TabPanel`:
 Layout:
 - Stats bar: Total / Watching / Notifying / Notified / Unsubscribed / Failed (from `GET /subscribers/stats`)
 - `FailedNotice` (red, dismissible) when `stats.failed > 0` — message includes linked "Action Scheduler" text pointing to `wc-status&tab=action-scheduler&s=lswl_send_notification`
-- `NotifyingNotice` (yellow, dismissible) when `stats.notifying > 0`
+- `NotifyingNotice` (yellow, dismissible) when `stats.notifying > 0` — message includes linked "Action Scheduler" text (same `actionSchedulerUrl` as `FailedNotice`)
 - Both notices use local dismissed state (`failedDismissed`, `notifyingDismissed`) — reappear on page reload
 - Controls row: **By Subscriber** / **By Product** toggle (left) + reset button (shown only when filters are active, clears search + status) + search input + status select (right, native HTML elements — not WP SearchControl/SelectControl)
 - View area: `UserView` or `ProductView` (or `ProductDrillDown` when drilling into a product)
@@ -267,6 +267,8 @@ SubscribersTab
 5. **Back-in-Stock Notification Email** — toggle (default on), subject + body textarea (fields hidden when toggle off)
 
 Settings component tree: `SettingsTab` → `settings/WatchlistEnableCard`, `SubscriberFormCard`, `EmailConfigCard`, `ConfirmationEmailCard`, `NotificationEmailCard`. Each card in its own file under `src/admin/js/components/settings/`. Icons in `settings/icons.js`, generic card wrapper in `settings/SettingsCard.js`.
+
+**Settings tab and Style tab data fetching** — both use `useQuery({ queryKey: ['settings'], queryFn: getSettings })` (TanStack Query). `useState` lazy initializer reads `queryClient.getQueryData(['settings'])` synchronously on mount so no spinner on tab switch when data is cached. `initialized` ref prevents overwriting local edits when `queryData` updates. After save, `queryClient.setQueryData(['settings'], updated)` keeps cache fresh for both tabs. Spinner only shown when `isLoading && !settings` (first load only).
 
 **Style tab** — frontend form appearance; three grouped cards. Shares the same settings load/save API as SettingsTab (`getSettings()` / `saveSettings()`):
 

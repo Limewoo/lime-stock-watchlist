@@ -1,5 +1,5 @@
 === Lime Stock Watchlist for WooCommerce ===
-Contributors:      limewoo
+Contributors:      limewoo, thenahidul
 Tags:              woocommerce, stock, watchlist, back in stock, notification
 Requires at least: 6.5
 Tested up to:      7.0
@@ -88,6 +88,21 @@ Yes. Once notified (or after unsubscribing), the form reappears and a customer c
 = Does it work with backorder products? =
 
 Optionally. Enable **Allow subscriptions on backorder** in Settings → Subscriber Form to show the form and accept subscriptions on products with a backorder stock status.
+
+== Development ==
+
+The plugin's JavaScript and CSS are compiled from source. Full source code is on GitHub:
+
+https://github.com/Limewoo/lime-stock-watchlist
+
+To build from source:
+
+1. Clone: `git clone https://github.com/Limewoo/lime-stock-watchlist.git`
+2. Install dependencies: `bun install` (or `npm install`)
+3. Production build: `bun run build`
+4. Watch mode: `bun run start`
+
+Source files live in `src/`. Compiled output goes to `build/`. Do not edit `build/` directly.
 
 == Changelog ==
 
