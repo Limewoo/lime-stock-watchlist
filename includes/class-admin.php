@@ -31,6 +31,20 @@ class Admin {
 	public function register(): void {
 		add_action( 'admin_menu', array( $this, 'add_menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue' ) );
+		add_filter( 'plugin_action_links_' . plugin_basename( LSWL_FILE ), array( $this, 'add_action_links' ) );
+	}
+
+	/**
+	 * Add Manage link to the plugin action links.
+	 *
+	 * @param string[] $links Existing action links.
+	 * @return string[]
+	 */
+	public function add_action_links( array $links ): array {
+		$manage_link = '<a href="' . esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) . '">' . esc_html__( 'Manage', 'lime-stock-watchlist' ) . '</a>';
+		array_unshift( $links, $manage_link );
+
+		return $links;
 	}
 
 	/**
